@@ -1,0 +1,184 @@
+#!/usr/bin/env python
+# --------------------------------------------------------------------------------------------------------------------
+# Project:             my-renamer
+# Repository:          http://code.google.com/p/my-renamer/
+# License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
+# Purpose of document: ??
+# --------------------------------------------------------------------------------------------------------------------
+import sys 
+import os
+sys.path.insert(0, os.path.abspath(__file__+"/../../"))
+import re
+
+import tvdb_api
+
+import app.utils
+import episode
+import extension
+import moveItem
+import outputFormat
+
+class SeasonHelper:
+  def _escapedFileExtensions():
+    return extension.escapedFileTypeString()
+
+  @staticmethod
+  def episodeNumFromName(episode):
+    episodeRegex = "^.*?(\\d\\d?)\\D*%s$" % _escapedFileExtensions()
+    m = re.match(episodeRegex, episode, flags=re.IGNORECASE)
+    epNum = episode.UNRESOLVED_KEY
+    if m:
+      epNum = int(m.group(1))
+      out("episode: %s #:%d" % (episode, epNum), 1)
+    else:
+      out("** unresolved: %s" % episode, 1)
+    return epNum
+
+  @staticmethod
+  def episodeMapFromIndex(index, files):
+    epMap = episode.EpisodeMap()
+    if index != -1:
+      epRegex = "^.{%d}(\\d\\d?).*%s$" % (index, _escapedFileExtensions())
+      for f in files:
+        m = re.match(epRegex, f)
+        epNum = episode.UNRESOLVED_KEY
+        if m:
+          epNum = app.utils.toInt(m.group(1))
+        epMap.addItem(episode.SourceEpisode(epNum, f))
+    return epMap
+
+  @staticmethod
+  def episodeMapFromSeason(files):
+    epMap = episode.EpisodeMap()
+    for f in files:
+      epNum = episodeNumFromShow(f)
+      epMap.addItem(episode.SourceEpisode(epNum, f))
+    return epMap
+
+  @staticmethod
+  def getMatchIndex(files):
+    """search for two concecutive numbers where the second ones are the same"""
+    """a little dodgy. should check for best matching files"""
+    app.utils.verifyType(files, list)
+    index = -1
+    if len(files) > 1:
+      minLen = len(fileA)
+      if len(fileB) < minLen:
+        minLen = len(fileB)
+      for i in range(minLen-1):
+        if fileA[i] == fileB[i]:
+          a = fileA[i:i+2]
+          b = fileB[i:i+2]
+          if re.match("\\d{2}", a) and re.match("\\d{2}", b) and not a == b:
+            index = i
+            break
+        else:
+          break
+    return index
+  
+  @staticmethod
+  def getDestinationEpisodeMapFromTVDB(show, seasonNum):
+    app.utils.verifyType(show, str)
+    app.utils.verifyType(seasonNum, int)
+    eps = episode.EpisodeMap()
+    try:
+      tv = tvdb_api.Tvdb()
+      season = tv[show][seasonNum]
+      for i in season:
+        ep = season[i]
+        show = DestinationEpisode(int(show["episodenumber"]), show["episodename"])
+        eps.addItem(show)
+    except:
+      out("Could not find season. Show: %s seasonNum: %d" % (show, seasonNum), 1)
+    return eps
+    
+  @staticmethod
+  def getSourceEpisodeMapFromFilenames(files):
+    eps = episode.EpisodeMap()
+    app.utils.verifyType(files, list)    
+    
+    tmpMaps = []
+    tmpMaps.append(episodeNumFromName(files))
+    index = getMatchIndex(files)
+    if index != -1:
+      tmpMaps.append(episodeMapFromIndex(index, files))
+      for m in tmpMaps:
+        if len(m.matches_) > len(eps.matches_):
+          eps = m    
+    return eps  
+
+# --------------------------------------------------------------------------------------------------------------------
+class Season:
+  OK                          = 1
+  UNBALANCED_FILES            = -1
+  SEASON_UNRESOLVED           = -4
+  UNKNOWN                     = -5
+  
+  @staticmethod
+  def resultStr(result):
+    if   result == Season.OK:                return "OK"
+    elif result == Season.UNBALANCED_FILES:  return "UNBALANCED_FILES"
+    elif result == Season.SEASON_UNRESOLVED: return "SEASON_UNRESOLVED"
+    else:                                    assert(false); return "UNKNOWN"
+  
+  def __init__(self, seasonName, seasonNum, source, destination, format):
+    app.utils.verifyType(showName, str)
+    app.utils.verifyType(seasonNum, int)
+    app.utils.verifyType(source, episode.EpisodeMap)
+    app.utils.verifyType(destination, episode.EpisodeMap)
+    app.utils.verifyType(format, outputFormat.OutputFormat)
+    
+    self.seasonName_ = seasonName
+    self.seasonNum_ = seasonNum
+    self.source_ = source
+    self.destination_ = destination
+    self.format_ = format
+    
+    self._resolveMoveItems()
+    self._resolveStatus()
+    
+  def _resolveMoveItems(self):
+    self.moveItems_ = []
+    for key in self.source_.matches_:
+      state = moveItem.MoveItem.MISSING_NEW
+      destName = ""
+      sourceEp = self.source_.matches_[key]
+      if key in self.destination_.matches_:
+        destEp = self.destination_.matches_[key]
+        app.utils.verifyType(destEp, episode.DestinationEpisode)
+        inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
+        outname = self.format_.outputToString(inputMap, sourceEp.extension_)
+        if outname == sourceEp.self.filename_:
+          state = moveItem.MoveItem.DONE
+        else:
+          state = moveItem.MoveItem.READY          
+      else:
+        state = moveItem.MoveItem.MISSING_NEW
+      self.moveItems_.append(moveItem.MoveItem(key, state, sourceEp.filename_, destName))
+      
+    for key in self.destination_.matches_:
+      if key not in self.source_.matches_:
+        destEp = self.destination_.matches_[key]
+        inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
+        outname = self.format_.outputToString(inputMap, ".avi")
+        self.moveItems_.append(moveItem.MoveItem(key, moveItem.MoveItem.MISSING_OLD, "", outname))
+        
+    for item in self.source_.unresolved_:
+      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_OLD, item.filename_, ""))
+      
+    for item in self.destination_.unresolved_:
+      inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
+      outname = self.format_.outputToString(inputMap, ".avi")      
+      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_NEW, "", outname))
+    
+    self.moveItems_ = sorted(self.moveItems_, key=lambda item: item.key_)
+          
+  def _resolveStatus(self, outputFormat):
+    if len(self.moveItems_) == len(self.source_.moveItems_) and \
+       len(self.moveItems_) == len(self.destination_.moveItems_):
+      self.status_ = Season.OK      
+    if not self.destination_.matches_ and not self.destination_.unresolved_:
+      self.status_ = Season.SEASON_NOT_FOUND
+    else:
+      self.status_ = Season.UNBALANCED_FILES      
+ 
