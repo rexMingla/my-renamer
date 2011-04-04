@@ -5,11 +5,17 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
+import glob
+import os
+import re
 from PyQt4 import QtCore, QtGui
 
 import inputWidget
 import outputWidget
 import workBenchWidget
+
+from app import utils
+from tv import seasonHelper, season, extension
 
 class SeriesRenamerModule(QtCore.QObject):
   def __init__(self, parent=None):
@@ -25,9 +31,29 @@ class SeriesRenamerModule(QtCore.QObject):
     #output widget
     self.outputWidget_ = outputWidget.OutputWidget()
     self.outputWidget_.saveSignal_.connect(self._onSave)
-    
+  
+  def _getFolders(self, rootFolder, isRecursive):
+    dirs = []
+    rootFolder = rootFolder.replace("\\", "/")
+    if not isRecursive:
+      dirs.append(rootFolder)
+    else:
+      for root, dirs, files in os.walk(rootFolder):
+        dirs.append(root)      
+    return dirs 
+
   def _onExplore(self):
-    pass
+    seasons = []
+    dirs = self._getFolders(self.inputWidget_.inputSettings_.folder_, \
+                            self.inputWidget_.inputSettings_.showRecursive_)
+    for d in dirs:
+      seasonName, seriesNum = seasonHelper.SeasonHelper.seasonFromFolderName(d)
+      files = extension.FileExtensions.filterFiles(os.listdir(d))
+      if not seasonName == seasonHelper.SeasonHelper.NO_MATCH_NAME or len(files):
+        sourceMap = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(files)
+        destMap = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB(show, season)
+        season = season.Season(seasonName, seriesNum, sourceMap, destMap)
+        seasons.append(season)
     
   def _onSave(self):
     pass
