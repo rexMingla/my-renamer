@@ -14,6 +14,7 @@ import app
 
 class FileExtensions:
   _extensions_ = []
+  _ALL_FILES = ".*"
   
   @staticmethod
   def delimiter():
@@ -33,7 +34,7 @@ class FileExtensions:
         isAll = True
         break
     if isAll:
-      FileExtensions._extensions_ = [".*"]
+      FileExtensions._extensions_ = [_ALL_FILES]
     else:
       FileExtensions._extensions_ = l
   
@@ -44,7 +45,7 @@ class FileExtensions:
   @staticmethod
   def escapedFileTypeString():
     ret = ""
-    if FileExtensions._extensions_ == [".*"]:
+    if FileExtensions._extensions_ == [_ALL_FILES]:
       ret = "(?:\\..*)"
     else:
       temp = []
@@ -52,4 +53,17 @@ class FileExtensions:
         temp.append(re.escape(item))
         ret = "(?:%s)" % "|".join(temp)
     return ret
-      
+  
+  @staticmethod
+  def filterFiles(files):
+    app.utils.verifyType(files, list)
+    ret = []
+    if FileExtensions._extensions_ == FileExtensions._ALL_FILES:
+      ret = files
+    else:
+      for f in files:
+        for ext in FileExtensions._extensions_:
+          if f.endswith(ext):
+            ret.append(f)
+            break
+    return ret

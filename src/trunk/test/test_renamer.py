@@ -10,17 +10,14 @@ import os
 sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import unittest
 
-import tvdb_api
 import app
-import outputFormat
-import series
-import extension
+from tv import extension, outputFormat, seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
   def test_basic(self):
     pass
-    eps = series.Season.getSourceEpisodesFromFilenames(["a.mpg", "b.mpg"], "")
+    #eps = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(["a.mpg", "b.mpg"])
     
 # --------------------------------------------------------------------------------------------------------------------
 class ExtensionTest(unittest.TestCase):
@@ -31,7 +28,6 @@ class ExtensionTest(unittest.TestCase):
   def test_all(self):
     extension.FileExtensions.setExtensionsFromList([".mov",".*"])
     self.assertEqual(extension.FileExtensions.escapedFileTypeString(), "(?:\\..*)")
-
 
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormatTest(unittest.TestCase):

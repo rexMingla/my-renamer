@@ -12,17 +12,36 @@ import re
 
 import tvdb_api
 
-import app.utils
+import app
 import episode
 import extension
 
 class SeasonHelper:
-  def _escapedFileExtensions():
-    return extension.escapedFileTypeString()
+  NO_MATCH_NAME = ""
 
   @staticmethod
-  def episodeNumFromName(episode):
-    episodeRegex = "^.*?(\\d\\d?)\\D*%s$" % _escapedFileExtensions()
+  def _escapedFileExtensions():
+    return extension.FileExtensions.escapedFileTypeString()
+
+  @staticmethod
+  def seasonFromFolderName(folder):
+    app.utils.verifyType(folder, str)
+    splitFolderRegex = "^.*/(.*)/(?:season|series)\\s+(\\d+)$"     #/show/season
+    sameFolderRegex  = "^.*/(.*)\\s+(?:season|series)\\s+(\\d+)$"  #/show - season
+    show = SeasonHelper.NO_MATCH_NAME
+    seriesNum = -1
+    m = re.match(splitFolderRegex, folder, flags=re.IGNORECASE)
+    if not m:
+      m = re.match(sameFolderRegex, folder, flags=re.IGNORECASE)
+    if m:
+      show = m.group(1)
+      seriesNum = app.utils.toInt(m.group(2))
+    return show, seriesNum
+
+  @staticmethod
+  def episodeNumFromFilenames(episode):
+    app.utils.verifyType(episode, str)
+    episodeRegex = "^.*?(\\d\\d?)\\D*%s$" % SeasonHelper._escapedFileExtensions()
     m = re.match(episodeRegex, episode, flags=re.IGNORECASE)
     epNum = episode.UNRESOLVED_KEY
     if m:
@@ -36,7 +55,7 @@ class SeasonHelper:
   def episodeMapFromIndex(index, files):
     epMap = episode.EpisodeMap()
     if index != -1:
-      epRegex = "^.{%d}(\\d\\d?).*%s$" % (index, _escapedFileExtensions())
+      epRegex = "^.{%d}(\\d\\d?).*%s$" % (index, SeasonHelper._escapedFileExtensions())
       for f in files:
         m = re.match(epRegex, f)
         epNum = episode.UNRESOLVED_KEY
@@ -96,10 +115,10 @@ class SeasonHelper:
     app.utils.verifyType(files, list)    
     
     tmpMaps = []
-    tmpMaps.append(episodeNumFromName(files))
+    tmpMaps.append(SeasonHelper.episodeNumFromFilenames(files))
     index = getMatchIndex(files)
     if index != -1:
-      tmpMaps.append(episodeMapFromIndex(index, files))
+      tmpMaps.append(SeasonHelper.episodeMapFromIndex(index, files))
       for m in tmpMaps:
         if len(m.matches_) > len(eps.matches_):
           eps = m    

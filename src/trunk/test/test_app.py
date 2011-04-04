@@ -5,11 +5,12 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
+import sys 
 import os
+sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import unittest
 
-import errors
-import serializer
+from app import errors, serializer
 
 # --------------------------------------------------------------------------------------------------------------------
 class DataItemTest(unittest.TestCase):
