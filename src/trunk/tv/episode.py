@@ -21,6 +21,12 @@ class SourceEpisode:
     self.filename_ = filename
     (dummy, self.extension_) = os.path.splitext(filename)
     
+  def __str__(self):
+    return "<SourceEpisode: #:%d name:%s>" % (self.epNum_, self.filename_)   
+    
+  def __eq__(self, other):
+    return self.epNum_ == other.epNum_ and self.filename_ == other.filename_
+  
 # --------------------------------------------------------------------------------------------------------------------
 class DestinationEpisode:
   def __init__(self, epNum, epName):
@@ -28,7 +34,13 @@ class DestinationEpisode:
     utils.verifyType(epName, str)
     self.epNum_ = epNum
     self.epName_ = epName
+    
+  def __str__(self):
+    return "<DestinationEpisode: #:%d name:%s>" % (self.epNum_, self.epName_)   
 
+  def __eq__(self, other):
+    return self.epNum_ == other.epNum_ and self.epName_ == other.epName_
+  
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap:
   def __init__(self):
@@ -44,15 +56,15 @@ class EpisodeMap:
     else:
       self.matches_[item.epNum_] = item
 
-  @staticmethod
-  def areEqual(left, right):
-    utils.verifyType(left, EpisodeMap)
-    utils.verifyType(right, EpisodeMap)
-    ndiffs = sum(1 for a,b in zip(left.matches_.keys(),right.matches_.keys()) \
-               if (a==b==1 and left.matches_[a] == right.matches_[a]))
-    if not ndiffs:
-      ndiffs = sum(1 for a,b in zip(left.unresolved_,right.unresolved_) if (a==b==1))
-    
-    return not ndiffs 
-     
+  def __eq__(self, other):
+    #TODO:
+    utils.verifyType(other, EpisodeMap)
+    diffs = list(set(self.unresolved_).difference(set(other.unresolved_)))
+    if not diffs:
+      diffs = list(set(self.matches_.keys()).difference(set(other.matches_.keys())))
+    return not diffs
+  
+  def __str__(self):
+    return "<EpisodeMap: #matches:%d #unresolved:%d>" % \
+             (len(self.matches_), len(self.unresolved_)) 
     

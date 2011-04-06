@@ -41,7 +41,8 @@ class SeriesTest(unittest.TestCase):
                     2:episode.SourceEpisode(2,"b02.avi"), \
                     3:episode.SourceEpisode(3,"c03.avi")}
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
-    self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    self.assertEqual(act, exp)
 
   def test_episodeMapFromFilenamesDuplicate(self):
     exp = episode.EpisodeMap()
@@ -49,7 +50,10 @@ class SeriesTest(unittest.TestCase):
                     2:episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(1, "c01.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
-    self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    print (act)
+    print (exp)
+    self.assertEqual(act, exp)
 
   def test_episodeMapFromValidIndex(self):
     exp = episode.EpisodeMap()
@@ -57,7 +61,8 @@ class SeriesTest(unittest.TestCase):
                     2:episode.SourceEpisode(2,"b02.avi"), \
                     3:episode.SourceEpisode(3,"c03.avi")}
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
-    self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    self.assertEqual(act, exp)
 
   def test_episodeMapFromInvalidIndex(self):
     exp = episode.EpisodeMap()
@@ -65,7 +70,8 @@ class SeriesTest(unittest.TestCase):
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi"), \
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(-1, ["a01.avi", "b02.avi", "c03.avi"])
-    self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
+    self.assertEqual(act, exp)
 
   def test_episodeNumFromFilename(self):
     act = seasonHelper.SeasonHelper.episodeNumFromFilename("b02.avi")
