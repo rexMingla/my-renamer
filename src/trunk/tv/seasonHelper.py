@@ -5,50 +5,48 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-import sys 
-import os
-sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import re
 
-import tvdb_api
+from tvdb_api import tvdb_api
+from app import utils
 
-import app
 import episode
 import extension
 
 class SeasonHelper:
-  NO_MATCH_NAME = ""
-
   @staticmethod
   def _escapedFileExtensions():
     return extension.FileExtensions.escapedFileTypeString()
 
   @staticmethod
   def seasonFromFolderName(folder):
-    app.utils.verifyType(folder, str)
+    utils.verifyType(folder, str)
+    folder = folder.replace("\\","/")
+    if folder.endswith("/"):
+      folder = folder[:-1]
     splitFolderRegex = "^.*/(.*)/(?:season|series)\\s+(\\d+)$"     #/show/season
     sameFolderRegex  = "^.*/(.*)\\s+(?:season|series)\\s+(\\d+)$"  #/show - season
-    show = SeasonHelper.NO_MATCH_NAME
+    show = episode.UNRESOLVED_NAME
     seriesNum = -1
     m = re.match(splitFolderRegex, folder, flags=re.IGNORECASE)
     if not m:
       m = re.match(sameFolderRegex, folder, flags=re.IGNORECASE)
     if m:
       show = m.group(1)
-      seriesNum = app.utils.toInt(m.group(2))
+      seriesNum = utils.toInt(m.group(2))
     return show, seriesNum
 
   @staticmethod
-  def episodeNumFromFilenames(episode):
-    app.utils.verifyType(episode, str)
+  def episodeNumFromFilename(ep):
+    utils.verifyType(ep, str)
     episodeRegex = "^.*?(\\d\\d?)\\D*%s$" % SeasonHelper._escapedFileExtensions()
-    m = re.match(episodeRegex, episode, flags=re.IGNORECASE)
+    m = re.match(episodeRegex, ep, flags=re.IGNORECASE)
     epNum = episode.UNRESOLVED_KEY
     if m:
       epNum = int(m.group(1))
-      out("episode: %s #:%d" % (episode, epNum), 1)
+      utils.out("episode: %s #:%d" % (ep, epNum), 1)
     else:
-      out("** unresolved: %s" % episode, 1)
+      utils.out("** unresolved: %s" % ep, 1)
     return epNum
 
   @staticmethod
@@ -60,15 +58,15 @@ class SeasonHelper:
         m = re.match(epRegex, f)
         epNum = episode.UNRESOLVED_KEY
         if m:
-          epNum = app.utils.toInt(m.group(1))
+          epNum = utils.toInt(m.group(1))
         epMap.addItem(episode.SourceEpisode(epNum, f))
     return epMap
 
   @staticmethod
-  def episodeMapFromSeason(files):
+  def episodeMapFromFilenames(files):
     epMap = episode.EpisodeMap()
     for f in files:
-      epNum = episodeNumFromShow(f)
+      epNum = SeasonHelper.episodeNumFromFilename(f)
       epMap.addItem(episode.SourceEpisode(epNum, f))
     return epMap
 
@@ -76,9 +74,11 @@ class SeasonHelper:
   def getMatchIndex(files):
     """search for two concecutive numbers where the second ones are the same"""
     """a little dodgy. should check for best matching files"""
-    app.utils.verifyType(files, list)
+    utils.verifyType(files, list)
     index = -1
     if len(files) > 1:
+      fileA = files[0]
+      fileB = files[1]
       minLen = len(fileA)
       if len(fileB) < minLen:
         minLen = len(fileB)
@@ -95,8 +95,8 @@ class SeasonHelper:
   
   @staticmethod
   def getDestinationEpisodeMapFromTVDB(show, seasonNum):
-    app.utils.verifyType(show, str)
-    app.utils.verifyType(seasonNum, int)
+    utils.verifyType(show, str)
+    utils.verifyType(seasonNum, int)
     eps = episode.EpisodeMap()
     try:
       tv = tvdb_api.Tvdb()
@@ -106,20 +106,46 @@ class SeasonHelper:
         show = DestinationEpisode(int(show["episodenumber"]), show["episodename"])
         eps.addItem(show)
     except:
-      out("Could not find season. Show: %s seasonNum: %d" % (show, seasonNum), 1)
+      utils.out("Could not find season. Show: %s seasonNum: %d" % (show, seasonNum), 1)
     return eps
     
   @staticmethod
   def getSourceEpisodeMapFromFilenames(files):
     eps = episode.EpisodeMap()
-    app.utils.verifyType(files, list)    
+    utils.verifyType(files, list)    
     
     tmpMaps = []
-    tmpMaps.append(SeasonHelper.episodeNumFromFilenames(files))
+    tmpMaps.append(SeasonHelper.episodeMapFromFilenames(files))
     index = getMatchIndex(files)
     if index != -1:
       tmpMaps.append(SeasonHelper.episodeMapFromIndex(index, files))
       for m in tmpMaps:
         if len(m.matches_) > len(eps.matches_):
           eps = m    
-    return eps  
+    return eps 
+  
+  @staticmethod
+  def getFolders(rootFolder, isRecursive):
+    utils.verifyType(rootFolder, str)
+    utils.verifyType(rootFolder, bool)
+    dirs = []
+    rootFolder = rootFolder.replace("\\", "/")
+    if not isRecursive:
+      dirs.append(rootFolder)
+    else:
+      for root, dirs, files in os.walk(rootFolder):
+        dirs.append(root)      
+    return dirs 
+
+  @staticmethod
+  def getEpisodeMapForFolders(rootFolder, isRecursive):
+    seasons = []
+    dirs = SeasonHelper.getFolders(rootFolder, isRecursive)
+    for d in dirs:
+      seasonName, seriesNum = SeasonHelper.seasonFromFolderName(d)
+      files = extension.FileExtensions.filterFiles(os.listdir(d))
+      if not seasonName == episode.UNRESOLVED_NAME or len(files):
+        sourceMap = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(files)
+        destMap = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB(show, season)
+        season = season.Season(seasonName, seriesNum, sourceMap, destMap)
+        seasons.append(season)

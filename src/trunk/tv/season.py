@@ -5,14 +5,11 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-import sys 
-import os
-sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import re
 
 import tvdb_api
 
-import app.utils
+from app import utils
 import episode
 import extension
 import outputFormat
@@ -33,11 +30,11 @@ class Season:
     else:                                    assert(false); return "UNKNOWN"
   
   def __init__(self, seasonName, seasonNum, source, destination, format):
-    app.utils.verifyType(showName, str)
-    app.utils.verifyType(seasonNum, int)
-    app.utils.verifyType(source, episode.EpisodeMap)
-    app.utils.verifyType(destination, episode.EpisodeMap)
-    app.utils.verifyType(format, outputFormat.OutputFormat)
+    utils.verifyType(showName, str)
+    utils.verifyType(seasonNum, int)
+    utils.verifyType(source, episode.EpisodeMap)
+    utils.verifyType(destination, episode.EpisodeMap)
+    utils.verifyType(format, outputFormat.OutputFormat)
     
     self.seasonName_ = seasonName
     self.seasonNum_ = seasonNum
@@ -56,7 +53,7 @@ class Season:
       sourceEp = self.source_.matches_[key]
       if key in self.destination_.matches_:
         destEp = self.destination_.matches_[key]
-        app.utils.verifyType(destEp, episode.DestinationEpisode)
+        utils.verifyType(destEp, episode.DestinationEpisode)
         inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
         outname = self.format_.outputToString(inputMap, sourceEp.extension_)
         if outname == sourceEp.self.filename_:

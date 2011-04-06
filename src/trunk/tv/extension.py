@@ -5,12 +5,9 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-import sys 
-import os
-sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import re
 
-import app
+from app import utils
 
 class FileExtensions:
   _extensions_ = []
@@ -27,14 +24,14 @@ class FileExtensions:
 
   @staticmethod
   def setExtensionsFromList(l):
-    app.utils.verifyType(l, list)
+    utils.verifyType(l, list)
     isAll = False
     for item in l:
       if item in ["*", "*.*", ".*"]:
         isAll = True
         break
     if isAll:
-      FileExtensions._extensions_ = [_ALL_FILES]
+      FileExtensions._extensions_ = [FileExtensions._ALL_FILES]
     else:
       FileExtensions._extensions_ = l
   
@@ -45,7 +42,7 @@ class FileExtensions:
   @staticmethod
   def escapedFileTypeString():
     ret = ""
-    if FileExtensions._extensions_ == [_ALL_FILES]:
+    if FileExtensions._extensions_ == [FileExtensions._ALL_FILES]:
       ret = "(?:\\..*)"
     else:
       temp = []
@@ -56,7 +53,7 @@ class FileExtensions:
   
   @staticmethod
   def filterFiles(files):
-    app.utils.verifyType(files, list)
+    utils.verifyType(files, list)
     ret = []
     if FileExtensions._extensions_ == FileExtensions._ALL_FILES:
       ret = files
@@ -67,3 +64,4 @@ class FileExtensions:
             ret.append(f)
             break
     return ret
+  

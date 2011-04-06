@@ -43,17 +43,10 @@ class SeriesRenamerModule(QtCore.QObject):
     return dirs 
 
   def _onExplore(self):
-    seasons = []
-    dirs = self._getFolders(self.inputWidget_.inputSettings_.folder_, \
-                            self.inputWidget_.inputSettings_.showRecursive_)
-    for d in dirs:
-      seasonName, seriesNum = seasonHelper.SeasonHelper.seasonFromFolderName(d)
-      files = extension.FileExtensions.filterFiles(os.listdir(d))
-      if not seasonName == seasonHelper.SeasonHelper.NO_MATCH_NAME or len(files):
-        sourceMap = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(files)
-        destMap = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB(show, season)
-        season = season.Season(seasonName, seriesNum, sourceMap, destMap)
-        seasons.append(season)
+    folders = seasonHelper.getFolders(self.inputWidget_.inputSettings_.folder_, \
+                                   self.inputWidget_.inputSettings_.showRecursive_)
+    seasons = seasonHelper.getEpisodeMapForFolders(folders)
+    
     
   def _onSave(self):
     pass
