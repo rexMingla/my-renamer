@@ -5,11 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-import sys 
-import os
-sys.path.insert(0, os.path.abspath(__file__+"/../../"))
-
-import app.utils
+from app import utils
 
 # -----------------------------------------------------------------------------------
 class MoveItem:
@@ -32,6 +28,10 @@ class MoveItem:
     else:                        assert(False); return "UNKNOWN"      
   
   def __init__(self, key, matchType, oldName, newName):
+    utils.verifyType(key, str)
+    utils.verifyType(matchType, int)
+    utils.verifyType(oldName, str)
+    utils.verifyType(newName, str)
     self.key_ = key
     self.matchType_ = matchType
     self.oldName_ = oldName
