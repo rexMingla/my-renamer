@@ -88,6 +88,31 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
     raise errors.AssertionError(text)
 
 # --------------------------------------------------------------------------------------------------------------------
+def listCompare(left, right):
+  #assumes lists are already ordered
+  verifyType(left, list)
+  verifyType(right, list)
+  isSame = len(left) == len(right)
+  if isSame:
+    for l, r in zip(left, right):
+      if not l == r:
+        isSame = False
+        break
+  return isSame
+  
+# --------------------------------------------------------------------------------------------------------------------
+def dictCompare(left, right):
+  verifyType(left, dict)
+  verifyType(right, dict)
+  isSame = len(left) == len(right)
+  if isSame:
+    for key in left.keys():
+      if not right.has_key(key) or not left[key] == right[key]:
+        isSame = False
+        break
+  return isSame   
+
+# --------------------------------------------------------------------------------------------------------------------
 def toString(value, defaultIfNull=""):
   """ 
   attempt to convert string. returns defaultIfNull if null 

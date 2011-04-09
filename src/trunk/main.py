@@ -6,44 +6,63 @@
 # Purpose of document: main entry point of the program
 # --------------------------------------------------------------------------------------------------------------------
 import sys
+hasQt = False
 
-# --------------------------------------------------------------------------------------------------------------------
-def _runGUI():
+try:
   from PyQt4 import QtGui, QtCore
   from app import mainWindow
-  
+  hasQt = True
+except ImportError:  
+  pass
+
+import unittest
+
+from test import test_app, test_renamer
+from app import commandLine, utils
+from tv import seasonHelper
+
+# --------------------------------------------------------------------------------------------------------------------
+def _runGUI(cl):  
   app = QtGui.QApplication(sys.argv)
   
   mw = mainWindow.MainWindow()
   mw.show()
   
   app.exec_()
+  
+# --------------------------------------------------------------------------------------------------------------------
+def _runNonGUI(cl):   
+  utils.verify(cl.folder_, "Folder is not empty")
+  seasons = seasonHelper.getSeasonsForFolders(cl.folder_, cl.isRecursive_)
+  for season in seasons:
+    utils.out(season)
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runTests():
-  import unittest
-  from test import test_app, test_renamer
-
   suite = unittest.TestSuite([
-      unittest.TestLoader().loadTestsFromModule(test_app),
-      unittest.TestLoader().loadTestsFromModule(test_renamer)
+    unittest.TestLoader().loadTestsFromModule(test_app),
+    unittest.TestLoader().loadTestsFromModule(test_renamer)
   ])
   
   runner = unittest.TextTestRunner(verbosity=2)
   result = runner.run(suite)
-  if result.wasSuccessful():
-      return 0
-  else:
-      return 1
   
 # --------------------------------------------------------------------------------------------------------------------
 def main(argv):
-  #TODO:parse command line args
+  cl = commandLine.CommandLineParser(argv, "config.p")
+  if cl.showHelp_:
+    utils.out(cl.usageMessage())
+    return
   
-  if False:
-    _runGUI()
-  else:
+  if cl.runUnitTests_:
     _runTests()
+  elif not cl.showGui_:
+    _runNonGUI(cl)
+  elif hasQt:
+    _runGUI(cl)
+  else:
+    utils.out(cl.usageMessage())
+    utils.out("PyQt4 could not be found")
 
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
