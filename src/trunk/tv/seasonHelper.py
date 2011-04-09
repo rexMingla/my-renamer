@@ -37,7 +37,7 @@ class SeasonHelper:
     return show, seriesNum
 
   @staticmethod
-  def episodeNumFromFilename(ep):
+  def episodeNumFromLastNumInFilename(ep):
     utils.verifyType(ep, str)
     episodeRegex = "^.*?(\\d\\d?)\\D*%s$" % SeasonHelper._escapedFileExtensions()
     m = re.match(episodeRegex, ep, flags=re.IGNORECASE)
@@ -51,22 +51,24 @@ class SeasonHelper:
 
   @staticmethod
   def episodeMapFromIndex(index, files):
+    utils.verifyType(files, list)
     epMap = episode.EpisodeMap()
-    if index != -1:
-      epRegex = "^.{%d}(\\d\\d?).*%s$" % (index, SeasonHelper._escapedFileExtensions())
-      for f in files:
+    epRegex = "^.{%d}(\\d\\d?).*%s$" % (index, SeasonHelper._escapedFileExtensions())
+    for f in files:
+      epNum = episode.UNRESOLVED_KEY
+      if index >= 0:
         m = re.match(epRegex, f)
-        epNum = episode.UNRESOLVED_KEY
         if m:
           epNum = utils.toInt(m.group(1))
-        epMap.addItem(episode.SourceEpisode(epNum, f))
+      epMap.addItem(episode.SourceEpisode(epNum, f))
     return epMap
 
   @staticmethod
   def episodeMapFromFilenames(files):
+    utils.verifyType(files, list)
     epMap = episode.EpisodeMap()
     for f in files:
-      epNum = SeasonHelper.episodeNumFromFilename(f)
+      epNum = SeasonHelper.episodeNumFromLastNumInFilename(f)
       epMap.addItem(episode.SourceEpisode(epNum, f))
     return epMap
 
@@ -131,14 +133,15 @@ class SeasonHelper:
     dirs = []
     rootFolder = rootFolder.replace("\\", "/")
     if not isRecursive:
-      dirs.append(rootFolder)
+      if os.path.exists(rootFolder):
+        dirs.append(rootFolder)
     else:
       for root, dirs, files in os.walk(rootFolder):
         dirs.append(root)      
     return dirs 
 
   @staticmethod
-  def getEpisodeMapForFolders(rootFolder, isRecursive):
+  def getSeasonsForFolders(rootFolder, isRecursive):
     seasons = []
     dirs = SeasonHelper.getFolders(rootFolder, isRecursive)
     for d in dirs:

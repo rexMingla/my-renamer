@@ -27,6 +27,9 @@ class SourceEpisode:
   def __eq__(self, other):
     return self.epNum_ == other.epNum_ and self.filename_ == other.filename_
   
+  def __hash__(self):
+    return hash(self.epNum_) + hash(self.filename_) 
+  
 # --------------------------------------------------------------------------------------------------------------------
 class DestinationEpisode:
   def __init__(self, epNum, epName):
@@ -59,10 +62,7 @@ class EpisodeMap:
   def __eq__(self, other):
     #TODO:
     utils.verifyType(other, EpisodeMap)
-    diffs = list(set(self.unresolved_).difference(set(other.unresolved_)))
-    if not diffs:
-      diffs = list(set(self.matches_.keys()).difference(set(other.matches_.keys())))
-    return not diffs
+    return utils.listCompare(self.unresolved_, other.unresolved_) and utils.dictCompare(self.matches_, other.matches_)
   
   def __str__(self):
     return "<EpisodeMap: #matches:%d #unresolved:%d>" % \

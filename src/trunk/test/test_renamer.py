@@ -41,16 +41,14 @@ class SeriesTest(unittest.TestCase):
                     2:episode.SourceEpisode(2,"b02.avi"), \
                     3:episode.SourceEpisode(3,"c03.avi")}
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
-    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
     self.assertEqual(act, exp)
 
   def test_episodeMapFromFilenamesDuplicate(self):
     exp = episode.EpisodeMap()
     exp.matches_ = {1:episode.SourceEpisode(1,"a01.avi"), \
                     2:episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved_ = [episode.SourceEpisode(1, "c01.avi")]
+    exp.unresolved_ = [episode.SourceEpisode(1,"c01.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
-    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
     print (act)
     print (exp)
     self.assertEqual(act, exp)
@@ -61,7 +59,6 @@ class SeriesTest(unittest.TestCase):
                     2:episode.SourceEpisode(2,"b02.avi"), \
                     3:episode.SourceEpisode(3,"c03.avi")}
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
-    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
     self.assertEqual(act, exp)
 
   def test_episodeMapFromInvalidIndex(self):
@@ -70,15 +67,18 @@ class SeriesTest(unittest.TestCase):
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi"), \
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(-1, ["a01.avi", "b02.avi", "c03.avi"])
-    #self.assertTrue(episode.EpisodeMap.areEqual(act, exp))
     self.assertEqual(act, exp)
 
-  def test_episodeNumFromFilename(self):
-    act = seasonHelper.SeasonHelper.episodeNumFromFilename("b02.avi")
+  def test_episodeNumFromLastNumInFilename(self):
+    act = seasonHelper.SeasonHelper.episodeNumFromLastNumInFilename("b02.avi")
     self.assertEqual(act, 2)
 
+  def test_episodeNumFromLastNumInFilename2(self):
+    act = seasonHelper.SeasonHelper.episodeNumFromLastNumInFilename("b02x03.avi")
+    self.assertEqual(act, 3)
+
   def test_episodeNumFromInvalidFilename(self):
-    act = seasonHelper.SeasonHelper.episodeNumFromFilename("bad.avi")
+    act = seasonHelper.SeasonHelper.episodeNumFromLastNumInFilename("bad.avi")
     self.assertEqual(act, episode.UNRESOLVED_KEY)
 
   def test_getMatchIndex(self):
