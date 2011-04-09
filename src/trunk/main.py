@@ -17,9 +17,9 @@ except ImportError:
 
 import unittest
 
-from test import test_app, test_renamer
 from app import commandLine, utils
-from tv import seasonHelper
+from test import test_app, test_renamer
+from tv import seasonHelper, outputFormat
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runGUI(cl):  
@@ -33,9 +33,11 @@ def _runGUI(cl):
 # --------------------------------------------------------------------------------------------------------------------
 def _runNonGUI(cl):   
   utils.verify(cl.folder_, "Folder is not empty")
-  seasons = seasonHelper.getSeasonsForFolders(cl.folder_, cl.isRecursive_)
+  seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(cl.folder_, cl.isRecursive_)
   for season in seasons:
     utils.out(season)
+    for item in season.moveItems_:
+      utils.out(item)
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runTests():

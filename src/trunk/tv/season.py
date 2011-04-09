@@ -10,27 +10,34 @@ import re
 import tvdb_api
 
 from app import utils
+
 import episode
 import extension
+import moveItem
 import outputFormat
 import seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class Season:
-  OK                          = 1
-  UNBALANCED_FILES            = -1
-  SEASON_UNRESOLVED           = -4
-  UNKNOWN                     = -5
+  OK                = 1
+  UNBALANCED_FILES  = -1
+  SEASON_UNRESOLVED = -2
+  SEASON_NOT_FOUND  = -3
+  UNKNOWN           = -4
   
   @staticmethod
   def resultStr(result):
     if   result == Season.OK:                return "OK"
-    elif result == Season.UNBALANCED_FILES:  return "UNBALANCED_FILES"
-    elif result == Season.SEASON_UNRESOLVED: return "SEASON_UNRESOLVED"
+    elif result == Season.UNBALANCED_FILES:  return "UNBALANCED FILES"
+    elif result == Season.SEASON_NOT_FOUND:  return "SEASON NOT FOUND"
+    elif result == Season.SEASON_UNRESOLVED: return "SEASON UNRESOLVED"
     else:                                    assert(false); return "UNKNOWN"
   
-  def __init__(self, seasonName, seasonNum, source, destination, format):
-    utils.verifyType(showName, str)
+  def __str__(self):
+    return "season: %s season #: %d status: %s" % (self.seasonName_, self.seasonNum_, Season.resultStr(self.status_))
+    
+  def __init__(self, seasonName, seasonNum, source, destination, format=outputFormat.DEFAULT_FORMAT):
+    utils.verifyType(seasonName, str)
     utils.verifyType(seasonNum, int)
     utils.verifyType(source, episode.EpisodeMap)
     utils.verifyType(destination, episode.EpisodeMap)
@@ -40,10 +47,13 @@ class Season:
     self.seasonNum_ = seasonNum
     self.source_ = source
     self.destination_ = destination
+    self.resolveForFormat(format)
+  
+  def resolveForFormat(self, format):
+    utils.verifyType(format, outputFormat.OutputFormat)
     self.format_ = format
-    
     self._resolveMoveItems()
-    self._resolveStatus()
+    self._resolveStatus()    
     
   def _resolveMoveItems(self):
     self.moveItems_ = []
@@ -81,12 +91,13 @@ class Season:
     
     self.moveItems_ = sorted(self.moveItems_, key=lambda item: item.key_)
           
-  def _resolveStatus(self, outputFormat):
-    if len(self.moveItems_) == len(self.source_.moveItems_) and \
-       len(self.moveItems_) == len(self.destination_.moveItems_):
-      self.status_ = Season.OK      
-    if not self.destination_.matches_ and not self.destination_.unresolved_:
+  def _resolveStatus(self):
+    if not self.destination_.matches_:
       self.status_ = Season.SEASON_NOT_FOUND
+    elif len(self.moveItems_) == len(self.source_.matches_) and \
+    len(self.moveItems_) == len(self.destination_.matches_) and \
+    not self.destination_.unresolved_ and not self.destination_.unresolved_:
+      self.status_ = Season.OK      
     else:
       self.status_ = Season.UNBALANCED_FILES      
  

@@ -44,3 +44,6 @@ class OutputFormat:
     for key in inputs.data_.keys():
       ret = ret.replace(key, inputs.data_[key])
     return ret + ext
+
+DEFAULT_FORMAT = OutputFormat("[ep_num] - [ep_name]")
+  

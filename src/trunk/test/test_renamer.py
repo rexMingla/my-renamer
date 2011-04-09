@@ -16,12 +16,12 @@ from tv import extension, outputFormat, seasonHelper, episode
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
   def test_seasonFromFolderName(self):
-    name, num = seasonHelper.SeasonHelper.seasonFromFolderName("c:/folder/Show Season 1/")
+    name, num = seasonHelper.SeasonHelper.seasonFromFolderName("c:/folder/Show - Season 1/")
     self.assertEqual(name, "Show")
     self.assertEqual(num, 1)
 
   def test_seasonFromFolderName2(self):
-    name, num = seasonHelper.SeasonHelper.seasonFromFolderName("c:/folder/Show Name Series 12")
+    name, num = seasonHelper.SeasonHelper.seasonFromFolderName("c:/folder/Show Name - Series 12")
     self.assertEqual(name, "Show Name")
     self.assertEqual(num, 12)
     
@@ -86,11 +86,28 @@ class SeriesTest(unittest.TestCase):
     act = seasonHelper.SeasonHelper.getMatchIndex(["a01.avi", "a02.avi", "a03.avi"])
     self.assertEqual(act, exp)
   
-  def _getDestinationEpisodeMapFromTVDB(self):
-    pass #covered by tvdb_api tests
+  def test_getDestinationEpisodeMapFromTVDB(self):
+    exp = episode.EpisodeMap()
+    exp.matches_ = {1:episode.DestinationEpisode(1,"Entourage (Pilot)"), \
+                    2:episode.DestinationEpisode(2,"The Review"), \
+                    3:episode.DestinationEpisode(3,"Talk Show"), \
+                    4:episode.DestinationEpisode(4,"Date Night"), \
+                    5:episode.DestinationEpisode(5,"The Script & The Sherpa"), \
+                    6:episode.DestinationEpisode(6,"Busey And The Beach"), \
+                    7:episode.DestinationEpisode(7,"The Scene"), \
+                    8:episode.DestinationEpisode(8,"New York")}
+    act = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB("Entourage", 1)
+    self.assertEqual(act, exp)
     
-  def _getSourceEpisodeMapFromFilenames(self):
-    pass #not yet
+  def test_getSourceEpisodeMapFromFilenames(self):
+    exp = episode.EpisodeMap()
+    exp.matches_ = {1:episode.SourceEpisode(1,"a01.avi"), \
+                    2:episode.SourceEpisode(2,"a02.avi"), \
+                    3:episode.SourceEpisode(3,"a03.avi"), \
+                    4:episode.SourceEpisode(4,"a04x01.avi")}
+    act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "a02.avi", "a03.avi", "a04x01.avi"])
+    self.assertEqual(act, exp)
+
     
 # --------------------------------------------------------------------------------------------------------------------
 class ExtensionTest(unittest.TestCase):
