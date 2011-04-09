@@ -96,6 +96,7 @@ def listCompare(left, right):
   if isSame:
     for l, r in zip(left, right):
       if not l == r:
+        out("listCompare failure: %s != %s " % (toString(l), toString(r)))
         isSame = False
         break
   return isSame
@@ -107,9 +108,20 @@ def dictCompare(left, right):
   isSame = len(left) == len(right)
   if isSame:
     for key in left.keys():
-      if not right.has_key(key) or not left[key] == right[key]:
+      if not right.has_key(key):
+        out("dictCompare failure: right missing key: %s" % key)
         isSame = False
         break
+      elif not left[key] == right[key]:
+        out("dictCompare value mismatch: %s != %s " % (toString(left[key]), toString(right[key])))
+        isSame = False
+        break
+    if isSame:
+      for key in right.keys():
+        if not left.has_key(key):
+          out("dictCompare failure: left missing key: %s" % key)
+          isSame = False
+          break
   return isSame   
 
 # --------------------------------------------------------------------------------------------------------------------

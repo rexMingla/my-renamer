@@ -19,16 +19,16 @@ class MoveItem:
   
   @staticmethod
   def typeStr(type):
-    if type == MoveItem.READY:   return "READY"
-    elif type == MoveItem.DONE:  return "DONE"
-    elif type == MoveItem.M_NEW: return "MISSING NEW"
-    elif type == MoveItem.M_OLD: return "MISSING OLD"
-    elif type == MoveItem.U_NEW: return "UNRESOLVED NEW"
-    elif type == MoveItem.U_OLD: return "UNRESOLVED OLD"
-    else:                        assert(False); return "UNKNOWN"      
+    if type == MoveItem.READY:            return "READY"
+    elif type == MoveItem.DONE:           return "DONE"
+    elif type == MoveItem.MISSING_NEW:    return "MISSING NEW"
+    elif type == MoveItem.MISSING_OLD:    return "MISSING OLD"
+    elif type == MoveItem.UNRESOLVED_NEW: return "UNRESOLVED NEW"
+    elif type == MoveItem.UNRESOLVED_OLD: return "UNRESOLVED OLD"
+    else:                                 assert(False); return "UNKNOWN"      
   
   def __init__(self, key, matchType, oldName, newName):
-    utils.verifyType(key, str)
+    utils.verifyType(key, int)
     utils.verifyType(matchType, int)
     utils.verifyType(oldName, str)
     utils.verifyType(newName, str)
@@ -38,4 +38,4 @@ class MoveItem:
     self.newName_ = newName
       
   def __str__(self):
-    return "[%s] %s: %s -> %s" % (self.key_, MoveItem.typeStr(self.matchType_), self.oldName_, self.newName_)
+    return "[%d] %s: %s -> %s" % (self.key_, MoveItem.typeStr(self.matchType_), self.oldName_, self.newName_)

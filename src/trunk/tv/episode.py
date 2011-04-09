@@ -44,6 +44,9 @@ class DestinationEpisode:
   def __eq__(self, other):
     return self.epNum_ == other.epNum_ and self.epName_ == other.epName_
   
+  def __hash__(self):
+    return hash(self.epNum_) + hash(self.epName_) 
+
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap:
   def __init__(self):
