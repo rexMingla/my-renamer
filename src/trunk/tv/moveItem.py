@@ -36,6 +36,10 @@ class MoveItem:
     self.matchType_ = matchType
     self.oldName_ = oldName
     self.newName_ = newName
-      
+  
+  def __eq__(self, other):
+    return self.key_ == other.key_ and self.matchType_ == other.matchType_ and \
+           self.oldName_ == other.oldName_ and self.newName_ == other.newName_
+    
   def __str__(self):
     return "[%d] %s: %s -> %s" % (self.key_, MoveItem.typeStr(self.matchType_), self.oldName_, self.newName_)

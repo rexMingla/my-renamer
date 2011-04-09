@@ -65,8 +65,8 @@ class Season:
         destEp = self.destination_.matches_[key]
         utils.verifyType(destEp, episode.DestinationEpisode)
         inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
-        outname = self.format_.outputToString(inputMap, sourceEp.extension_)
-        if outname == sourceEp.self.filename_:
+        destName = self.format_.outputToString(inputMap, sourceEp.extension_)
+        if destName == sourceEp.filename_:
           state = moveItem.MoveItem.DONE
         else:
           state = moveItem.MoveItem.READY          
@@ -79,15 +79,14 @@ class Season:
         destEp = self.destination_.matches_[key]
         inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
         outname = self.format_.outputToString(inputMap, ".avi")
-        self.moveItems_.append(moveItem.MoveItem(key, moveItem.MoveItem.MISSING_OLD, "", outname))
+        self.moveItems_.append(moveItem.MoveItem(key, moveItem.MoveItem.MISSING_OLD, episode.UNRESOLVED_NAME, outname))
         
     for item in self.source_.unresolved_:
-      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_OLD, item.filename_, ""))
+      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_OLD, item.filename_, episode.UNRESOLVED_NAME))
       
     for item in self.destination_.unresolved_:
-      inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
-      outname = self.format_.outputToString(inputMap, ".avi")      
-      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_NEW, "", outname))
+      #this should never really happen. TV show should always be resolved
+      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_NEW, episode.UNRESOLVED_NAME, episode.UNRESOLVED_NAME))
     
     self.moveItems_ = sorted(self.moveItems_, key=lambda item: item.key_)
           
