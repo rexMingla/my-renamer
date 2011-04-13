@@ -48,8 +48,6 @@ class SeriesTest(unittest.TestCase):
                     2:episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(1,"c01.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
-    print (act)
-    print (exp)
     self.assertEqual(act, exp)
 
   def test_episodeMapFromValidIndex(self):
@@ -97,6 +95,11 @@ class SeriesTest(unittest.TestCase):
                     8:episode.DestinationEpisode(8,"New York")}
     act = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB("Entourage", 1)
     self.assertEqual(act, exp)
+    
+  def test_getDestinationEpisodeMapFromTVDBInvalid(self):
+    exp = episode.EpisodeMap()
+    act = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB("Not real, Really", 1)
+    self.assertEqual(act, exp)  
     
   def test_getSourceEpisodeMapFromFilenames(self):
     exp = episode.EpisodeMap()

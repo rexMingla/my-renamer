@@ -21,9 +21,11 @@ class WorkBenchWidget(QtGui.QWidget):
     self._ui_ = uic.loadUi("ui/ui_WorkBench.ui", self)
     self._ui_.refreshButton_.clicked.connect(self._refresh)
     
-    self._model_ = model.SeriesRenamerModel()
-    self._ui_.tableView_.model = self._model_
+    self._model_ = model.TreeModel()
+    self._ui_.view_.setModel(self._model_)
     
   def _refresh(self):
     pass
   
+  def updateModel(self, seasons):
+    self._model_.setSeasons(seasons + seasons)

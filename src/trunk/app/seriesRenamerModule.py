@@ -43,10 +43,9 @@ class SeriesRenamerModule(QtCore.QObject):
     return dirs 
 
   def _onExplore(self):
-    folders = seasonHelper.getFolders(self.inputWidget_.inputSettings_.folder_, \
-                                   self.inputWidget_.inputSettings_.showRecursive_)
-    seasons = seasonHelper.getEpisodeMapForFolders(folders)
-    
+    seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(self.inputWidget_.inputSettings_.folder_, \
+                                                             self.inputWidget_.inputSettings_.showRecursive_)
+    self.workBenchWidget_.updateModel(seasons)
     
   def _onSave(self):
     pass

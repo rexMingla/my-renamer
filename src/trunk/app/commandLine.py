@@ -12,7 +12,7 @@ import os
 class CommandLineParser:
   def usageMessage(self):
     ret = self.name_ + " [-h | -u | -c configFile | -n options]\n" + \
-           "  -h --help           Show this message\n" + \
+           "  -h -? --help        Show this message\n" + \
            "  -u --unit-tests     Run unit tests\n" + \
            "  -c --config <name>  Config file for GUI mode\n" + \
            "  -n --no-gui         Run in console mode\n" + \
@@ -31,7 +31,7 @@ class CommandLineParser:
     self.name_ = argv[0]
     self.errorMessage_ = ""
     try:
-      opts, args = getopt.getopt(argv[1:], "hcuf:rnt", ["help", "config=", "folder=", "recursive", "no-gui", "test"])
+      opts, args = getopt.getopt(argv[1:], "?hc:uf:rnt", ["help", "config=", "folder=", "recursive", "no-gui", "test"])
     except getopt.GetoptError, err:
       self.errorMessage_ = err
     
@@ -41,13 +41,14 @@ class CommandLineParser:
     self.config_ = defaultConfig
     self.testOnly_ = False
     self.runUnitTests_ = False
+    self.showHelp_ = False
     if not self.errorMessage_:
       for opt, arg in opts:
-        if opt in ("-h", "--help"):
+        if opt in ("-?", "-h", "--help"):
           self.showHelp_ = True
-        if opt in ("-c", "--config"):
+        elif opt in ("-c", "--config"):
           self.config_ = ""
-        if opt in ("-u", "--unit-tests"):
+        elif opt in ("-u", "--unit-tests"):
           self.runUnitTests_ = True
         elif opt in ("-f", "--folder"):
           self.folder_ = arg
@@ -64,5 +65,5 @@ class CommandLineParser:
     elif self.showGui_ and not self.config_:
       self.errorMessage_ = "configFile must be supplied"
         
-    self.showHelp_ = not not self.errorMessage_
+    self.showHelp_ = self.showHelp_ or self.errorMessage_
   
