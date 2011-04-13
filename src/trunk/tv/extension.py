@@ -10,7 +10,7 @@ import re
 from app import utils
 
 class FileExtensions:
-  _extensions_ = []
+  _extensions_ = [".avi", ".mov"]
   _ALL_FILES = ".*"
   
   @staticmethod

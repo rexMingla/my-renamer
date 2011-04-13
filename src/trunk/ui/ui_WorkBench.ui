@@ -21,7 +21,7 @@
     <number>3</number>
    </property>
    <item>
-    <widget class="QTableView" name="tableView_"/>
+    <widget class="QTreeView" name="view_"/>
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
