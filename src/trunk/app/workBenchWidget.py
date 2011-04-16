@@ -28,4 +28,4 @@ class WorkBenchWidget(QtGui.QWidget):
     pass
   
   def updateModel(self, seasons):
-    self._model_.setSeasons(seasons + seasons)
+    self._model_.setSeasons(seasons)

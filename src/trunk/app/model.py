@@ -7,7 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore
 
-from tv import season
+from tv import season, moveItem
 
 import utils
 
@@ -21,8 +21,8 @@ class Columns:
   
 class TreeItem(object):
   def __init__(self, data, parent=None):
-    self.parentItem = parent
-    self.itemData = data
+    self.parent_ = parent
+    self.rowData_ = data
     self.childItems = []
 
   def appendChild(self, item):
@@ -35,20 +35,20 @@ class TreeItem(object):
     return len(self.childItems)
 
   def columnCount(self):
-    return len(self.itemData)
+    return len(self.rowData_)
 
   def data(self, column):
     try:
-      return self.itemData[column]
+      return self.rowData_[column]
     except IndexError:
       return None
 
   def parent(self):
-    return self.parentItem
+    return self.parent_
 
   def row(self):
-    if self.parentItem:
-      return self.parentItem.childItems.index(self)
+    if self.parent_:
+      return self.parent_.childItems.index(self)
 
     return 0
 
@@ -56,14 +56,15 @@ class TreeItem(object):
 class TreeModel(QtCore.QAbstractItemModel):
   def __init__(self, parent=None):
     super(TreeModel, self).__init__(parent)
+    self._seasons_ = []
+    self.rootItem_ = TreeItem(("",))  
     
-    self.rootItem_ = TreeItem(("",""))
-  
   def columnCount(self, parent):
-    if parent.isValid():
-      return parent.internalPointer().columnCount()
-    else:
-      return self.rootItem_.columnCount()
+    return Columns.NUM_COLS
+    #if parent.isValid():
+    #  return parent.internalPointer().columnCount()
+    #else:
+    #  return self.rootItem_.columnCount()
 
   def data(self, index, role):
     if not index.isValid():
@@ -84,8 +85,12 @@ class TreeModel(QtCore.QAbstractItemModel):
 
   def headerData(self, section, orientation, role):
     if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-      return self.rootItem_.data(section)
-
+      if section == Columns.COL_OLD_NAME:
+        return "Existing File"
+      elif section == Columns.COL_NEW_NAME:
+        return "New Name"
+      elif section == Columns.COL_STATUS:
+        return "Status"
     return None
 
   def index(self, row, column, parent):
@@ -93,11 +98,11 @@ class TreeModel(QtCore.QAbstractItemModel):
       return QtCore.QModelIndex()
 
     if not parent.isValid():
-      parentItem = self.rootItem_
+      parent_ = self.rootItem_
     else:
-      parentItem = parent.internalPointer()
+      parent_ = parent.internalPointer()
 
-    childItem = parentItem.child(row)
+    childItem = parent_.child(row)
     if childItem:
       return self.createIndex(row, column, childItem)
     else:
@@ -108,34 +113,37 @@ class TreeModel(QtCore.QAbstractItemModel):
       return QtCore.QModelIndex()
 
     childItem = index.internalPointer()
-    parentItem = childItem.parent()
+    parent_ = childItem.parent()
 
-    if parentItem == self.rootItem_:
+    if parent_ == self.rootItem_:
       return QtCore.QModelIndex()
 
-    return self.createIndex(parentItem.row(), 0, parentItem)
+    return self.createIndex(parent_.row(), 0, parent_)
 
   def rowCount(self, parent):
     if parent.column() > 0:
       return 0
 
     if not parent.isValid():
-      parentItem = self.rootItem_
+      parent_ = self.rootItem_
     else:
-      parentItem = parent.internalPointer()
+      parent_ = parent.internalPointer()
 
-    return parentItem.childCount()
+    return parent_.childCount()
   
   def setSeasons(self, seasons):
-    #self.modelAboutToBeReset()
-    self.rootItem_ = TreeItem(("",""))
-    #self.modelReset()
+    if self._seasons_:
+      self.beginRemoveRows(QtCore.QModelIndex(), 0, len(self._seasons_) - 1)
+      self.rootItem_ = TreeItem(("",))
+      self.endRemoveRows()
     
+    self._seasons_ = seasons
     if seasons:
-      self.beginInsertRows(QtCore.QModelIndex(), 0, len(seasons) - 1)
-      for season in seasons:
-        ti = TreeItem(("Season","Series"), self.rootItem_)
+      self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._seasons_) - 1)
+      for season in self._seasons_:
+        name = "Season: %s #: %d" % (season.seasonName_, season.seasonNum_)
+        ti = TreeItem((name,), self.rootItem_)
         self.rootItem_.appendChild(ti)
         for mi in season.moveItems_:
-          ti.appendChild(TreeItem(("w","t"), ti))    
+          ti.appendChild(TreeItem((mi.oldName_, mi.newName_, moveItem.MoveItem.typeStr(mi.matchType_)), ti))   
       self.endInsertRows()
