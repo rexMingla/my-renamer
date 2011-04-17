@@ -47,6 +47,7 @@ class Season:
     self.seasonNum_ = seasonNum
     self.source_ = source
     self.destination_ = destination
+    self.performMove_ = True
     self.resolveForFormat(format)
   
   def resolveForFormat(self, format):

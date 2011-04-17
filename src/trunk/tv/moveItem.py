@@ -35,7 +35,9 @@ class MoveItem:
     self.key_ = key
     self.matchType_ = matchType
     self.oldName_ = oldName
-    self.newName_ = newName  
+    self.newName_ = newName
+    self.canMove_ = matchType in (MoveItem.READY, MoveItem.DONE) #can execute
+    self.performMove_ = self.canMove_                             #will move
   
   def __eq__(self, other):
     return self.key_ == other.key_ and self.matchType_ == other.matchType_ and \
