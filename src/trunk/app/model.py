@@ -14,25 +14,25 @@ import utils
 class Columns:
   COL_OLD_NAME = 0
   COL_NEW_NAME = 1
-  COL_SELECTED = 2
-  COL_STATUS   = 3
-  NUM_COLS     = 4
+  COL_STATUS   = 2
+  NUM_COLS     = 3
 
   
 class TreeItem(object):
-  def __init__(self, data, parent=None):
+  def __init__(self, rowData, rawData=None, parent=None):
     self.parent_ = parent
-    self.rowData_ = data
-    self.childItems = []
+    self.rowData_ = rowData
+    self.raw_ = rawData
+    self.childItems_ = []
 
   def appendChild(self, item):
-    self.childItems.append(item)
+    self.childItems_.append(item)
 
   def child(self, row):
-    return self.childItems[row]
+    return self.childItems_[row]
 
   def childCount(self):
-    return len(self.childItems)
+    return len(self.childItems_)
 
   def columnCount(self):
     return len(self.rowData_)
@@ -48,10 +48,49 @@ class TreeItem(object):
 
   def row(self):
     if self.parent_:
-      return self.parent_.childItems.index(self)
-
+      return self.parent_.childItems_.index(self)
     return 0
-
+  
+  def isSeason(self):
+    return isinstance(self.raw_, season.Season)
+  
+  def isMoveItem(self):
+    return isinstance(self.raw_, moveItem.MoveItem)
+  
+  def canCheck(self):
+    if not self.childItems_:
+      return self.raw_.canMove_
+    else:
+      return True
+  
+  def checkState(self):
+    cs = QtCore.Qt.Checked
+    if self.isMoveItem():
+      if not self.raw_.performMove_:
+        cs = QtCore.Qt.Unchecked
+    elif self.isSeason():
+      checkCount = 0
+      uncheckCount = 0
+      for c in self.childItems_:
+        if c.canCheck():
+          if c.checkState() == QtCore.Qt.Unchecked:
+            uncheckCount += 1
+          else:
+            checkCount += 1
+      if checkCount and not uncheckCount:
+        cs = QtCore.Qt.Checked
+      elif not checkCount and uncheckCount:
+        cs = QtCore.Qt.Unchecked
+      else:
+        cs = QtCore.Qt.PartiallyChecked
+    return cs
+  
+  def setCheckState(self, cs):
+    isChecked = cs == QtCore.Qt.Checked
+    if self.isMoveItem() and self.raw_.canMove_:
+      self.raw_.performMove_ = isChecked
+    elif self.isSeason():
+      self.raw_.performMove_ = isChecked
 
 class TreeModel(QtCore.QAbstractItemModel):
   def __init__(self, parent=None):
@@ -61,27 +100,49 @@ class TreeModel(QtCore.QAbstractItemModel):
     
   def columnCount(self, parent):
     return Columns.NUM_COLS
-    #if parent.isValid():
-    #  return parent.internalPointer().columnCount()
-    #else:
-    #  return self.rootItem_.columnCount()
 
   def data(self, index, role):
     if not index.isValid():
       return None
-
-    if role != QtCore.Qt.DisplayRole:
-      return None
-
+    
     item = index.internalPointer()
+    if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
+      return item.checkState()
+    elif role == QtCore.Qt.DisplayRole:
+      return item.data(index.column())
+    else:
+      return None
+    
+  def setData(self, index, value, role):
+    if not index.isValid():
+      return False
 
-    return item.data(index.column())
+    if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
+      item = index.internalPointer()
+      item.setCheckState(value)
+      self.dataChanged.emit(index, index)
+      if item.isSeason():
+        for child in item.childItems_:
+          child.setCheckState(value)
+          changedIndex = index.child(Columns.COL_OLD_NAME, child.row())
+          self.dataChanged.emit(changedIndex, changedIndex)
+      elif item.isMoveItem():
+        self.dataChanged.emit(index.parent(), index.parent())
+      return True
+    return False
 
   def flags(self, index):
     if not index.isValid():
       return QtCore.Qt.NoItemFlags
-
-    return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+    
+    item = index.internalPointer()
+    
+    f = QtCore.Qt.ItemIsSelectable
+    if item.canCheck():
+      f |= QtCore.Qt.ItemIsEnabled 
+      if index.column() == Columns.COL_OLD_NAME:
+        f |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsTristate
+    return f
 
   def headerData(self, section, orientation, role):
     if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -142,8 +203,8 @@ class TreeModel(QtCore.QAbstractItemModel):
       self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._seasons_) - 1)
       for season in self._seasons_:
         name = "Season: %s #: %d" % (season.seasonName_, season.seasonNum_)
-        ti = TreeItem((name,), self.rootItem_)
+        ti = TreeItem((name,), season, self.rootItem_)
         self.rootItem_.appendChild(ti)
         for mi in season.moveItems_:
-          ti.appendChild(TreeItem((mi.oldName_, mi.newName_, moveItem.MoveItem.typeStr(mi.matchType_)), ti))   
+          ti.appendChild(TreeItem((mi.oldName_, mi.newName_, moveItem.MoveItem.typeStr(mi.matchType_)), mi, ti))   
       self.endInsertRows()

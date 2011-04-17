@@ -133,15 +133,15 @@ class SeasonHelper:
   def getFolders(rootFolder, isRecursive):
     utils.verifyType(rootFolder, str)
     utils.verifyType(isRecursive, bool)
-    dirs = []
+    folders = []
     rootFolder = rootFolder.replace("\\", "/")
     if not isRecursive:
       if os.path.exists(rootFolder):
-        dirs.append(rootFolder)
+        folders.append(rootFolder)
     else:
       for root, dirs, files in os.walk(rootFolder):
-        dirs.append(root)      
-    return dirs 
+        folders.append(root)      
+    return folders 
 
   @staticmethod
   def getSeasonsForFolders(rootFolder, isRecursive):
