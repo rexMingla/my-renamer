@@ -109,7 +109,7 @@ class SeriesTest(unittest.TestCase):
                     4:episode.SourceEpisode(4,"a04x01.avi")}
     act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "a02.avi", "a03.avi", "a04x01.avi"])
     self.assertEqual(act, exp)
-
+    
 # --------------------------------------------------------------------------------------------------------------------
 class MoveTest(unittest.TestCase):
   def setUp(self):
@@ -160,73 +160,73 @@ class MoveTest(unittest.TestCase):
     
 # --------------------------------------------------------------------------------------------------------------------
 class SwitchFilesTest(unittest.TestCase):  
-  def test_switchFileNotExists():
+  def test_switchFileNotExists(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
-    after = before.setKeyForFilename(1, "d04.avi")
+    after = seasonHelper.SeasonHelper.setKeyForFilename(before, 1, "d04.avi")
     self.assertEqual(before, after)
   
-  def test_switchResolvedKeyForNewResolvedKey():
+  def test_switchResolvedKeyForNewResolvedKey(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
     exp = episode.EpisodeMap()
     exp.matches_ = {1:episode.SourceEpisode(1,"a01.avi"), \
                     2:episode.SourceEpisode(2,"b02.avi"), \
                     4:episode.SourceEpisode(4,"c03.avi")}
-    act = before.setKeyForFilename(4, "c03.avi")
+    act = seasonHelper.SeasonHelper.setKeyForFilename(before, 4, "c03.avi")
     self.assertEqual(act, exp)
 
-  def test_switchResolvedKeyForExistingResolvedKey():
+  def test_switchResolvedKeyForExistingResolvedKey(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
     exp = episode.EpisodeMap()
     exp.matches_ = {1:episode.SourceEpisode(1,"a01.avi"), \
                     2:episode.SourceEpisode(2,"c03.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi")]
-    act = before.setKeyForFilename(2, "c03.avi")
+    act = seasonHelper.SeasonHelper.setKeyForFilename(before, 2, "c03.avi")
     self.assertEqual(act, exp)
     
-  def test_switchResolvedKeyForSameResolvedKey():
+  def test_switchResolvedKeyForSameResolvedKey(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
-    after = before.setKeyForFilename(1, "a01.avi")
+    after = seasonHelper.SeasonHelper.setKeyForFilename(before, 1, "a01.avi")
     self.assertEqual(before, after)
 
-  def test_switchResolvedKeyForUnresolvedKey():
+  def test_switchResolvedKeyForUnresolvedKey(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
     exp = episode.EpisodeMap()
     exp.matches_ = {1:episode.SourceEpisode(1,"a01.avi"), \
                     2:episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
-    act = before.setKeyForFilename(episode.UNRESOLVED_KEY, "c03.avi")
+    act = seasonHelper.SeasonHelper.setKeyForFilename(before, episode.UNRESOLVED_KEY, "c03.avi")
     self.assertEqual(act, exp)
     
-  def test_switchResolvedKeyForUnresolvedKey2():
+  def test_switchResolvedKeyForUnresolvedKey2(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "a01b.avi", "b02.avi"])
     exp = episode.EpisodeMap()
     exp.matches_ = {2:episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi"),
-                       episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01b.avi")] #maybe you would want this to get resolve now but for now not 
-    act = before.setKeyForFilename(episode.UNRESOLVED_KEY, "a01.avi")
+    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01b.avi"),
+                       episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")] #maybe you would want this to get resolve now but for now not 
+    act = seasonHelper.SeasonHelper.setKeyForFilename(before, episode.UNRESOLVED_KEY, "a01.avi")
     self.assertEqual(act, exp)
 
-  def test_switchUnresolvedKeyForNewResolvedKey():
+  def test_switchUnresolvedKeyForNewResolvedKey(self):
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c01.avi"])
     exp = episode.EpisodeMap()
     exp.matches_ = {1:episode.SourceEpisode(1,"a01.avi"), \
                     2:episode.SourceEpisode(2,"b02.avi"), \
-                    3:episode.SourceEpisode(2,"c01.avi")}
-    act = before.setKeyForFilename(3, "c03.avi")
+                    3:episode.SourceEpisode(3,"c01.avi")}
+    act = seasonHelper.SeasonHelper.setKeyForFilename(act, 3, "c01.avi")
     self.assertEqual(act, exp)
     
-  def test_switchUnresolvedKeyForExistingResolvedKey():
+  def test_switchUnresolvedKeyForExistingResolvedKey(self):
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c01.avi"])
     exp = episode.EpisodeMap()
     exp.matches_ = {1:episode.SourceEpisode(1,"c01.avi"), \
                     2:episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")]
-    act = before.setKeyForFilename(3, "c03.avi")
+    act = seasonHelper.SeasonHelper.setKeyForFilename(act, 1, "c01.avi")
     self.assertEqual(act, exp)
 
-def test_switchUnresolvedKeyForUnresolvedKey():
+def test_switchUnresolvedKeyForUnresolvedKey(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi", "xxx.avi"])
-    after = before.setKeyForFilename(episode.UNRESOLVED_KEY, "xxx.avi")
+    after = seasonHelper.SeasonHelper.setKeyForFilename(before, episode.UNRESOLVED_KEY, "xxx.avi")
     self.assertEqual(before, after)
 
 # --------------------------------------------------------------------------------------------------------------------
