@@ -49,7 +49,12 @@ class Season:
     self.destination_ = destination
     self.performMove_ = True
     self.resolveForFormat(format)
-  
+    
+  def updateSource(self, newSource):
+    utils.verifyType(source, episode.EpisodeMap)
+    self.source_ = newSource
+    self.resolveForFormat(self.format_)
+      
   def resolveForFormat(self, format):
     utils.verifyType(format, outputFormat.OutputFormat)
     self.format_ = format
@@ -95,8 +100,8 @@ class Season:
     if not self.destination_.matches_:
       self.status_ = Season.SEASON_NOT_FOUND
     elif len(self.moveItems_) == len(self.source_.matches_) and \
-    len(self.moveItems_) == len(self.destination_.matches_) and \
-    not self.destination_.unresolved_ and not self.destination_.unresolved_:
+      len(self.moveItems_) == len(self.destination_.matches_) and \
+      not self.destination_.unresolved_ and not self.destination_.unresolved_:
       self.status_ = Season.OK      
     else:
       self.status_ = Season.UNBALANCED_FILES      

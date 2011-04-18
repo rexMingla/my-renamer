@@ -5,6 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
+import copy
 import os
 
 from app import utils
@@ -28,7 +29,10 @@ class SourceEpisode:
     return self.epNum_ == other.epNum_ and self.filename_ == other.filename_
   
   def __hash__(self):
-    return hash(self.epNum_) + hash(self.filename_) 
+    return hash(self.epNum_) + hash(self.filename_)
+  
+  def __copy__(self):
+    return SourceEpisode(self.epNum_, self.filename_)
   
 # --------------------------------------------------------------------------------------------------------------------
 class DestinationEpisode:
@@ -45,7 +49,10 @@ class DestinationEpisode:
     return self.epNum_ == other.epNum_ and self.epName_ == other.epName_
   
   def __hash__(self):
-    return hash(self.epNum_) + hash(self.epName_) 
+    return hash(self.epNum_) + hash(self.epName_)
+
+  def __copy__(self):
+    return SourceEpisode(self.epNum_, self.epName_)
 
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap:
@@ -58,7 +65,9 @@ class EpisodeMap:
       self.unresolved_.append(item)
     elif self.matches_.has_key(item.epNum_):
       utils.out("key already exists: %d" % item.epNum_, 1)
-      self.unresolved_.append(item)
+      tempItem = copy.copy(item)
+      tempItem.epNum_ = UNRESOLVED_KEY
+      self.unresolved_.append(tempItem)
     else:
       self.matches_[item.epNum_] = item
 
@@ -69,5 +78,13 @@ class EpisodeMap:
   
   def __str__(self):
     return "<EpisodeMap: #matches:%d #unresolved:%d>" % \
-             (len(self.matches_), len(self.unresolved_)) 
+             (len(self.matches_), len(self.unresolved_))
+  
+  def __copy__(self):
+    ret = EpisodeMap()
+    for key in self.matches_:
+      ret.matches_[key] = copy.copy(self.matches_[key])
+    for item in self.unresolved_:
+      ret.unresolved_.append(copy.copy(item))
+    return ret
     
