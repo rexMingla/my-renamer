@@ -6,12 +6,9 @@
 # Website:             http://code.google.com/p/dps-x509/
 # Purpose of document: All the generic functions that don't have a more appropriate home
 # --------------------------------------------------------------------------------------------------------------------
-import logging
-import exceptions
-import inspect
-
 import errors
-
+import logging
+import inspect
 
 # --------------------------------------------------------------------------------------------------------------------
 def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
@@ -68,7 +65,7 @@ def verify(test, message):
   @type  test: bool
   @param message: to display on error
   @type  message: string
-  @raise exceptions.AssertionError: if test == False """
+  @raise errors.AssertionError: if test == False """
   if not test:
     text = "assertion failed: %s stack: %s" % (message, stackFunctionName(2))
     out(text)
@@ -81,7 +78,7 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
   @type  test: bool
   @param message: to display on error
   @type  message: string
-  @raise exceptions.AssertionError: if different """
+  @raise errors.AssertionError: if different """
   if not isinstance(obj, class_or_type_or_tuple):
     text = "%s type mismatch: %s is not %s" % (stackFunctionName(2), toString(obj), str(class_or_type_or_tuple))
     out(text)
