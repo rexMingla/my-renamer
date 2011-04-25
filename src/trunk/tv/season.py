@@ -51,7 +51,7 @@ class Season:
     self.resolveForFormat(format)
     
   def updateSource(self, newSource):
-    utils.verifyType(source, episode.EpisodeMap)
+    utils.verifyType(newSource, episode.EpisodeMap)
     self.source_ = newSource
     self.resolveForFormat(self.format_)
       

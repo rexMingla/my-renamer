@@ -5,9 +5,10 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
+import copy
 from PyQt4 import QtCore
 
-from tv import season, moveItem
+from tv import season, moveItem, episode, seasonHelper
 
 import utils
 
@@ -17,6 +18,7 @@ class Columns:
   COL_STATUS   = 2
   NUM_COLS     = 3
 
+RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
   
 class TreeItem(object):
   def __init__(self, rowData, rawData=None, parent=None):
@@ -91,6 +93,7 @@ class TreeItem(object):
       self.raw_.performMove_ = isChecked
     elif self.isSeason():
       self.raw_.performMove_ = isChecked
+      
 
 class TreeModel(QtCore.QAbstractItemModel):
   def __init__(self, parent=None):
@@ -104,6 +107,9 @@ class TreeModel(QtCore.QAbstractItemModel):
   def data(self, index, role):
     if not index.isValid():
       return None
+    if role == RAW_DATA_ROLE:
+      item = index.internalPointer()
+      return (item.raw_, item.isMoveItem())
     
     item = index.internalPointer()
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
@@ -116,8 +122,29 @@ class TreeModel(QtCore.QAbstractItemModel):
   def setData(self, index, value, role):
     if not index.isValid():
       return False
-
-    if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
+    
+    if role == QtCore.Qt.EditRole and index.column() == Columns.COL_NEW_NAME:
+      item = index.internalPointer()
+      utils.verify(item.isMoveItem(), "Not a MoveItem")
+      parentItem = item.parent()
+      parentIndex = index.parent()
+      utils.verify(parentItem.isSeason(), "Not a Season")
+      
+      self.beginRemoveRows(parentIndex, 0, parentItem.childCount() - 1)
+      newSourceMap = copy.copy(parentItem.raw_.source_)
+      intVal, isOk = value.toInt()
+      utils.verify(isOk, "cast value to int")
+      newSourceMap.setKeyForFilename(intVal, item.raw_.oldName_)
+      parentItem.raw_.updateSource(newSourceMap)
+      parentItem.childItems_ = []
+      for mi in parentItem.raw_.moveItems_:
+        parentItem.appendChild(TreeItem((mi.oldName_, mi.newName_, moveItem.MoveItem.typeStr(mi.matchType_)), mi, parentItem))
+      self.endRemoveRows()
+      self.beginInsertRows(parentIndex, 0, parentItem.childCount() - 1)
+      self.endInsertRows()
+            
+      return True
+    elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       item = index.internalPointer()
       item.setCheckState(value)
       self.dataChanged.emit(index, index)
@@ -142,6 +169,10 @@ class TreeModel(QtCore.QAbstractItemModel):
       f |= QtCore.Qt.ItemIsEnabled 
       if index.column() == Columns.COL_OLD_NAME:
         f |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsTristate
+      #elif index.column() == Columns.COL_NEW_NAME and item.isMoveItem() and item.raw_.oldName_:
+      #  f |= QtCore.Qt.ItemIsEditable
+    elif item.isMoveItem() and item.raw_.canEdit_:
+      f |= QtCore.Qt.ItemIsEnabled       
     return f
 
   def headerData(self, section, orientation, role):
