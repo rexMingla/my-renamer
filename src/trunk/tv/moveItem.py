@@ -37,6 +37,7 @@ class MoveItem:
     self.oldName_ = oldName
     self.newName_ = newName
     self.canMove_ = matchType in (MoveItem.READY, MoveItem.DONE) #can execute
+    self.canEdit_ = matchType in (MoveItem.READY, MoveItem.DONE, MoveItem.MISSING_NEW) #can execute
     self.performMove_ = self.canMove_                             #will move
   
   def __eq__(self, other):

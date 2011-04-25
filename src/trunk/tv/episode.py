@@ -9,6 +9,7 @@ import copy
 import os
 
 from app import utils
+import episode
 
 UNRESOLVED_KEY = -1 
 UNRESOLVED_NAME = "" 
@@ -52,7 +53,7 @@ class DestinationEpisode:
     return hash(self.epNum_) + hash(self.epName_)
 
   def __copy__(self):
-    return SourceEpisode(self.epNum_, self.epName_)
+    return DestinationEpisode(self.epNum_, self.epName_)
 
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap:
@@ -87,4 +88,43 @@ class EpisodeMap:
     for item in self.unresolved_:
       ret.unresolved_.append(copy.copy(item))
     return ret
+  
+  def setKeyForFilename(self, newKey, filename):
+    utils.verifyType(newKey, int)
+    utils.verifyType(filename, str)
+    
+    sourceEp = None
+    for key in self.matches_.keys():
+      if self.matches_[key].filename_ == filename:
+        sourceEp = self.matches_[key]
+        break
+    if not sourceEp:
+      for ep in self.unresolved_:
+        if ep.filename_ == filename:
+          sourceEp = ep
+          break
+        
+    if not sourceEp or sourceEp.epNum_ == newKey:
+      return
+
+    oldEpNum = sourceEp.epNum_
+    sourceEp.epNum_ = newKey
+    if oldEpNum == episode.UNRESOLVED_KEY:
+      utils.verify(not newKey == episode.UNRESOLVED_KEY, "old key <> new key")
+      self.unresolved_.remove(sourceEp)
+      if self.matches_.has_key(newKey):
+        oldEp = copy.copy(self.matches_[newKey])
+        oldEp.epNum_ = episode.UNRESOLVED_KEY
+        self.unresolved_.append(oldEp)
+      self.matches_[sourceEp.epNum_] = sourceEp
+    else: #oldEpNum in matches
+      del self.matches_[oldEpNum]
+      if newKey == episode.UNRESOLVED_KEY:
+        self.unresolved_.append(sourceEp)
+      else: #newEp in matches
+        if self.matches_.has_key(newKey):
+          oldEp = copy.copy(self.matches_[newKey])
+          oldEp.epNum_ = episode.UNRESOLVED_KEY          
+          self.unresolved_.append(oldEp)
+        self.matches_[sourceEp.epNum_] = sourceEp
     

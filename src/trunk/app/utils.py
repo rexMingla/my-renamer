@@ -80,7 +80,7 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
   @type  message: string
   @raise errors.AssertionError: if different """
   if not isinstance(obj, class_or_type_or_tuple):
-    text = "%s type mismatch: %s is not %s" % (stackFunctionName(2), toString(obj), str(class_or_type_or_tuple))
+    text = "%s type mismatch: %s is not %s. real type: %s" % (stackFunctionName(2), toString(obj), str(class_or_type_or_tuple), type(obj))
     out(text)
     raise errors.AssertionError(text)
 
