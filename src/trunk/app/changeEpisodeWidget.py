@@ -21,6 +21,8 @@ class ChangeEpisodeWidget(QtGui.QDialog):
     
   def showEvent(self, event):
     utils.verify(self._ui_.episodeComboBox_.count() > 0, "No items in list")
+    self.setMaximumHeight(self.sizeHint().height())
+    self.setMinimumHeight(self.sizeHint().height())
   
   def setData(self, ssn, ep):
     utils.verifyType(ssn, season.Season)
