@@ -5,6 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
+import os
 import re
 
 import tvdb_api
@@ -48,7 +49,29 @@ class Season:
     self.source_ = source
     self.destination_ = destination
     self.performMove_ = True
+    self.inputFolder_ = ""
+    if self.source_:
+      name = ""
+      if self.source_.matches_:
+        name = self.source_.matches_[self.source_.matches_.keys()[0]].filename_
+      elif self.source_.unresolved_:
+        name = self.source_.unresolved_[0].filename_
+      if name:
+        self.format_ = os.path.dirname(name)
     self.resolveForFormat(format)
+    
+  def setInputFolder(self, folder):
+    utils.verifyType(folder, str)
+    self.inputFolder_ = folder
+    
+  def updateDestination(self, seasonName, seasonNum, newDestination):
+    utils.verifyType(seasonName, str)
+    utils.verifyType(seasonNum, int)    
+    utils.verifyType(newDestination, episode.EpisodeMap)
+    self.seasonName_ = seasonName
+    self.seasonNum_ = seasonNum
+    self.destination_ = newDestination
+    self.resolveForFormat(self.format_)
     
   def updateSource(self, newSource):
     utils.verifyType(newSource, episode.EpisodeMap)
