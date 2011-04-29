@@ -47,7 +47,7 @@ class CommandLineParser:
         if opt in ("-?", "-h", "--help"):
           self.showHelp_ = True
         elif opt in ("-c", "--config"):
-          self.config_ = ""
+          self.config_ = arg
         elif opt in ("-u", "--unit-tests"):
           self.runUnitTests_ = True
         elif opt in ("-f", "--folder"):
@@ -65,5 +65,5 @@ class CommandLineParser:
     elif self.showGui_ and not self.config_:
       self.errorMessage_ = "configFile must be supplied"
         
-    self.showHelp_ = self.showHelp_ or self.errorMessage_
+    self.showHelp_ = self.showHelp_ or not not self.errorMessage_
   

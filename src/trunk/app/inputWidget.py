@@ -21,15 +21,18 @@ class InputSettings():
     self.extensions_ = ".avi"        
 
   def toDictionary(self):
-    return {"folder":str(self.folder_),
-            "recursive":str(self.showRecursive_), 
-            "extensions":str(self.extensions_)}
+    return {"folder"        :utils.toString(self.folder_),
+            "showRecursive" :utils.toString(self.showRecursive_), 
+            "extensions"    :utils.toString(self.extensions_)}
 
   def fromDictionary(self, dic):
     utils.verifyType(dic, dict)
-    if dic.has_key("folder") and isinstance(dic["folder"], str):         self.folder_ = dic["folder"]
-    if dic.has_key("recursive") and isinstance(dic["recursive"], str):   self.showRecursive_ = utils.strToBool(dic["recursive"])
-    if dic.has_key("extensions") and isinstance(dic["extensions"], str): self.extensions_ = dic["extensions"]
+    if dic.has_key("folder") and isinstance(dic["folder"], str):         
+      self.folder_ = dic["folder"]
+    if dic.has_key("showRecursive") and isinstance(dic["showRecursive"], str):   
+      self.showRecursive_ = utils.strToBool(dic["showRecursive"])
+    if dic.has_key("extensions") and isinstance(dic["extensions"], str): 
+      self.extensions_ = dic["extensions"]
       
 # --------------------------------------------------------------------------------------------------------------------
 class InputWidget(QtGui.QWidget):
@@ -46,9 +49,9 @@ class InputWidget(QtGui.QWidget):
     self._ui_.loadButton_.clicked.connect(self.exploreSignal_)
     self._onStateChanged()
     
-    self._ui_.folderEdit_.textChanged.connect(self._readbackGUI)
+    self._ui_.folderEdit_.editingFinished.connect(self._readbackGUI)
     self._ui_.isRecursiveCheckBox_.toggled.connect(self._readbackGUI)
-    self._ui_.fileExtensionEdit_.textChanged.connect(self._readbackGUI)
+    self._ui_.fileExtensionEdit_.editingFinished.connect(self._readbackGUI)
     self._isUpdating = False
   
   def _readbackGUI(self):

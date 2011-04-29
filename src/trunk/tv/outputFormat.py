@@ -14,7 +14,7 @@ def leftPad(val):
 # --------------------------------------------------------------------------------------------------------------------
 class InputMap:    
   KEY_SHOW_NAME  = "[show_name]"
-  KEY_SERIES_NUM = "[series_num]"
+  KEY_SERIES_NUM = "[season_num]"
   KEY_EP_NUM     = "[ep_num]"   
   KEY_EP_NAME    = "[ep_name]"  
 
@@ -28,8 +28,8 @@ class InputMap:
                   InputMap.KEY_EP_NUM:     leftPad(epNum),
                   InputMap.KEY_EP_NAME:    epName}
 
-HELP_FORMAT = InputMap("Show Name", "Series Number", "Episode Number", "Episode Name")
-EXAMPLE_FORMAT = InputMap("Entourage", 1, 7, "The Scene")
+HELP_INPUT_MAP    = InputMap("Show Name", "Series Number", "Episode Number", "Episode Name")
+EXAMPLE_INPUT_MAP = InputMap("Entourage", 1, 7, "The Scene")
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:

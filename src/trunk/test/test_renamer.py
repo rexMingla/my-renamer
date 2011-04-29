@@ -252,12 +252,12 @@ class OutputFormatTest(unittest.TestCase):
     self.in_ = outputFormat.InputMap("Entourage", 1, 3, "Talk Show")
     
   def test_normal(self):
-    format = outputFormat.OutputFormat("[show_name] - S[series_num]E[ep_num] - [ep_name]")
+    format = outputFormat.OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name]")
     out = format.outputToString(self.in_)
     self.assertEqual(out, "Entourage - S01E03 - Talk Show")
  
   def test_missing(self):
-    format = outputFormat.OutputFormat("[show_name] - S[series_num]E[ep_num] - [ep_name ]")
+    format = outputFormat.OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name ]")
     out = format.outputToString(self.in_)
     self.assertEqual(out, "Entourage - S01E03 - [ep_name ]")
 
