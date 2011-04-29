@@ -8,21 +8,38 @@
 
 from PyQt4 import QtCore, QtGui, uic
 
+from tv import outputFormat
+
 import serializer
 import utils
+
+USE_SOURCE_DIRECTORY = ""
 
 # --------------------------------------------------------------------------------------------------------------------
 class OutputSettings():
   """"""
   def __init__(self):
-    self.shouldOverwrite_ = False
+    self.outputFileFormat_ = outputFormat.DEFAULT_FORMAT.formatStr_
+    self.outputFolder_     = USE_SOURCE_DIRECTORY
+    self.keepSourceFiles_  = True
+    self.doNotOverwrite_   = True
 
   def toDictionary(self):
-    return {"shouldOverwrite":self.shouldOverwrite_}
+    return {"outputFileFormat":utils.toString(self.outputFileFormat_),
+            "outputFolder"    :utils.toString(self.outputFolder_),
+            "keepSourceFiles" :utils.toString(self.keepSourceFiles_),
+            "doNotOverwrite"  :utils.toString(self.doNotOverwrite_)}
 
   def fromDictionary(self, dic):
     utils.verifyType(dic, dict)
-    if dic.has_key("shouldOverwrite"): self.shouldOverwrite_ = dic["shouldOverwrite"]
+    if dic.has_key("outputFileFormat") and isinstance(dic["outputFileFormat"], str):  
+      self.outputFileFormat_ = dic["outputFileFormat"]
+    if dic.has_key("outputFolder") and isinstance(dic["outputFolder"], str): 
+      self.outputFolder_ = dic["outputFolder"]
+    if dic.has_key("keepSourceFiles") and isinstance(dic["keepSourceFiles"], str): 
+      self.keepSourceFiles_ = utils.strToBool(dic["keepSourceFiles"])
+    if dic.has_key("doNotOverwrite") and isinstance(dic["doNotOverwrite"], str): 
+      self.doNotOverwrite_ = utils.strToBool(dic["doNotOverwrite"])
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputWidget(QtGui.QWidget):
@@ -38,8 +55,56 @@ class OutputWidget(QtGui.QWidget):
     self._ui_.saveButton_.clicked.connect(self.saveSignal_)
     self._onStateChanged()
     
+    self._ui_.specificDirectoryButton_.clicked.connect(self._showFolderSelectionDialog)
+    
+    self._ui_.useSpecificDirectoryRadio_.toggled.connect(self._ui_.specificDirectoryEdit_.setEnabled)
+    self._ui_.useSpecificDirectoryRadio_.toggled.connect(self._ui_.specificDirectoryButton_.setEnabled)
+    
+    self._ui_.formatEdit_.textChanged.connect(self._updatePreviewText)
+    self._updatePreviewText()
+
+    self._ui_.formatEdit_.editingFinished.connect(self._readbackGUI)
+    self._ui_.specificDirectoryEdit_.editingFinished.connect(self._readbackGUI)
+    self._ui_.useSourceDirectoryRadio_.toggled.connect(self._readbackGUI)
+    self._ui_.useSpecificDirectoryRadio_.toggled.connect(self._readbackGUI)
+    self._ui_.keepSourceCheckBox_.toggled.connect(self._readbackGUI)
+    self._ui_.doNotOverwriteCheckBox_.toggled.connect(self._readbackGUI)
+    self._isUpdating = False
+    
+  def _updatePreviewText(self):
+    text = self._ui_.formatEdit_.text()
+    oFormat = outputFormat.OutputFormat(utils.toString(text))
+    formattedText = oFormat.outputToString(outputFormat.EXAMPLE_INPUT_MAP)
+    self._ui_.formatExampleLabel_.setText(formattedText)
+    
+  def _readbackGUI(self):
+    if not self._isUpdating:
+      self.outputSettings_.outputFileFormat_ = self._ui_.formatEdit_.text()
+      outputDir = self._ui_.specificDirectoryEdit_.text()
+      if self._ui_.useSourceDirectoryRadio_.isChecked():
+        outputDir = USE_SOURCE_DIRECTORY
+      self.outputSettings_.outputFolder_ = outputDir
+      self.outputSettings_.keepSourceFiles_ = self._ui_.keepSourceCheckBox_.isChecked()
+      self.outputSettings_.doNotOverwrite_ = self._ui_.doNotOverwriteCheckBox_.isChecked()
+      self.dataItem_.setData(self.outputSettings_.toDictionary())
+    
   def _onStateChanged(self):
+    self._isUpdating  = True
     self.outputSettings_.fromDictionary(self.dataItem_.data_)
-    self._ui_.shouldOverwriteCheckBox_.setChecked(self.outputSettings_.shouldOverwrite_)
+    self._ui_.formatEdit_.setText(self.outputSettings_.outputFileFormat_)
+    if self.outputSettings_.outputFolder_ == USE_SOURCE_DIRECTORY:
+      self._ui_.useSourceDirectoryRadio_.setChecked(True)
+    else:
+      self._ui_.specificDirectoryEdit_.setText(self.outputSettings_.outputFolder_)
+      self._ui_.useSpecificDirectoryRadio_.setChecked(True)
+    self._ui_.keepSourceCheckBox_.setChecked(self.outputSettings_.keepSourceFiles_)
+    self._ui_.doNotOverwriteCheckBox_.setChecked(self.outputSettings_.doNotOverwrite_)
+    self._isUpdating  = False
+      
+  def _showFolderSelectionDialog(self):
+    folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.outputSettings_.outputFolder_)
+    if folder:
+      self.outputSettings_.outputFolder_ = folder
+      self.dataItem_.setData(self.outputSettings_.toDictionary())
   
-  
+
