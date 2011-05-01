@@ -14,13 +14,13 @@ import utils
 
 class Columns:
   COL_OLD_NAME = 0
-  COL_NEW_NAME = 1
-  COL_STATUS   = 2
-  NUM_COLS     = 3
+  COL_NEW_NUM  = 1
+  COL_NEW_NAME = 2
+  COL_STATUS   = 3
+  NUM_COLS     = 4
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
   
-#(mi.oldName_, mi.newName_, moveItem.MoveItem.typeStr(mi.matchType_))
 class TreeItem(object):
   def __init__(self, rawData=None, parent=None):
     self.parent_ = parent
@@ -43,6 +43,8 @@ class TreeItem(object):
     if self.isMoveItem():      
       if column == Columns.COL_OLD_NAME:
         return self.raw_.oldName_
+      elif column == Columns.COL_NEW_NUM:
+        return self.raw_.key_
       elif column == Columns.COL_NEW_NAME:
         return self.raw_.newName_
       elif column == Columns.COL_STATUS:
@@ -207,6 +209,8 @@ class TreeModel(QtCore.QAbstractItemModel):
     if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
       if section == Columns.COL_OLD_NAME:
         return "Existing File"
+      elif section == Columns.COL_NEW_NUM:
+        return "Episode Num"
       elif section == Columns.COL_NEW_NAME:
         return "New Name"
       elif section == Columns.COL_STATUS:
