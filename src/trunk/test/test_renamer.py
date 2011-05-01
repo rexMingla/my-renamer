@@ -114,51 +114,35 @@ class SeriesTest(unittest.TestCase):
 # --------------------------------------------------------------------------------------------------------------------
 class MoveTest(unittest.TestCase):
   def setUp(self):
+    self.readySrc_ = episode.SourceEpisode(1,"01 - Ready.avi")
+    self.missingNewSrc_ = episode.SourceEpisode(3,"Missing New.avi")
+
+    self.readyDest_ = episode.DestinationEpisode(1,"Ready")
+    self.missingOldDest_ = episode.DestinationEpisode(2,"Missing Old.avi")
+    
     source = episode.EpisodeMap()
-    source.matches_ = { 1:episode.SourceEpisode(1,"01 - Done.avi"), \
-                        2:episode.SourceEpisode(2,"Ready To Change.avi"), \
-                        3:episode.SourceEpisode(3,"Missing New.avi")}
-    source.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"Unresolved Old.avi")]
+    source.matches_ = { 1:self.readySrc_, 3:self.missingNewSrc_ }
 
     destination = episode.EpisodeMap()
-    destination.matches_ = {1:episode.DestinationEpisode(1,"Done"), \
-                            2:episode.DestinationEpisode(2,"Ready"), \
-                            4:episode.DestinationEpisode(4,"Missing Old")}
-    #dest *should* never really happen as the tv show should always get resolved
-    destination.unresolved_ = [episode.DestinationEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)] 
+    destination.matches_ = {1:self.readyDest_, 2:self.missingOldDest_ }
     
-    self.season_ = season.Season("Test", 1, source, destination, outputFormat.DEFAULT_FORMAT)
-  
-  def test_done(self):
-    item = moveItem.MoveItem(1, moveItem.MoveItem.DONE, "01 - Done.avi", "01 - Done.avi")
-    exists = item in self.season_.moveItems_
-    self.assertTrue(exists)
- 
+    self.season_ = season.Season("Test", 1, source, destination, "")
+   
   def test_ready(self):
-    item = moveItem.MoveItem(2, moveItem.MoveItem.READY, "Ready To Change.avi", "02 - Ready.avi")
+    item = moveItem.MoveItem(self.readySrc_, self.readyDest_)
     exists = item in self.season_.moveItems_
     self.assertTrue(exists)
   
   def test_missingNew(self):
-    item = moveItem.MoveItem(3, moveItem.MoveItem.MISSING_NEW, "Missing New.avi", episode.UNRESOLVED_NAME)
+    item = moveItem.MoveItem(self.missingNewSrc_, episode.DestinationEpisode.unresolvedDestination())
     exists = item in self.season_.moveItems_
     self.assertTrue(exists)
   
   def test_missingOld(self):
-    item = moveItem.MoveItem(4, moveItem.MoveItem.MISSING_OLD, episode.UNRESOLVED_NAME, "04 - Missing Old.avi")
+    item = moveItem.MoveItem(episode.SourceEpisode.unresolvedSource(), self.missingOldDest_)
     exists = item in self.season_.moveItems_
     self.assertTrue(exists)
-  
-  def test_unresolvedNew(self):
-    item = moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_NEW, episode.UNRESOLVED_NAME, episode.UNRESOLVED_NAME)
-    exists = item in self.season_.moveItems_
-    self.assertTrue(exists)
-  
-  def test_unresolvedOld(self):
-    item = moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_OLD, "Unresolved Old.avi", episode.UNRESOLVED_NAME)
-    exists = item in self.season_.moveItems_
-    self.assertTrue(exists)    
-    
+      
 # --------------------------------------------------------------------------------------------------------------------
 class SwitchFilesTest(unittest.TestCase):  
   def test_switchFileNotExists(self):

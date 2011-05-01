@@ -15,7 +15,7 @@ import outputWidget
 import workBenchWidget
 
 from app import utils
-from tv import fileHelper, seasonHelper, season, extension
+from tv import fileHelper, outputFormat, seasonHelper, season, extension
 
 class SeriesRenamerModule(QtCore.QObject):
   def __init__(self, parent=None):
@@ -62,18 +62,25 @@ class SeriesRenamerModule(QtCore.QObject):
   def _rename(self):
     self._enableControls(False)
     #self.progressBar_.setVisible(True)
-    filenames = []
-
     formatSettings = self.outputWidget_.outputSettings_
-
-    moveItems = self.workBenchWidget_.moveItems()
-    for item in moveItems:
+    filenames = []
+    seasons = self.workBenchWidget_.seasons()
+    utils.verify(seasons, "Must have seasons to have gotten this far")
+    for season in seasons:
       outputFolder = formatSettings.outputFolder_
       if outputFolder == outputWidget.USE_SOURCE_DIRECTORY:
-        outputFolder = fileHelper.FileHelper.dirname(item.oldName_)
-      newName = fileHelper.FileHelper.joinPath(outputFolder, item.newName_)
-      filenames.append((item.oldName_, newName))
-    
+        outputFolder = season.inputFolder_
+      oFormat = outputFormat.OutputFormat(formatSettings.outputFileFormat_)
+      for ep in season.moveItems_:
+        if ep.performMove_:
+          im = outputFormat.InputMap(season.seasonName_, 
+                                     season.seasonNum_, 
+                                     ep.destination_.epNum_, 
+                                     ep.destination_.epName_)
+          outputBaseName = oFormat.outputToString(im, ep.source_.extension_)
+          newName = fileHelper.FileHelper.joinPath(outputFolder, outputBaseName)
+          filenames.append((ep.source_.filename_, newName))
+    utils.verify(filenames, "Must have files to have gotten this far")
     actioner = fileHelper.MoveItemActioner(canOverwrite= not formatSettings.doNotOverwrite_, \
                                            keepSource=formatSettings.keepSourceFiles_)
     actioner.setPercentageCompleteCallback(self._updateProgress)

@@ -34,6 +34,10 @@ class SourceEpisode:
   
   def __copy__(self):
     return SourceEpisode(self.epNum_, self.filename_)
+
+  @staticmethod
+  def unresolvedSource():
+    return SourceEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
   
 # --------------------------------------------------------------------------------------------------------------------
 class DestinationEpisode:
@@ -55,6 +59,10 @@ class DestinationEpisode:
   def __copy__(self):
     return DestinationEpisode(self.epNum_, self.epName_)
 
+  @staticmethod
+  def unresolvedDestination():
+    return DestinationEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
+  
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap:
   def __init__(self):

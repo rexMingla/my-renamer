@@ -9,6 +9,7 @@ from PyQt4 import QtCore, QtGui, uic
 
 from tv import episode, moveItem, outputFormat, season
 
+import copy
 import utils
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -28,16 +29,19 @@ class ChangeEpisodeWidget(QtGui.QDialog):
     utils.verifyType(ssn, season.Season)
     utils.verifyType(ep, moveItem.MoveItem)
     self._ui_.episodeComboBox_.clear()
-    for mi in ssn.moveItems_:
-      if mi.newName_ <> episode.UNRESOLVED_NAME:
-        self._ui_.episodeComboBox_.addItem(mi.newName_, mi.key_)
-    index = self._ui_.episodeComboBox_.findData(ep.key_)
+    moveItems = copy.copy(ssn.moveItems_)
+    moveItems = sorted(moveItems, key=lambda item: item.destination_.epNum_)
+    for mi in moveItems:
+      if mi.destination_.epName_ <> episode.UNRESOLVED_NAME:
+        displayName = "%d: %s" % (mi.destination_.epNum_, mi.destination_.epName_)
+        self._ui_.episodeComboBox_.addItem(displayName, mi.destination_.epNum_)
+    index = self._ui_.episodeComboBox_.findData(ep.source_.epNum_)
     if index <> -1:
       self._ui_.pickFromListRadio_.setChecked(True)
       self._ui_.episodeComboBox_.setCurrentIndex(index)
     else:
       self._ui_.ignoreRadio_.setChecked(True)
-    self._ui_.filenameLabel_.setText(ep.oldName_)
+    self._ui_.filenameLabel_.setText(ep.source_.filename_)
     self._ui_.episodeComboBox_.setEnabled(index <> -1)
     
   def episodeNumber(self):

@@ -17,7 +17,7 @@ from app import utils
 class FileHelper:
   _VALID_FILENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
                                            string.digits, \
-                                           " !#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
+                                           " :!#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
   
   @staticmethod
   def dirname(f):

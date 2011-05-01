@@ -15,7 +15,6 @@ from app import utils
 import episode
 import extension
 import moveItem
-import outputFormat
 import seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -37,28 +36,21 @@ class Season:
   def __str__(self):
     return "season: %s season #: %d status: %s" % (self.seasonName_, self.seasonNum_, Season.resultStr(self.status_))
     
-  def __init__(self, seasonName, seasonNum, source, destination, format=outputFormat.DEFAULT_FORMAT):
+  def __init__(self, seasonName, seasonNum, source, destination, inputFolder):
     utils.verifyType(seasonName, str)
     utils.verifyType(seasonNum, int)
     utils.verifyType(source, episode.EpisodeMap)
     utils.verifyType(destination, episode.EpisodeMap)
-    utils.verifyType(format, outputFormat.OutputFormat)
+    utils.verifyType(inputFolder, str)
     
     self.seasonName_ = seasonName
     self.seasonNum_ = seasonNum
     self.source_ = source
     self.destination_ = destination
     self.performMove_ = True
-    self.inputFolder_ = ""
-    if self.source_:
-      name = ""
-      if self.source_.matches_:
-        name = self.source_.matches_[self.source_.matches_.keys()[0]].filename_
-      elif self.source_.unresolved_:
-        name = self.source_.unresolved_[0].filename_
-      if name:
-        self.format_ = os.path.dirname(name)
-    self.resolveForFormat(format)
+    self.inputFolder_ = inputFolder
+    self._resolveMoveItems()
+    self._resolveStatus() 
     
   def setInputFolder(self, folder):
     utils.verifyType(folder, str)
@@ -71,53 +63,43 @@ class Season:
     self.seasonName_ = seasonName
     self.seasonNum_ = seasonNum
     self.destination_ = newDestination
-    self.resolveForFormat(self.format_)
+    self._resolveMoveItems()
+    self._resolveStatus()    
     
   def updateSource(self, newSource):
     utils.verifyType(newSource, episode.EpisodeMap)
     self.source_ = newSource
-    self.resolveForFormat(self.format_)
-      
-  def resolveForFormat(self, format):
-    utils.verifyType(format, outputFormat.OutputFormat)
-    self.format_ = format
     self._resolveMoveItems()
     self._resolveStatus()    
-    
+          
   def _resolveMoveItems(self):
     self.moveItems_ = []
     for key in self.source_.matches_:
-      state = moveItem.MoveItem.MISSING_NEW
-      destName = ""
+      destEp = None
       sourceEp = self.source_.matches_[key]
       if key in self.destination_.matches_:
         destEp = self.destination_.matches_[key]
         utils.verifyType(destEp, episode.DestinationEpisode)
-        inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
-        destName = self.format_.outputToString(inputMap, sourceEp.extension_)
-        if destName == sourceEp.filename_:
-          state = moveItem.MoveItem.DONE
-        else:
-          state = moveItem.MoveItem.READY          
       else:
-        state = moveItem.MoveItem.MISSING_NEW
-      self.moveItems_.append(moveItem.MoveItem(key, state, sourceEp.filename_, destName))
+        destEp = episode.DestinationEpisode.unresolvedDestination()
+      self.moveItems_.append(moveItem.MoveItem(sourceEp, destEp))
       
     for key in self.destination_.matches_:
       if key not in self.source_.matches_:
+        sourceEp = episode.SourceEpisode.unresolvedSource()
         destEp = self.destination_.matches_[key]
-        inputMap = outputFormat.InputMap(self.seasonName_, self.seasonNum_, destEp.epNum_, destEp.epName_)
-        outname = self.format_.outputToString(inputMap, ".avi")
-        self.moveItems_.append(moveItem.MoveItem(key, moveItem.MoveItem.MISSING_OLD, episode.UNRESOLVED_NAME, outname))
+        self.moveItems_.append(moveItem.MoveItem(sourceEp, destEp))
         
     for item in self.source_.unresolved_:
-      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_OLD, item.filename_, episode.UNRESOLVED_NAME))
+      destEp = episode.DestinationEpisode.unresolvedDestination()
+      self.moveItems_.append(moveItem.MoveItem(item, destEp))
       
     for item in self.destination_.unresolved_:
+      sourceEp = episode.SourceEpisode.unresolvedSource()
       #this should never really happen. TV show should always be resolved
-      self.moveItems_.append(moveItem.MoveItem(episode.UNRESOLVED_KEY, moveItem.MoveItem.UNRESOLVED_NEW, episode.UNRESOLVED_NAME, episode.UNRESOLVED_NAME))
+      self.moveItems_.append(moveItem.MoveItem(sourceEp, item))
     
-    self.moveItems_ = sorted(self.moveItems_, key=lambda item: item.key_)
+    self.moveItems_ = sorted(self.moveItems_, key=lambda item: item.source_.epNum_)
           
   def _resolveStatus(self):
     if not self.destination_.matches_:
