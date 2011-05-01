@@ -60,7 +60,7 @@ class TreeItem(object):
         return moveItem.MoveItem.typeStr(self.raw_.matchType())
     elif self.isSeason() and column == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.ToolTipRole:
-        return "Folder: %s" % fileHelper.FileHelper.basename(self.raw_.inputFolder_)
+        return "Folder: %s" % self.raw_.inputFolder_
       else:        
         if self.raw_.seasonNum_ == episode.UNRESOLVED_KEY:
           return "Season: %s #: <Unknown>" % (self.raw_.seasonName_)

@@ -20,6 +20,16 @@ class FileHelper:
                                            " :!#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
   
   @staticmethod
+  def isFile(f):
+    utils.verifyType(f, str)
+    return os.path.isfile(f)
+
+  @staticmethod
+  def isDir(d):
+    utils.verifyType(d, str)
+    return os.path.isdir(d)
+
+  @staticmethod
   def dirname(f):
     utils.verifyType(f, str)
     return os.path.dirname(f)
@@ -39,7 +49,7 @@ class FileHelper:
   @staticmethod
   def dirExists(d):
     utils.verifyType(d, str)
-    return os.path.exists(d) and os.path.isdir(d)
+    return os.path.exists(d) and FileHelper.isDir(d)
   
   @staticmethod
   def createDir(d):
@@ -66,7 +76,7 @@ class FileHelper:
   @staticmethod
   def fileExists(f):
     utils.verifyType(f, str)
-    return os.path.exists(f) and os.path.isfile(f)
+    return os.path.exists(f) and FileHelper.isFile(f)
  
   @staticmethod
   def isValidFilename(f):
