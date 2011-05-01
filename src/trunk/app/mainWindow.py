@@ -21,13 +21,14 @@ class MainWindow(QtGui.QMainWindow):
     self.ui_ = uic.loadUi("ui/ui_MainWindow.ui", self)
     self.ui_.setCentralWidget(QtGui.QWidget())
     lo = QtGui.QVBoxLayout(self.ui_.centralWidget())
-    lo.setMargin(3)
-    lo.setSpacing(3)
-    
+    lo.setMargin(4)
+    lo.setSpacing(4)
+        
     #widgets
     lo.addWidget(self.seriesModule_.inputWidget_)
     lo.addWidget(self.seriesModule_.workBenchWidget_)
     lo.addWidget(self.seriesModule_.outputWidget_)
+    lo.addWidget(self.seriesModule_.progressBar_)
 
     #serializer
     self.serializer_ = serializer.Serializer("config.p")
@@ -38,5 +39,5 @@ class MainWindow(QtGui.QMainWindow):
   def closeEvent(self, event):
     self.serializer_.saveItems()
     event.accept()
-          
+      
     

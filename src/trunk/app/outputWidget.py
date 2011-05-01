@@ -8,7 +8,7 @@
 
 from PyQt4 import QtCore, QtGui, uic
 
-from tv import outputFormat
+from tv import outputFormat, fileHelper
 
 import serializer
 import utils
@@ -44,7 +44,7 @@ class OutputSettings():
 # --------------------------------------------------------------------------------------------------------------------
 class OutputWidget(QtGui.QWidget):
   """"""
-  saveSignal_ = QtCore.pyqtSignal()
+  renameSignal_ = QtCore.pyqtSignal()
   
   def __init__(self, parent=None):
     super(QtGui.QWidget, self).__init__(parent)
@@ -52,7 +52,8 @@ class OutputWidget(QtGui.QWidget):
     self.outputSettings_ = OutputSettings()
     self.dataItem_ = serializer.DataItem(self.outputSettings_.toDictionary())
     self.dataItem_.onChangedSignal_.connect(self._onStateChanged)
-    self._ui_.saveButton_.clicked.connect(self.saveSignal_)
+    self._ui_.renameButton_.clicked.connect(self.renameSignal_)
+    self._ui_.renameButton_.setEnabled(False)
     self._onStateChanged()
     
     self._ui_.specificDirectoryButton_.clicked.connect(self._showFolderSelectionDialog)
@@ -71,10 +72,14 @@ class OutputWidget(QtGui.QWidget):
     self._ui_.doNotOverwriteCheckBox_.toggled.connect(self._readbackGUI)
     self._isUpdating = False
     
+  def enableControls(self, isEnabled):
+    self._ui_.renameButton_.setEnabled(isEnabled)
+    
   def _updatePreviewText(self):
-    text = self._ui_.formatEdit_.text()
-    oFormat = outputFormat.OutputFormat(utils.toString(text))
+    text = utils.toString(self._ui_.formatEdit_.text())
+    oFormat = outputFormat.OutputFormat(text)
     formattedText = oFormat.outputToString(outputFormat.EXAMPLE_INPUT_MAP)
+    formattedText = fileHelper.FileHelper.sanitizeFilename(formattedText)
     self._ui_.formatExampleLabel_.setText(formattedText)
     
   def _readbackGUI(self):

@@ -53,12 +53,15 @@ class InputWidget(QtGui.QWidget):
     self._ui_.isRecursiveCheckBox_.toggled.connect(self._readbackGUI)
     self._ui_.fileExtensionEdit_.editingFinished.connect(self._readbackGUI)
     self._isUpdating = False
+    
+  def enableControls(self, isEnabled):
+    self._ui_.loadButton_.setEnabled(isEnabled)
   
   def _readbackGUI(self):
     if not self._isUpdating:
-      self.inputSettings_.folder_ = self._ui_.folderEdit_.text()
+      self.inputSettings_.folder_ = utils.toString(self._ui_.folderEdit_.text())
       self.inputSettings_.showRecursive_ = self._ui_.isRecursiveCheckBox_.isChecked()
-      self.inputSettings_.extensions_ = self._ui_.fileExtensionEdit_.text()
+      self.inputSettings_.extensions_ = utils.toString(self._ui_.fileExtensionEdit_.text())
       self.dataItem_.setData(self.inputSettings_.toDictionary())
     
   def _onStateChanged(self):
@@ -72,7 +75,7 @@ class InputWidget(QtGui.QWidget):
   def _showFolderSelectionDialog(self):
     folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.inputSettings_.folder_)
     if folder:
-      self.inputSettings_.folder_ = folder
+      self.inputSettings_.folder_ = utils.toString(folder)
       self.dataItem_.setData(self.inputSettings_.toDictionary())
   
   

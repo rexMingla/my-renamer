@@ -15,7 +15,7 @@ import outputWidget
 import workBenchWidget
 
 from app import utils
-from tv import seasonHelper, season, extension
+from tv import fileHelper, seasonHelper, season, extension
 
 class SeriesRenamerModule(QtCore.QObject):
   def __init__(self, parent=None):
@@ -23,14 +23,21 @@ class SeriesRenamerModule(QtCore.QObject):
     
     #input widget
     self.inputWidget_ = inputWidget.InputWidget()
-    self.inputWidget_.exploreSignal_.connect(self._onExplore)
+    self.inputWidget_.exploreSignal_.connect(self._explore)
     
     #workbench widget
     self.workBenchWidget_ = workBenchWidget.WorkBenchWidget()
     
     #output widget
     self.outputWidget_ = outputWidget.OutputWidget()
-    self.outputWidget_.saveSignal_.connect(self._onSave)
+    self.outputWidget_.renameSignal_.connect(self._rename)
+    self.workBenchWidget_.workBenchChangedSignal_.connect(self.outputWidget_.enableControls)
+    
+    #progress widget
+    self.progressBar_ = QtGui.QProgressBar()
+    self.progressBar_.setMinimum(0)
+    self.progressBar_.setMaximum(100)
+    #self.progressBar_.setVisible(False)
   
   def _getFolders(self, rootFolder, isRecursive):
     dirs = []
@@ -42,10 +49,39 @@ class SeriesRenamerModule(QtCore.QObject):
         dirs.append(root)      
     return dirs 
 
-  def _onExplore(self):
+  def _explore(self):
     seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(self.inputWidget_.inputSettings_.folder_, \
                                                              self.inputWidget_.inputSettings_.showRecursive_)
     self.workBenchWidget_.updateModel(seasons)
     
-  def _onSave(self):
-    pass
+  def _enableControls(self, isEnabled):
+    self.inputWidget_.enableControls(isEnabled)
+    self.workBenchWidget_.setEnabled(isEnabled)
+    self.outputWidget_.enableControls(isEnabled)
+    
+  def _rename(self):
+    self._enableControls(False)
+    #self.progressBar_.setVisible(True)
+    filenames = []
+
+    formatSettings = self.outputWidget_.outputSettings_
+
+    moveItems = self.workBenchWidget_.moveItems()
+    for item in moveItems:
+      outputFolder = formatSettings.outputFolder_
+      if outputFolder == outputWidget.USE_SOURCE_DIRECTORY:
+        outputFolder = fileHelper.FileHelper.dirname(item.oldName_)
+      newName = fileHelper.FileHelper.joinPath(outputFolder, item.newName_)
+      filenames.append((item.oldName_, newName))
+    
+    actioner = fileHelper.MoveItemActioner(canOverwrite= not formatSettings.doNotOverwrite_, \
+                                           keepSource=formatSettings.keepSourceFiles_)
+    actioner.setPercentageCompleteCallback(self._updateProgress)
+    actioner.performActions(filenames)
+  
+  def _updateProgress(self, percentageComplete):
+    utils.verifyType(percentageComplete, int)
+    self.progressBar_.setValue(percentageComplete)
+    if percentageComplete == 100:
+      self._enableControls(True)
+      #self.progressBar_.setVisible(False)

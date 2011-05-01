@@ -103,6 +103,8 @@ class TreeItem(object):
       
 
 class TreeModel(QtCore.QAbstractItemModel):
+  workBenchChangedSignal_ = QtCore.pyqtSignal(bool)
+  
   def __init__(self, parent=None):
     super(TreeModel, self).__init__(parent)
     self._seasons_ = []
@@ -129,6 +131,7 @@ class TreeModel(QtCore.QAbstractItemModel):
   def setData(self, index, value, role):
     if not index.isValid():
       return False
+    ret = False
     
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
@@ -149,7 +152,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         self.endRemoveRows()
         self.beginInsertRows(parentIndex, 0, parentItem.childCount() - 1)
         self.endInsertRows()              
-        return True
+        ret = True
       else:
         self.beginRemoveRows(index, 0, item.childCount() - 1)
         params = value.toList()
@@ -166,8 +169,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         self.beginInsertRows(index, 0, item.childCount() - 1)
         self.endInsertRows()
         self.dataChanged.emit(index.sibling(index.row(), 0), index.sibling(index.row(), Columns.NUM_COLS-1))
-        return True
-        
+        ret = True
     elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       item = index.internalPointer()
       item.setCheckState(value)
@@ -179,8 +181,10 @@ class TreeModel(QtCore.QAbstractItemModel):
           self.dataChanged.emit(changedIndex, changedIndex)
       elif item.isMoveItem():
         self.dataChanged.emit(index.parent(), index.parent())
-      return True
-    return False
+      ret = True
+    if ret:   
+      self._emitWorkBenchChanged()
+    return ret
 
   def flags(self, index):
     if not index.isValid():
@@ -262,5 +266,29 @@ class TreeModel(QtCore.QAbstractItemModel):
         self.rootItem_.appendChild(ti)
         for mi in season.moveItems_:
           ti.appendChild(TreeItem(mi, ti))   
-      self.endInsertRows()
-     
+      self.endInsertRows()      
+    self._emitWorkBenchChanged()
+    
+  def moveItems(self):
+    items = []
+    for i in range(self.rootItem_.childCount()):
+      seasonItem = self.rootItem_.child(i)
+      utils.verify(seasonItem.isSeason(), "Not a Season")
+      data = seasonItem.raw_
+      for item in data.moveItems_:
+        if item.performMove_:
+          items.append(item)
+    return items
+  
+  def _hasMoveableItems(self):
+    ret = False
+    for i in range(self.rootItem_.childCount()):
+      seasonItem = self.rootItem_.child(i)
+      if not seasonItem.checkState() == QtCore.Qt.Unchecked:
+        ret = True
+        break
+    return ret
+
+  def _emitWorkBenchChanged(self):
+    hasItems = self._hasMoveableItems()
+    self.workBenchChangedSignal_.emit(hasItems)

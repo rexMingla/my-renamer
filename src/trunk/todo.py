@@ -12,3 +12,4 @@
 #    2011-04-29                  Move/copy file functionality
 #    2011-04-29                  Convert config to json (maybe rework save/load objs)
 #    2011-04-29                  Figure out cause of: "QObject::startTimer: QTimer can only be used with threads started with QThread"
+#    2011-05-01                  Enable/disable buttons

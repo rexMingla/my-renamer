@@ -157,6 +157,7 @@ class SeasonHelper:
         sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
         destMap = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
         s = season.Season(seasonName, seriesNum, sourceMap, destMap)
+        s.inputFolder_ = d
         seasons.append(s)
     return seasons
 
