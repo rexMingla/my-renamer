@@ -6,43 +6,53 @@
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
 from app import utils
+from tv import episode
 
 # -----------------------------------------------------------------------------------
 class MoveItem:
   READY          = 1
-  DONE           = 2
-  MISSING_NEW    = 3
-  MISSING_OLD    = 4
-  UNRESOLVED_NEW = 5
-  UNRESOLVED_OLD = 6
-  UNKNOWN        = 7
+  MISSING_NEW    = 2
+  MISSING_OLD    = 3
+  UNKNOWN        = 4
   
   @staticmethod
   def typeStr(t):
     if t == MoveItem.READY:            return "READY"
-    elif t == MoveItem.DONE:           return "DONE"
     elif t == MoveItem.MISSING_NEW:    return "MISSING NEW"
     elif t == MoveItem.MISSING_OLD:    return "MISSING OLD"
-    elif t == MoveItem.UNRESOLVED_NEW: return "UNRESOLVED NEW"
-    elif t == MoveItem.UNRESOLVED_OLD: return "UNRESOLVED OLD"
     else:                              assert(False); return "UNKNOWN"      
-
-  def __init__(self, key, matchType, oldName, newName):
-    utils.verifyType(key, int)
-    utils.verifyType(matchType, int)
-    utils.verifyType(oldName, str)
-    utils.verifyType(newName, str)
-    self.key_ = key
-    self.matchType_ = matchType
-    self.oldName_ = oldName
-    self.newName_ = newName
-    self.canMove_ = matchType in (MoveItem.READY, MoveItem.DONE) #can execute
-    self.canEdit_ = matchType in (MoveItem.READY, MoveItem.DONE, MoveItem.UNRESOLVED_OLD, MoveItem.MISSING_NEW) #can edit
+  
+  def __init__(self, source, destination):
+    utils.verifyType(source, episode.SourceEpisode)
+    utils.verify(source, episode.SourceEpisode)
+    utils.verify(destination, episode.DestinationEpisode)
+    self.source_ = source
+    self.destination_ = destination
+    mt = self.matchType()
+    self.canMove_ = mt == MoveItem.READY #can execute
+    self.canEdit_ = mt in (MoveItem.READY, MoveItem.MISSING_NEW) #can edit
     self.performMove_ = self.canMove_                             #will move
   
+  def matchType(self):
+    ret = None
+    if self.destination_.epNum_ == episode.UNRESOLVED_KEY:
+      ret = MoveItem.MISSING_NEW
+    elif self.source_.epNum_ == episode.UNRESOLVED_KEY:
+      ret = MoveItem.MISSING_OLD
+    else:
+      utils.verify(self.source_.epNum_ == self.destination_.epNum_, "Keys must be the same")
+      ret = MoveItem.READY
+    return ret
+  
+  def __copy__(self):
+    return MoveItem(copy.copy(self.source_, copy(self.destination_)))
+    
   def __eq__(self, other):
-    return self.key_ == other.key_ and self.matchType_ == other.matchType_ and \
-           self.oldName_ == other.oldName_ and self.newName_ == other.newName_
+    return self.source_ == other.source_ and self.destination_ == other.destination_
     
   def __str__(self):
-    return "[%d] %s: %s -> %s" % (self.key_, MoveItem.typeStr(self.matchType_), self.oldName_, self.newName_)
+    return "[%d:%d] %s: %s -> %s" % (self.source_.epNum_, \
+                                     self.destination_.epNum_, \
+                                     MoveItem.typeStr(self.matchType()), \
+                                     self.source_.filename_, \
+                                     self.destination_.epName_)

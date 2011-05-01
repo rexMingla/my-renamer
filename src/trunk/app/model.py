@@ -8,7 +8,7 @@
 import copy
 from PyQt4 import QtCore
 
-from tv import season, moveItem, episode, seasonHelper
+from tv import fileHelper, season, moveItem, episode, seasonHelper
 
 import utils
 
@@ -39,19 +39,33 @@ class TreeItem(object):
   def columnCount(self):
     return len(self.rowData_)
 
-  def data(self, column):
-    if self.isMoveItem():      
+  def data(self, column, role=QtCore.Qt.DisplayRole):
+    if role <> QtCore.Qt.DisplayRole and role <> QtCore.Qt.ToolTipRole:
+      return None
+    
+    if self.isMoveItem():
       if column == Columns.COL_OLD_NAME:
-        return self.raw_.oldName_
+        if role == QtCore.Qt.ToolTipRole:
+          return self.raw_.source_.filename_
+        else:
+          return fileHelper.FileHelper.basename(self.raw_.source_.filename_)
       elif column == Columns.COL_NEW_NUM:
-        return self.raw_.key_
+        if self.raw_.destination_.epNum_ == episode.UNRESOLVED_KEY:
+          return None
+        else:
+          return self.raw_.destination_.epNum_
       elif column == Columns.COL_NEW_NAME:
-        return self.raw_.newName_
+        return self.raw_.destination_.epName_
       elif column == Columns.COL_STATUS:
-        return moveItem.MoveItem.typeStr(self.raw_.matchType_)
-    elif self.isSeason():
-      if column == Columns.COL_OLD_NAME:
-        return "Season: %s #: %d" % (self.raw_.seasonName_, self.raw_.seasonNum_)
+        return moveItem.MoveItem.typeStr(self.raw_.matchType())
+    elif self.isSeason() and column == Columns.COL_OLD_NAME:
+      if role == QtCore.Qt.ToolTipRole:
+        return "Folder: %s" % fileHelper.FileHelper.basename(self.raw_.inputFolder_)
+      else:        
+        if self.raw_.seasonNum_ == episode.UNRESOLVED_KEY:
+          return "Season: %s #: <Unknown>" % (self.raw_.seasonName_)
+        else:
+          return "Season: %s #: %d" % (self.raw_.seasonName_, self.raw_.seasonNum_)
     return None
     
   def parent(self):
@@ -88,10 +102,10 @@ class TreeItem(object):
             uncheckCount += 1
           else:
             checkCount += 1
-      if checkCount and not uncheckCount:
-        cs = QtCore.Qt.Checked
-      elif not checkCount and uncheckCount:
+      if not checkCount:
         cs = QtCore.Qt.Unchecked
+      elif checkCount and not uncheckCount:
+        cs = QtCore.Qt.Checked
       else:
         cs = QtCore.Qt.PartiallyChecked
     return cs
@@ -125,10 +139,8 @@ class TreeModel(QtCore.QAbstractItemModel):
     item = index.internalPointer()
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       return item.checkState()
-    elif role == QtCore.Qt.DisplayRole:
-      return item.data(index.column())
     else:
-      return None
+      return item.data(index.column(), role)
     
   def setData(self, index, value, role):
     if not index.isValid():
@@ -146,7 +158,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         newSourceMap = copy.copy(parentItem.raw_.source_)
         intVal, isOk = value.toInt()
         utils.verify(isOk, "cast value to int")
-        newSourceMap.setKeyForFilename(intVal, item.raw_.oldName_)
+        newSourceMap.setKeyForFilename(intVal, item.raw_.source_.filename_)
         parentItem.raw_.updateSource(newSourceMap)
         parentItem.childItems_ = []
         for mi in parentItem.raw_.moveItems_:
@@ -273,22 +285,21 @@ class TreeModel(QtCore.QAbstractItemModel):
       self.endInsertRows()      
     self._emitWorkBenchChanged()
     
-  def moveItems(self):
-    items = []
+  def seasons(self):
+    seasons = []
     for i in range(self.rootItem_.childCount()):
       seasonItem = self.rootItem_.child(i)
       utils.verify(seasonItem.isSeason(), "Not a Season")
-      data = seasonItem.raw_
-      for item in data.moveItems_:
-        if item.performMove_:
-          items.append(item)
-    return items
+      raw = seasonItem.raw_
+      if seasonItem.checkState() <> QtCore.Qt.Unchecked:
+        seasons.append(raw)
+    return seasons
   
   def _hasMoveableItems(self):
     ret = False
     for i in range(self.rootItem_.childCount()):
       seasonItem = self.rootItem_.child(i)
-      if not seasonItem.checkState() == QtCore.Qt.Unchecked:
+      if seasonItem.checkState() <> QtCore.Qt.Unchecked:
         ret = True
         break
     return ret

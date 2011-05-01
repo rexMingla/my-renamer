@@ -80,9 +80,9 @@ class WorkBenchWidget(QtGui.QWidget):
     self._ui_.editEpisodeButton_.setEnabled(False)
     self._ui_.editSeasonButton_.setEnabled(False)
     
-  def moveItems(self):
-    items = self._model_.moveItems()
-    return items
+  def seasons(self):
+    seasons = self._model_.seasons()
+    return seasons
     
   def _onChangeEpisodeFinished(self):
     newKey = self._changeEpisodeWidget_.episodeNumber()

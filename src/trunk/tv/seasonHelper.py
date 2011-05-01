@@ -10,7 +10,9 @@ import os
 import re
 
 from tvdb_api import tvdb_api
+
 from app import utils
+from tv import fileHelper
 
 import episode
 import extension
@@ -152,11 +154,14 @@ class SeasonHelper:
     dirs = SeasonHelper.getFolders(rootFolder, isRecursive)
     for d in dirs:
       seasonName, seriesNum = SeasonHelper.seasonFromFolderName(d)
-      files = extension.FileExtensions.filterFiles(os.listdir(d))
+      tempFiles = extension.FileExtensions.filterFiles(os.listdir(d))
+      files = []
+      for f in tempFiles:
+        files.append(fileHelper.FileHelper.joinPath(d, f))
       if not seasonName == episode.UNRESOLVED_NAME or len(files):
         sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
         destMap = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
-        s = season.Season(seasonName, seriesNum, sourceMap, destMap)
+        s = season.Season(seasonName, seriesNum, sourceMap, destMap, d)
         s.inputFolder_ = d
         seasons.append(s)
     return seasons
