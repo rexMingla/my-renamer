@@ -50,9 +50,14 @@ class SeriesRenamerModule(QtCore.QObject):
     return dirs 
 
   def _explore(self):
+    self.inputWidget_.enableControls(False)
+    ext = extension.FileExtensions([])
+    ext.setExtensionsFromString(self.inputWidget_.inputSettings_.extensions_)
     seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(self.inputWidget_.inputSettings_.folder_, \
-                                                             self.inputWidget_.inputSettings_.showRecursive_)
+                                                             self.inputWidget_.inputSettings_.showRecursive_, \
+                                                             ext)
     self.workBenchWidget_.updateModel(seasons)
+    self.inputWidget_.enableControls(True)
     
   def _enableControls(self, isEnabled):
     self.inputWidget_.enableControls(isEnabled)

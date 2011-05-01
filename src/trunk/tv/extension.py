@@ -10,58 +10,61 @@ import re
 from app import utils
 
 class FileExtensions:
-  _extensions_ = [".avi", ".mov"]
-  _ALL_FILES = ".*"
+  ALL_FILES = ".*"
+  
+  def __init__(self, extensions):
+    utils.verifyType(extensions, list)
+    self.setExtensionsFromList(extensions)
   
   @staticmethod
   def delimiter():
     return " "
 
-  @staticmethod
-  def setExtensionsFromString(s):
-    app.utils.verifyType(s, str)
-    setExtensionsFromList(s.split(delimiter()))
+  def setExtensionsFromString(self, s):
+    utils.verifyType(s, str)
+    self.setExtensionsFromList(s.split(FileExtensions.delimiter()))
 
-  @staticmethod
-  def setExtensionsFromList(l):
+  def setExtensionsFromList(self, l):
     utils.verifyType(l, list)
-    isAll = False
+    isAll = not l
     for item in l:
       if item in ["*", "*.*", ".*"]:
         isAll = True
         break
     if isAll:
-      FileExtensions._extensions_ = [FileExtensions._ALL_FILES]
+      self._extensions_ = [FileExtensions.ALL_FILES] #make a copy
     else:
-      FileExtensions._extensions_ = l
+      self._extensions_ = l
   
-  @staticmethod
-  def extensionString():
-    return delimiter().join(_extensions_)
+  def extensionString(self):
+    return FileExtensions.delimiter().join(self._extensions_)
   
-  @staticmethod
-  def escapedFileTypeString():
+  def escapedFileTypeString(self):
     ret = ""
-    if FileExtensions._extensions_ == [FileExtensions._ALL_FILES]:
+    if self == ALL_FILE_EXTENSIONS:
       ret = "(?:\\..*)"
     else:
       temp = []
-      for item in FileExtensions._extensions_:
+      for item in self._extensions_:
         temp.append(re.escape(item))
         ret = "(?:%s)" % "|".join(temp)
     return ret
   
-  @staticmethod
-  def filterFiles(files):
+  def filterFiles(self, files):
     utils.verifyType(files, list)
     ret = []
-    if FileExtensions._extensions_ == FileExtensions._ALL_FILES:
+    if self == ALL_FILE_EXTENSIONS:
       ret = files
     else:
       for f in files:
-        for ext in FileExtensions._extensions_:
+        for ext in self._extensions_:
           if f.endswith(ext):
             ret.append(f)
             break
     return ret
   
+  def __eq__(self, other):
+    return utils.listCompare(self._extensions_, other._extensions_)
+
+ALL_FILE_EXTENSIONS      = FileExtensions([FileExtensions.ALL_FILES])
+DEFAULT_VIDEO_EXTENSIONS = FileExtensions([".avi", ".mov"])

@@ -223,12 +223,12 @@ def test_switchUnresolvedKeyForUnresolvedKey(self):
 # --------------------------------------------------------------------------------------------------------------------
 class ExtensionTest(unittest.TestCase):
   def test_basic(self):
-    extension.FileExtensions.setExtensionsFromList([".mov",".avi"])
-    self.assertEqual(extension.FileExtensions.escapedFileTypeString(), "(?:\\.mov|\\.avi)")
+    ext = extension.FileExtensions([".mov",".avi"])
+    self.assertEqual(ext.escapedFileTypeString(), "(?:\\.mov|\\.avi)")
     
   def test_all(self):
-    extension.FileExtensions.setExtensionsFromList([".mov",".*"])
-    self.assertEqual(extension.FileExtensions.escapedFileTypeString(), "(?:\\..*)")
+    ext = extension.FileExtensions([".mov",".*"])
+    self.assertEqual(ext.escapedFileTypeString(), "(?:\\..*)")
 
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormatTest(unittest.TestCase):

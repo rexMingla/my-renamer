@@ -14,16 +14,12 @@ from tvdb_api import tvdb_api
 from app import utils
 from tv import fileHelper
 
-import episode
 import extension
+import episode
 import outputFormat
 import season
 
 class SeasonHelper:
-  @staticmethod
-  def _escapedFileExtensions():
-    return extension.FileExtensions.escapedFileTypeString()
-
   @staticmethod
   def seasonFromFolderName(folder):
     utils.verifyType(folder, str)
@@ -45,7 +41,7 @@ class SeasonHelper:
   @staticmethod
   def episodeNumFromLastNumInFilename(ep):
     utils.verifyType(ep, str)
-    episodeRegex = "^.*?(\\d\\d?)\\D*%s$" % SeasonHelper._escapedFileExtensions()
+    episodeRegex = "^.*?(\\d\\d?)\\D*\\.[^\\.]*$"
     m = re.match(episodeRegex, ep, flags=re.IGNORECASE)
     epNum = episode.UNRESOLVED_KEY
     if m:
@@ -59,7 +55,7 @@ class SeasonHelper:
   def episodeMapFromIndex(index, files):
     utils.verifyType(files, list)
     epMap = episode.EpisodeMap()
-    epRegex = "^.{%d}(\\d\\d?).*%s$" % (index, SeasonHelper._escapedFileExtensions())
+    epRegex = "^.{%d}(\\d\\d?).*\\.[^\\.]*$" % index
     for f in files:
       epNum = episode.UNRESOLVED_KEY
       if index >= 0:
@@ -119,17 +115,16 @@ class SeasonHelper:
     
   @staticmethod
   def getSourceEpisodeMapFromFilenames(files):
-    eps = episode.EpisodeMap()
     utils.verifyType(files, list)    
     
     tmpMaps = []
-    tmpMaps.append(SeasonHelper.episodeMapFromFilenames(files))
+    eps = SeasonHelper.episodeMapFromFilenames(files)    
     index = SeasonHelper.getMatchIndex(files)
     if index != -1:
-      tmpMaps.append(SeasonHelper.episodeMapFromIndex(index, files))
-      for m in tmpMaps:
-        if len(m.matches_) > len(eps.matches_):
-          eps = m    
+      tmpMaps.append(SeasonHelper.episodeMapFromIndex(index, files)) #may be other technicques for filename
+    for m in tmpMaps:
+      if len(m.matches_) > len(eps.matches_):
+        eps = m    
     return eps 
   
   @staticmethod
@@ -147,17 +142,20 @@ class SeasonHelper:
     return folders 
 
   @staticmethod
-  def getSeasonsForFolders(rootFolder, isRecursive):
+  def getSeasonsForFolders(rootFolder, isRecursive, extensionFilter):
     utils.verifyType(rootFolder, str)
     utils.verifyType(isRecursive, bool)
+    utils.verifyType(extensionFilter, extension.FileExtensions)
     seasons = []
     dirs = SeasonHelper.getFolders(rootFolder, isRecursive)
     for d in dirs:
       seasonName, seriesNum = SeasonHelper.seasonFromFolderName(d)
-      tempFiles = extension.FileExtensions.filterFiles(os.listdir(d))
+      tempFiles = extensionFilter.filterFiles(os.listdir(d))
       files = []
       for f in tempFiles:
-        files.append(fileHelper.FileHelper.joinPath(d, f))
+        filename = fileHelper.FileHelper.joinPath(d, f) 
+        if fileHelper.FileHelper.isFile(filename):
+          files.append(filename)
       if not seasonName == episode.UNRESOLVED_NAME or len(files):
         sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
         destMap = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)

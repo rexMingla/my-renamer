@@ -19,7 +19,7 @@ import unittest
 
 from app import commandLine, utils
 from test import test_app, test_renamer
-from tv import seasonHelper, outputFormat
+from tv import seasonHelper, outputFormat, extension
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runGUI(cl):  
@@ -33,7 +33,7 @@ def _runGUI(cl):
 # --------------------------------------------------------------------------------------------------------------------
 def _runNonGUI(cl):   
   utils.verify(cl.folder_, "Folder is not empty")
-  seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(cl.folder_, cl.isRecursive_)
+  seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(cl.folder_, cl.isRecursive_, extension.DEFAULT_VIDEO_EXTENSIONS)
   for season in seasons:
     utils.out(season)
     for item in season.moveItems_:
