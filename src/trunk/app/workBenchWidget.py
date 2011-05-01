@@ -16,8 +16,7 @@ import model
 
 # --------------------------------------------------------------------------------------------------------------------
 class WorkBenchWidget(QtGui.QWidget):
-  """"""
-  refreshSignal_ = QtCore.pyqtSignal(str, int)
+  workBenchChangedSignal_ = QtCore.pyqtSignal(bool)
   
   def __init__(self, parent=None):
     super(QtGui.QWidget, self).__init__(parent)
@@ -44,6 +43,8 @@ class WorkBenchWidget(QtGui.QWidget):
     
     self._ui_.editEpisodeButton_.setEnabled(False)
     self._ui_.editSeasonButton_.setEnabled(False)
+    
+    self._model_.workBenchChangedSignal_.connect(self.workBenchChangedSignal_)
     
   def _onClicked(self, modelIndex):
     self._currentIndex_ = modelIndex
@@ -79,6 +80,10 @@ class WorkBenchWidget(QtGui.QWidget):
     self._ui_.editEpisodeButton_.setEnabled(False)
     self._ui_.editSeasonButton_.setEnabled(False)
     
+  def moveItems(self):
+    items = self._model_.moveItems()
+    return items
+    
   def _onChangeEpisodeFinished(self):
     newKey = self._changeEpisodeWidget_.episodeNumber()
     self._model_.setData(self._currentIndex_, QtCore.QVariant(newKey), model.RAW_DATA_ROLE)
@@ -91,3 +96,4 @@ class WorkBenchWidget(QtGui.QWidget):
     #newKey = self._changeEpisodeWidget_.episodeNumber()
     #index = self._currentIndex_.sibling(self._currentIndex_.row(), model.Columns.COL_NEW_NAME)
     #self._model_.setData(index, QtCore.QVariant(newKey), QtCore.Qt.EditRole)
+    
