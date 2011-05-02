@@ -9,6 +9,7 @@ from PyQt4 import QtGui, QtCore, uic
 
 import serializer
 import seriesRenamerModule
+import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
@@ -19,17 +20,13 @@ class MainWindow(QtGui.QMainWindow):
     self.seriesModule_ = seriesRenamerModule.SeriesRenamerModule(self)
 
     self._ui_ = uic.loadUi("ui/ui_MainWindow.ui", self)
-    self._ui_.setCentralWidget(QtGui.QWidget())
-    lo = QtGui.QVBoxLayout(self._ui_.centralWidget())
-    lo.setMargin(4)
-    lo.setSpacing(4)
+    self._ui_.setCentralWidget(self.seriesModule_.workBenchWidget_)
         
     #widgets
-    lo.addWidget(self.seriesModule_.inputWidget_)
-    lo.addWidget(self.seriesModule_.workBenchWidget_)
-    lo.addWidget(self.seriesModule_.outputWidget_)
-    lo.addWidget(self.seriesModule_.progressBar_)
-    lo.addWidget(self.seriesModule_.logWidget_)
+    dockAreas = QtCore.Qt.AllDockWidgetAreas
+    self._addDockWidget(self.seriesModule_.inputWidget_, dockAreas, QtCore.Qt.TopDockWidgetArea, "Input Settings")
+    self._addDockWidget(self.seriesModule_.outputWidget_, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
+    self._addDockWidget(self.seriesModule_.logWidget_, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
     self.mainWindowDataItem_ = serializer.DataItem({"geometry":self._ui_.saveGeometry(), \
                                                     "windowState":self._ui_.saveState()})
@@ -42,6 +39,18 @@ class MainWindow(QtGui.QMainWindow):
     self.serializer_.addItem("output", self.seriesModule_.outputWidget_.dataItem_)
     self.serializer_.addItem("mainWindow", self.mainWindowDataItem_)
     self.serializer_.loadItems()
+    
+  def _addDockWidget(self, widget, areas, defaultArea, name):
+    utils.verifyType(widget, QtGui.QWidget)
+    utils.verifyType(areas, int)
+    utils.verifyType(defaultArea, int)
+    utils.verifyType(name, str)
+    dock = QtGui.QDockWidget(name, widget.parent())
+    dock.setObjectName(name)
+    dock.setWidget(widget)
+    dock.setAllowedAreas(areas)
+    self._ui_.addDockWidget(defaultArea, dock)
+    return dock
     
   def _mainWindowSettingsChanged(self):
     if not self.isShuttingDown_:

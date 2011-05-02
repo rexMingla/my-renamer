@@ -36,11 +36,7 @@ class SeriesRenamerModule(QtCore.QObject):
     self.workBenchWidget_.workBenchChangedSignal_.connect(self.outputWidget_.enableControls)
     
     #progress widget
-    self.progressBar_ = QtGui.QProgressBar(parent)
-    self.progressBar_.setMinimum(0)
-    self.progressBar_.setMaximum(100)
-    self.progressBar_.setTextVisible(False)
-    #self.progressBar_.setVisible(False)
+    self.progressBar_ = self.outputWidget_.progressBar_
     
     #log widget
     self.logWidget_ = logWidget.LogWidget(parent)
@@ -72,7 +68,7 @@ class SeriesRenamerModule(QtCore.QObject):
     
   def _rename(self):
     self._enableControls(False)
-    #self.progressBar_.setVisible(True)
+    self.progressBar_.setVisible(True)
     formatSettings = self.outputWidget_.outputSettings_
     filenames = []
     seasons = self.workBenchWidget_.seasons()
@@ -98,6 +94,7 @@ class SeriesRenamerModule(QtCore.QObject):
     actioner.setMessageCallback(self._addMessage)
     results = actioner.performActions(filenames)
     self.sendSummaryMessages(results)
+    self.progressBar_.setVisible(False)
     self._enableControls(True)
 
   def sendSummaryMessages(self, results):
