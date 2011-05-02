@@ -79,7 +79,7 @@ class OutputWidget(QtGui.QWidget):
     text = utils.toString(self._ui_.formatEdit_.text())
     oFormat = outputFormat.OutputFormat(text)
     formattedText = oFormat.outputToString(outputFormat.EXAMPLE_INPUT_MAP)
-    formattedText = fileHelper.FileHelper.sanitizeFilename(formattedText)
+    formattedText = "Example: %s" % fileHelper.FileHelper.sanitizeFilename(formattedText)
     self._ui_.formatExampleLabel_.setText(formattedText)
     
   def _readbackGUI(self):
