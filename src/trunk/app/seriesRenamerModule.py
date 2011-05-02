@@ -37,6 +37,7 @@ class SeriesRenamerModule(QtCore.QObject):
     
     #progress widget
     self.progressBar_ = self.outputWidget_.progressBar_
+    self.progressBar_.setVisible(True)
     
     #log widget
     self.logWidget_ = logWidget.LogWidget(parent)
@@ -102,6 +103,7 @@ class SeriesRenamerModule(QtCore.QObject):
     for key in results.keys():
       text = "*** %s: %d" % (fileHelper.MoveItemActioner.resultStr(key), results[key])
       self._addMessage(text)
+      self.outputWidget_.lastMessageLabel_.setText("Last log message: %s" % text)
     
   def _updateProgress(self, percentageComplete):
     utils.verifyType(percentageComplete, int)
