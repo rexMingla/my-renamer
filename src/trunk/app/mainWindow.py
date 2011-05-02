@@ -29,6 +29,7 @@ class MainWindow(QtGui.QMainWindow):
     lo.addWidget(self.seriesModule_.workBenchWidget_)
     lo.addWidget(self.seriesModule_.outputWidget_)
     lo.addWidget(self.seriesModule_.progressBar_)
+    lo.addWidget(self.seriesModule_.logWidget_)
 
     #serializer
     self.serializer_ = serializer.Serializer("config.p")

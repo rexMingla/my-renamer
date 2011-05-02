@@ -11,8 +11,10 @@ import re
 from PyQt4 import QtCore, QtGui
 
 import inputWidget
+import logWidget
 import outputWidget
 import workBenchWidget
+import logging
 
 from app import utils
 from tv import fileHelper, outputFormat, seasonHelper, season, extension
@@ -22,22 +24,26 @@ class SeriesRenamerModule(QtCore.QObject):
     super(QtCore.QObject, self).__init__(parent)
     
     #input widget
-    self.inputWidget_ = inputWidget.InputWidget()
+    self.inputWidget_ = inputWidget.InputWidget(parent)
     self.inputWidget_.exploreSignal_.connect(self._explore)
     
     #workbench widget
-    self.workBenchWidget_ = workBenchWidget.WorkBenchWidget()
+    self.workBenchWidget_ = workBenchWidget.WorkBenchWidget(parent)
     
     #output widget
-    self.outputWidget_ = outputWidget.OutputWidget()
+    self.outputWidget_ = outputWidget.OutputWidget(parent)
     self.outputWidget_.renameSignal_.connect(self._rename)
     self.workBenchWidget_.workBenchChangedSignal_.connect(self.outputWidget_.enableControls)
     
     #progress widget
-    self.progressBar_ = QtGui.QProgressBar()
+    self.progressBar_ = QtGui.QProgressBar(parent)
     self.progressBar_.setMinimum(0)
     self.progressBar_.setMaximum(100)
+    self.progressBar_.setTextVisible(False)
     #self.progressBar_.setVisible(False)
+    
+    #log widget
+    self.logWidget_ = logWidget.LogWidget(parent)
   
   def _getFolders(self, rootFolder, isRecursive):
     dirs = []
@@ -50,14 +56,14 @@ class SeriesRenamerModule(QtCore.QObject):
     return dirs 
 
   def _explore(self):
-    self.inputWidget_.enableControls(False)
+    self._enableControls(False)
     ext = extension.FileExtensions([])
     ext.setExtensionsFromString(self.inputWidget_.inputSettings_.extensions_)
     seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(self.inputWidget_.inputSettings_.folder_, \
                                                              self.inputWidget_.inputSettings_.showRecursive_, \
                                                              ext)
     self.workBenchWidget_.updateModel(seasons)
-    self.inputWidget_.enableControls(True)
+    self._enableControls(True)
     
   def _enableControls(self, isEnabled):
     self.inputWidget_.enableControls(isEnabled)
@@ -89,11 +95,22 @@ class SeriesRenamerModule(QtCore.QObject):
     actioner = fileHelper.MoveItemActioner(canOverwrite= not formatSettings.doNotOverwrite_, \
                                            keepSource=formatSettings.keepSourceFiles_)
     actioner.setPercentageCompleteCallback(self._updateProgress)
-    actioner.performActions(filenames)
-  
+    actioner.setMessageCallback(self._addMessage)
+    results = actioner.performActions(filenames)
+    self.sendSummaryMessages(results)
+    self._enableControls(True)
+
+  def sendSummaryMessages(self, results):
+    utils.verifyType(results, dict)
+    for key in results.keys():
+      text = "*** %s: %d" % (fileHelper.MoveItemActioner.resultStr(key), results[key])
+      self._addMessage(text)
+    
   def _updateProgress(self, percentageComplete):
     utils.verifyType(percentageComplete, int)
     self.progressBar_.setValue(percentageComplete)
-    if percentageComplete == 100:
-      self._enableControls(True)
-      #self.progressBar_.setVisible(False)
+
+  def _addMessage(self, msg):
+    utils.verifyType(msg, str)
+    self.logWidget_.appendMessage(msg)
+  

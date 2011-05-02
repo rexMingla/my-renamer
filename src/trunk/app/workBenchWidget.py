@@ -23,13 +23,13 @@ class WorkBenchWidget(QtGui.QWidget):
     self._ui_ = uic.loadUi("ui/ui_WorkBench.ui", self)
     #self._ui_.refreshButton_.clicked.connect(self._refresh)
     
-    self._changeEpisodeWidget_ = changeEpisodeWidget.ChangeEpisodeWidget()
+    self._changeEpisodeWidget_ = changeEpisodeWidget.ChangeEpisodeWidget(self)
     self._changeEpisodeWidget_.accepted.connect(self._onChangeEpisodeFinished)
     
-    self._changeSeasonWidget_ = changeSeasonWidget.ChangeSeasonWidget()
+    self._changeSeasonWidget_ = changeSeasonWidget.ChangeSeasonWidget(self)
     self._changeSeasonWidget_.accepted.connect(self._onChangeSeasonFinished)
     
-    self._model_ = model.TreeModel()
+    self._model_ = model.TreeModel(self)
     self._ui_.view_.setModel(self._model_)
     self._ui_.view_.header().setResizeMode(model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Stretch)
     self._ui_.view_.header().setResizeMode(model.Columns.COL_OLD_NAME, QtGui.QHeaderView.Stretch)
