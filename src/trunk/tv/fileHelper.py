@@ -142,6 +142,16 @@ class MoveItemActioner:
   FAILED                = -2
   INVALID_FILENAME      = -1
   SUCCESS               = 1
+  
+  @staticmethod
+  def resultStr(res):
+    if res == MoveItemActioner.SOURCE_DOES_NOT_EXIST: return "Source does not exist"
+    elif res == MoveItemActioner.COULD_NOT_OVERWRITE: return "Could not overwrite"
+    elif res == MoveItemActioner.FAILED:              return "Failed"
+    elif res == MoveItemActioner.INVALID_FILENAME:    return "Destination file invalid"
+    else:
+      utils.verify(res == MoveItemActioner.SUCCESS, "Invalid res")
+      return "Success"
 
   def __init__(self, canOverwrite, keepSource):
     utils.verifyType(canOverwrite, bool)
@@ -149,10 +159,18 @@ class MoveItemActioner:
     self.canOverwrite_ = canOverwrite
     self.keepSource_ = keepSource
     self.percentageCompleteCallback_ = None
+    self.messageCallback_ = None
   
   def setPercentageCompleteCallback(self, cb):
     self.percentageCompleteCallback_ = cb
     
+  def setMessageCallback(self, cb):
+    self.messageCallback_ = cb
+    
+  def sendMessage(self, msg):
+    if self.messageCallback_:
+      self.messageCallback_(message)
+
   def performActions(self, items):
     results = {}
     utils.verifyType(items, list)
@@ -166,6 +184,9 @@ class MoveItemActioner:
       if self.percentageCompleteCallback_:
         prog = 100 * (i + 1) / count
         self.percentageCompleteCallback_(prog)
+      if self.messageCallback_:
+        resText = "%s: %s -> %s" % (MoveItemActioner.resultStr(res), item[0], item[1]) 
+        self.messageCallback_(resText)
     return results
   
   def performAction(self, source, dest):
