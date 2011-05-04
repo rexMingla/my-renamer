@@ -55,15 +55,7 @@ class OutputWidget(QtGui.QWidget):
     self._ui_.renameButton_.clicked.connect(self.renameSignal_)
     self._ui_.renameButton_.setEnabled(False)
     self._onStateChanged()
-    
-    self.progressBar_ = QtGui.QProgressBar(parent)
-    self.progressBar_.setMinimum(0)
-    self.progressBar_.setMaximum(100)
-    self.progressBar_.setTextVisible(False)
-    progressLayout = QtGui.QVBoxLayout(self._ui_.progressFrame_)
-    progressLayout.setMargin(0)
-    progressLayout.addWidget(self.progressBar_)    
-    
+        
     self._ui_.specificDirectoryButton_.clicked.connect(self._showFolderSelectionDialog)
     
     self._ui_.useSpecificDirectoryRadio_.toggled.connect(self._ui_.specificDirectoryEdit_.setEnabled)
@@ -119,5 +111,8 @@ class OutputWidget(QtGui.QWidget):
     if folder:
       self.outputSettings_.outputFolder_ = folder
       self.dataItem_.setData(self.outputSettings_.toDictionary())
+  
+  def setResults(self, status):
+    pass
   
 

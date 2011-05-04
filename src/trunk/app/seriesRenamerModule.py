@@ -34,10 +34,11 @@ class SeriesRenamerModule(QtCore.QObject):
     self.outputWidget_ = outputWidget.OutputWidget(parent)
     self.outputWidget_.renameSignal_.connect(self._rename)
     self.workBenchWidget_.workBenchChangedSignal_.connect(self.outputWidget_.enableControls)
+    self.inputProgressBar_ = self.inputWidget_.progressBar_
+    self.inputProgressBar_.setVisible(False)
     
     #progress widget
-    self.progressBar_ = self.outputWidget_.progressBar_
-    self.progressBar_.setVisible(True)
+    self.outputProgressBar_ = self.outputWidget_.progressBar_
     
     #log widget
     self.logWidget_ = logWidget.LogWidget(parent)
@@ -54,12 +55,14 @@ class SeriesRenamerModule(QtCore.QObject):
 
   def _explore(self):
     self._enableControls(False)
+    self.inputProgressBar_.setVisible(True)
     ext = extension.FileExtensions([])
     ext.setExtensionsFromString(self.inputWidget_.inputSettings_.extensions_)
     seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(self.inputWidget_.inputSettings_.folder_, \
                                                              self.inputWidget_.inputSettings_.showRecursive_, \
                                                              ext)
     self.workBenchWidget_.updateModel(seasons)
+    self.inputProgressBar_.setVisible(False)
     self._enableControls(True)
     
   def _enableControls(self, isEnabled):
@@ -69,7 +72,7 @@ class SeriesRenamerModule(QtCore.QObject):
     
   def _rename(self):
     self._enableControls(False)
-    self.progressBar_.setVisible(True)
+    self.logWidget_.onRename()
     formatSettings = self.outputWidget_.outputSettings_
     filenames = []
     seasons = self.workBenchWidget_.seasons()
@@ -95,7 +98,6 @@ class SeriesRenamerModule(QtCore.QObject):
     actioner.setMessageCallback(self._addMessage)
     results = actioner.performActions(filenames)
     self.sendSummaryMessages(results)
-    self.progressBar_.setVisible(False)
     self._enableControls(True)
 
   def sendSummaryMessages(self, results):
@@ -103,11 +105,10 @@ class SeriesRenamerModule(QtCore.QObject):
     for key in results.keys():
       text = "*** %s: %d" % (fileHelper.MoveItemActioner.resultStr(key), results[key])
       self._addMessage(text)
-      self.outputWidget_.lastMessageLabel_.setText("Last log message: %s" % text)
     
   def _updateProgress(self, percentageComplete):
     utils.verifyType(percentageComplete, int)
-    self.progressBar_.setValue(percentageComplete)
+    self.outputProgressBar_.setValue(percentageComplete)
 
   def _addMessage(self, msg):
     utils.verifyType(msg, str)
