@@ -10,10 +10,12 @@ hasQt = False
 
 try:
   from PyQt4 import QtGui, QtCore
-  from app import mainWindow
   hasQt = True
 except ImportError:  
   pass
+
+if hasQt:
+  from app import mainWindow
 
 import unittest
 

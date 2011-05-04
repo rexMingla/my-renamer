@@ -7,9 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui, uic
 
-#from tv import episode, moveItem, outputFormat, season
-
-import utils
+from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class ChangeSeasonWidget(QtGui.QDialog):

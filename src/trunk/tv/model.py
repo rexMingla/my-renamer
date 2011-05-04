@@ -8,10 +8,14 @@
 import copy
 from PyQt4 import QtCore
 
-from tv import fileHelper, season, moveItem, episode, seasonHelper
+from common import utils
+import episode
+import fileHelper
+import moveItem
+import season
+import seasonHelper
 
-import utils
-
+# --------------------------------------------------------------------------------------------------------------------
 class Columns:
   COL_OLD_NAME = 0
   COL_NEW_NUM  = 1
@@ -21,6 +25,7 @@ class Columns:
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
   
+# --------------------------------------------------------------------------------------------------------------------
 class TreeItem(object):
   def __init__(self, rawData=None, parent=None):
     self.parent_ = parent
@@ -117,7 +122,7 @@ class TreeItem(object):
     elif self.isSeason():
       self.raw_.performMove_ = isChecked
       
-
+# --------------------------------------------------------------------------------------------------------------------
 class TreeModel(QtCore.QAbstractItemModel):
   workBenchChangedSignal_ = QtCore.pyqtSignal(bool)
   

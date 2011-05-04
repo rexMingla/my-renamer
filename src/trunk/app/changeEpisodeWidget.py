@@ -5,12 +5,11 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
+import copy
 from PyQt4 import QtCore, QtGui, uic
 
+from common import utils
 from tv import episode, moveItem, outputFormat, season
-
-import copy
-import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class ChangeEpisodeWidget(QtGui.QDialog):

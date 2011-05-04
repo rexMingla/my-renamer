@@ -8,10 +8,11 @@
 import sys 
 import os
 sys.path.insert(0, os.path.abspath(__file__+"/../../"))
-import unittest
 import copy
+import unittest
 
-from tv import extension, outputFormat, seasonHelper, episode, season, moveItem
+from common import extension
+from tv import episode, moveItem, outputFormat, season, seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
@@ -134,12 +135,12 @@ class MoveTest(unittest.TestCase):
     self.assertTrue(exists)
   
   def test_missingNew(self):
-    item = moveItem.MoveItem(self.missingNewSrc_, episode.DestinationEpisode.unresolvedDestination())
+    item = moveItem.MoveItem(self.missingNewSrc_, episode.DestinationEpisode.createUnresolvedDestination())
     exists = item in self.season_.moveItems_
     self.assertTrue(exists)
   
   def test_missingOld(self):
-    item = moveItem.MoveItem(episode.SourceEpisode.unresolvedSource(), self.missingOldDest_)
+    item = moveItem.MoveItem(episode.SourceEpisode.createUnresolvedSource(), self.missingOldDest_)
     exists = item in self.season_.moveItems_
     self.assertTrue(exists)
       
@@ -246,5 +247,5 @@ class OutputFormatTest(unittest.TestCase):
     self.assertEqual(out, "Entourage - S01E03 - [ep_name ]")
 
 # --------------------------------------------------------------------------------------------------------------------
-if __name__ == '__main__':    
+if __name__ == '__main__':
   unittest.main()

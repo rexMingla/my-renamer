@@ -23,6 +23,10 @@ class SourceEpisode:
     self.filename_ = filename
     (dummy, self.extension_) = os.path.splitext(filename)
     
+  @staticmethod
+  def createUnresolvedSource():
+    return SourceEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
+
   def __str__(self):
     return "<SourceEpisode: #:%d name:%s>" % (self.epNum_, self.filename_)   
     
@@ -34,10 +38,6 @@ class SourceEpisode:
   
   def __copy__(self):
     return SourceEpisode(self.epNum_, self.filename_)
-
-  @staticmethod
-  def unresolvedSource():
-    return SourceEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
   
 # --------------------------------------------------------------------------------------------------------------------
 class DestinationEpisode:
@@ -47,6 +47,10 @@ class DestinationEpisode:
     self.epNum_ = epNum
     self.epName_ = epName
     
+  @staticmethod
+  def createUnresolvedDestination():
+    return DestinationEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
+
   def __str__(self):
     return "<DestinationEpisode: #:%d name:%s>" % (self.epNum_, self.epName_)   
 
@@ -58,10 +62,6 @@ class DestinationEpisode:
 
   def __copy__(self):
     return DestinationEpisode(self.epNum_, self.epName_)
-
-  @staticmethod
-  def unresolvedDestination():
-    return DestinationEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
   
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap:
@@ -79,23 +79,6 @@ class EpisodeMap:
       self.unresolved_.append(tempItem)
     else:
       self.matches_[item.epNum_] = item
-
-  def __eq__(self, other):
-    #TODO:
-    utils.verifyType(other, EpisodeMap)
-    return utils.listCompare(self.unresolved_, other.unresolved_) and utils.dictCompare(self.matches_, other.matches_)
-  
-  def __str__(self):
-    return "<EpisodeMap: #matches:%d #unresolved:%d>" % \
-             (len(self.matches_), len(self.unresolved_))
-  
-  def __copy__(self):
-    ret = EpisodeMap()
-    for key in self.matches_:
-      ret.matches_[key] = copy.copy(self.matches_[key])
-    for item in self.unresolved_:
-      ret.unresolved_.append(copy.copy(item))
-    return ret
   
   def setKeyForFilename(self, newKey, filename):
     utils.verifyType(newKey, int)
@@ -135,4 +118,19 @@ class EpisodeMap:
           oldEp.epNum_ = episode.UNRESOLVED_KEY          
           self.unresolved_.append(oldEp)
         self.matches_[sourceEp.epNum_] = sourceEp
-    
+
+  def __eq__(self, other):
+    utils.verifyType(other, EpisodeMap)
+    return utils.listCompare(self.unresolved_, other.unresolved_) and utils.dictCompare(self.matches_, other.matches_)
+  
+  def __str__(self):
+    return "<EpisodeMap: #matches:%d #unresolved:%d>" % (len(self.matches_), len(self.unresolved_))
+  
+  def __copy__(self):
+    ret = EpisodeMap()
+    for key in self.matches_:
+      ret.matches_[key] = copy.copy(self.matches_[key])
+    for item in self.unresolved_:
+      ret.unresolved_.append(copy.copy(item))
+    return ret
+      
