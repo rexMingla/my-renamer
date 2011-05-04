@@ -7,7 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui, uic
 
-from common import serializer, utils
+from common import logModel, serializer, utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogSettings():
@@ -40,20 +40,24 @@ class LogWidget(QtGui.QWidget):
     self.dataItem_.onChangedSignal_.connect(self._onStateChanged)
     self._onStateChanged()
     
+    self._model_ = logModel.LogModel(self)
+    self._ui_.logView_.setModel(self._model_)
+    self._ui_.logView_.horizontalHeader().setResizeMode(logModel.LogColumns.COL_LEVEL, QtGui.QHeaderView.ResizeToContents)
+    self._ui_.logView_.horizontalHeader().setResizeMode(logModel.LogColumns.COL_MESSAGE, QtGui.QHeaderView.Stretch)
+    self._ui_.logView_.horizontalHeader().setStretchLastSection(True)
+    
     self._isUpdating = False
     
   def onRename(self):
     if self.logSettings_.autoClear_:
       self._clearLog()
     
-  def appendMessage(self, message):
-    utils.verifyType(message, str)
-    text = self._ui_.logText_.toPlainText()
-    text += message + "\n"
-    self._ui_.logText_.setText(text)
+  def appendMessage(self, item):
+    utils.verifyType(item, logModel.LogItem)
+    self._model_.addItem(item)
     
   def _clearLog(self):
-    self._ui_.logText_.clear()
+    self._ui_._model_.clearItems()
     
   def _onStateChanged(self):
     self._isUpdating = False

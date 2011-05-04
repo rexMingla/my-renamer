@@ -6,11 +6,12 @@
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
 import glob
+import logging
 import os
 import re
 from PyQt4 import QtCore, QtGui
 
-from common import extension, fileHelper, utils
+from common import extension, fileHelper, logModel, utils
 from tv import outputFormat, season, seasonHelper
 
 import inputWidget
@@ -105,13 +106,13 @@ class SeriesRenamerModule(QtCore.QObject):
     utils.verifyType(results, dict)
     for key in results.keys():
       text = "*** %s: %d" % (fileHelper.MoveItemActioner.resultStr(key), results[key])
-      self._addMessage(text)
+      self._addMessage(logModel.LogItem(logModel.LogLevel.CRITICAL, text))
     
   def _updateProgress(self, percentageComplete):
     utils.verifyType(percentageComplete, int)
     self.outputProgressBar_.setValue(percentageComplete)
 
   def _addMessage(self, msg):
-    utils.verifyType(msg, str)
+    utils.verifyType(msg, logModel.LogItem)
     self.logWidget_.appendMessage(msg)
   

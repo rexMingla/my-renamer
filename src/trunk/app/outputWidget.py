@@ -81,11 +81,11 @@ class OutputWidget(QtGui.QWidget):
     
   def _readbackGUI(self):
     if not self._isUpdating:
-      self.outputSettings_.outputFileFormat_ = self._ui_.formatEdit_.text()
+      self.outputSettings_.outputFileFormat_ = utils.toString(self._ui_.formatEdit_.text())
       outputDir = self._ui_.specificDirectoryEdit_.text()
       if self._ui_.useSourceDirectoryRadio_.isChecked():
         outputDir = USE_SOURCE_DIRECTORY
-      self.outputSettings_.outputFolder_ = outputDir
+      self.outputSettings_.outputFolder_ = utils.toString(outputDir)
       self.outputSettings_.keepSourceFiles_ = self._ui_.keepSourceCheckBox_.isChecked()
       self.outputSettings_.doNotOverwrite_ = self._ui_.doNotOverwriteCheckBox_.isChecked()
       self.dataItem_.setData(self.outputSettings_.toDictionary())
