@@ -6,9 +6,10 @@
 # Website:             http://code.google.com/p/dps-x509/
 # Purpose of document: All the generic functions that don't have a more appropriate home
 # --------------------------------------------------------------------------------------------------------------------
-import errors
 import logging
 import inspect
+
+import errors
 
 # --------------------------------------------------------------------------------------------------------------------
 def stackFunctionName(index = 2): #1 is calling, 2 parent etc.

@@ -8,10 +8,7 @@
 import os
 import re
 
-import tvdb_api
-
-from app import utils
-
+from common import utils
 import episode
 import extension
 import moveItem
@@ -81,21 +78,21 @@ class Season:
         destEp = self.destination_.matches_[key]
         utils.verifyType(destEp, episode.DestinationEpisode)
       else:
-        destEp = episode.DestinationEpisode.unresolvedDestination()
+        destEp = episode.DestinationEpisode.createUnresolvedDestination()
       self.moveItems_.append(moveItem.MoveItem(sourceEp, destEp))
       
     for key in self.destination_.matches_:
       if key not in self.source_.matches_:
-        sourceEp = episode.SourceEpisode.unresolvedSource()
+        sourceEp = episode.SourceEpisode.createUnresolvedSource()
         destEp = self.destination_.matches_[key]
         self.moveItems_.append(moveItem.MoveItem(sourceEp, destEp))
         
     for item in self.source_.unresolved_:
-      destEp = episode.DestinationEpisode.unresolvedDestination()
+      destEp = episode.DestinationEpisode.createUnresolvedDestination()
       self.moveItems_.append(moveItem.MoveItem(item, destEp))
       
     for item in self.destination_.unresolved_:
-      sourceEp = episode.SourceEpisode.unresolvedSource()
+      sourceEp = episode.SourceEpisode.createUnresolvedSource()
       #this should never really happen. TV show should always be resolved
       self.moveItems_.append(moveItem.MoveItem(sourceEp, item))
     

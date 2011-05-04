@@ -5,13 +5,10 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-
 from PyQt4 import QtCore, QtGui, uic
 
-from tv import outputFormat, fileHelper
-
-import serializer
-import utils
+from common import fileHelper, serializer, utils
+from tv import outputFormat
 
 USE_SOURCE_DIRECTORY = ""
 
@@ -110,9 +107,5 @@ class OutputWidget(QtGui.QWidget):
     folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.outputSettings_.outputFolder_)
     if folder:
       self.outputSettings_.outputFolder_ = folder
-      self.dataItem_.setData(self.outputSettings_.toDictionary())
-  
-  def setResults(self, status):
-    pass
-  
+      self.dataItem_.setData(self.outputSettings_.toDictionary())  
 

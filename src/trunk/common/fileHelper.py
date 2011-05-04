@@ -11,7 +11,7 @@ import shutil
 import string
 import unicodedata
 
-from app import utils
+import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class FileHelper:

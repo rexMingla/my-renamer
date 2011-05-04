@@ -9,8 +9,7 @@ import os
 
 from PyQt4 import QtCore, QtGui, uic
 
-import serializer
-import utils
+from common import serializer, utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class InputSettings():

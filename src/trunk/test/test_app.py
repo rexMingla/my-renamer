@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import unittest
 
-from app import errors, serializer
+from common import errors, serializer
 
 # --------------------------------------------------------------------------------------------------------------------
 class DataItemTest(unittest.TestCase):

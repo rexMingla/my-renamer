@@ -9,10 +9,10 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import unittest
-#import copy
 
-from tv import moveItem, fileHelper
 from app import outputWidget, utils
+from common import fileHelper
+from tv import moveItem
 
 # --------------------------------------------------------------------------------------------------------------------
 def createTestFile(name):
@@ -238,5 +238,5 @@ class CopyItemTest(unittest.TestCase):
     self.assertEqual(res, fileHelper.MoveItemActioner.SOURCE_DOES_NOT_EXIST)
     
 # --------------------------------------------------------------------------------------------------------------------
-if __name__ == '__main__':    
+if __name__ == '__main__': 
   unittest.main()

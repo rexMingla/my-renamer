@@ -7,9 +7,9 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtGui, QtCore, uic
 
-import serializer
+from common import serializer, utils
+
 import seriesRenamerModule
-import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
@@ -41,6 +41,14 @@ class MainWindow(QtGui.QMainWindow):
     self.serializer_.addItem("mainWindow", self.mainWindowDataItem_)
     self.serializer_.loadItems()
     
+  def closeEvent(self, event):
+    self.isShuttingDown_ = True
+    self.mainWindowDataItem_.setData({"geometry":self._ui_.saveGeometry(), \
+                                      "windowState":self._ui_.saveState()})
+    self.serializer_.saveItems()
+    event.accept()
+
+    
   def _addDockWidget(self, widget, areas, defaultArea, name):
     utils.verifyType(widget, QtGui.QWidget)
     utils.verifyType(areas, int)
@@ -58,13 +66,5 @@ class MainWindow(QtGui.QMainWindow):
       geo = self.mainWindowDataItem_.data_["geometry"]
       state = self.mainWindowDataItem_.data_["windowState"]
       self._ui_.restoreGeometry(geo)
-      self._ui_.restoreState(state)
-    
-  def closeEvent(self, event):
-    self.isShuttingDown_ = True
-    self.mainWindowDataItem_.setData({"geometry":self._ui_.saveGeometry(), \
-                                      "windowState":self._ui_.saveState()})
-    self.serializer_.saveItems()
-    event.accept()
-      
+      self._ui_.restoreState(state)      
     

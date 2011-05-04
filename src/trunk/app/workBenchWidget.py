@@ -7,12 +7,11 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui, uic
 
-#import delegate
+from common import serializer, utils
+from tv import model
+
 import changeEpisodeWidget
 import changeSeasonWidget
-import serializer
-import utils
-import model
 
 # --------------------------------------------------------------------------------------------------------------------
 class WorkBenchWidget(QtGui.QWidget):
@@ -21,7 +20,6 @@ class WorkBenchWidget(QtGui.QWidget):
   def __init__(self, parent=None):
     super(QtGui.QWidget, self).__init__(parent)
     self._ui_ = uic.loadUi("ui/ui_WorkBench.ui", self)
-    #self._ui_.refreshButton_.clicked.connect(self._refresh)
     
     self._changeEpisodeWidget_ = changeEpisodeWidget.ChangeEpisodeWidget(self)
     self._changeEpisodeWidget_.accepted.connect(self._onChangeEpisodeFinished)
@@ -45,6 +43,16 @@ class WorkBenchWidget(QtGui.QWidget):
     self._ui_.editSeasonButton_.setEnabled(False)
     
     self._model_.workBenchChangedSignal_.connect(self.workBenchChangedSignal_)
+    
+  def updateModel(self, seasons):
+    self._model_.setSeasons(seasons)
+    self._ui_.view_.expandAll()
+    self._ui_.editEpisodeButton_.setEnabled(False)
+    self._ui_.editSeasonButton_.setEnabled(False)
+    
+  def seasons(self):
+    seasons = self._model_.seasons()
+    return seasons
     
   def _onClicked(self, modelIndex):
     self._currentIndex_ = modelIndex
@@ -73,17 +81,7 @@ class WorkBenchWidget(QtGui.QWidget):
       utils.verify(not isMoveItem, "Must be move item")
       self._changeEpisodeWidget_.setData(seasonData, moveItemData)
       self._changeEpisodeWidget_.show()
-  
-  def updateModel(self, seasons):
-    self._model_.setSeasons(seasons)
-    self._ui_.view_.expandAll()
-    self._ui_.editEpisodeButton_.setEnabled(False)
-    self._ui_.editSeasonButton_.setEnabled(False)
-    
-  def seasons(self):
-    seasons = self._model_.seasons()
-    return seasons
-    
+      
   def _onChangeEpisodeFinished(self):
     newKey = self._changeEpisodeWidget_.episodeNumber()
     self._model_.setData(self._currentIndex_, QtCore.QVariant(newKey), model.RAW_DATA_ROLE)
@@ -93,7 +91,4 @@ class WorkBenchWidget(QtGui.QWidget):
     seasonNum = self._changeSeasonWidget_.seasonNumber()
     var = QtCore.QVariant.fromList([QtCore.QVariant(seasonName), QtCore.QVariant(seasonNum)])
     self._model_.setData(self._currentIndex_, var, model.RAW_DATA_ROLE)
-    #newKey = self._changeEpisodeWidget_.episodeNumber()
-    #index = self._currentIndex_.sibling(self._currentIndex_.row(), model.Columns.COL_NEW_NAME)
-    #self._model_.setData(index, QtCore.QVariant(newKey), QtCore.Qt.EditRole)
     

@@ -10,15 +10,16 @@ import os
 import re
 from PyQt4 import QtCore, QtGui
 
+from common import extension, fileHelper, utils
+from tv import outputFormat, season, seasonHelper
+
 import inputWidget
+import logging
 import logWidget
 import outputWidget
 import workBenchWidget
-import logging
 
-from app import utils
-from tv import fileHelper, outputFormat, seasonHelper, season, extension
-
+# --------------------------------------------------------------------------------------------------------------------
 class SeriesRenamerModule(QtCore.QObject):
   def __init__(self, parent=None):
     super(QtCore.QObject, self).__init__(parent)
@@ -97,10 +98,10 @@ class SeriesRenamerModule(QtCore.QObject):
     actioner.setPercentageCompleteCallback(self._updateProgress)
     actioner.setMessageCallback(self._addMessage)
     results = actioner.performActions(filenames)
-    self.sendSummaryMessages(results)
+    self._sendSummaryMessages(results)
     self._enableControls(True)
 
-  def sendSummaryMessages(self, results):
+  def _sendSummaryMessages(self, results):
     utils.verifyType(results, dict)
     for key in results.keys():
       text = "*** %s: %d" % (fileHelper.MoveItemActioner.resultStr(key), results[key])

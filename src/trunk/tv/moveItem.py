@@ -5,8 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-from app import utils
-from tv import episode
+from common import utils
+import episode
 
 # -----------------------------------------------------------------------------------
 class MoveItem:

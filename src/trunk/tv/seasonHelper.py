@@ -11,11 +11,9 @@ import re
 
 from tvdb_api import tvdb_api
 
-from app import utils
-from tv import fileHelper
-
-import extension
+from common import extension, utils
 import episode
+import fileHelper
 import outputFormat
 import season
 
