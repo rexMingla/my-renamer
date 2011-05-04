@@ -37,6 +37,7 @@ class MainWindow(QtGui.QMainWindow):
     self.serializer_ = serializer.Serializer("config.p")
     self.serializer_.addItem("input", self.seriesModule_.inputWidget_.dataItem_)
     self.serializer_.addItem("output", self.seriesModule_.outputWidget_.dataItem_)
+    self.serializer_.addItem("log", self.seriesModule_.logWidget_.dataItem_)
     self.serializer_.addItem("mainWindow", self.mainWindowDataItem_)
     self.serializer_.loadItems()
     

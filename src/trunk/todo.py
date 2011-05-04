@@ -16,5 +16,6 @@
 #    2011-05-02  2011-05-02      Save window layout
 #    2011-05-02  2011-05-02      Use dock widgets
 #    2011-05-02                  Improve logging
+#    2011-05-04                  Restructure libs
 
 
