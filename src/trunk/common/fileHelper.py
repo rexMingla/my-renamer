@@ -11,6 +11,7 @@ import shutil
 import string
 import unicodedata
 
+import logModel
 import utils
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -185,8 +186,11 @@ class MoveItemActioner:
         prog = 100 * (i + 1) / count
         self.percentageCompleteCallback_(prog)
       if self.messageCallback_:
-        resText = "%s: %s -> %s" % (MoveItemActioner.resultStr(res), item[0], item[1]) 
-        self.messageCallback_(resText)
+        longText = "%s: %s -> %s" % (MoveItemActioner.resultStr(res), item[0], item[1]) 
+        shortText = "%s: %s -> %s" % (MoveItemActioner.resultStr(res), \
+                                     FileHelper.basename(item[0]),
+                                     FileHelper.basename(item[1])) 
+        self.messageCallback_(logModel.LogItem(logModel.LogLevel.CRITICAL, shortText, longText))
     return results
   
   def performAction(self, source, dest):

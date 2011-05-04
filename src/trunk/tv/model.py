@@ -143,7 +143,9 @@ class TreeModel(QtCore.QAbstractItemModel):
     
     item = index.internalPointer()
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
-      return item.checkState()
+      if item.canCheck():
+        return item.checkState()
+      return None
     else:
       return item.data(index.column(), role)
     
