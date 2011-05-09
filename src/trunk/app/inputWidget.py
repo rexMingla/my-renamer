@@ -51,6 +51,12 @@ class InputWidget(QtGui.QWidget):
     self._ui_.folderEdit_.editingFinished.connect(self._readbackGUI)
     self._ui_.isRecursiveCheckBox_.toggled.connect(self._readbackGUI)
     self._ui_.fileExtensionEdit_.editingFinished.connect(self._readbackGUI)
+    
+    completer = QtGui.QCompleter(self)
+    fsModel = QtGui.QFileSystemModel(completer)
+    fsModel.setRootPath("")
+    completer.setModel(fsModel)
+    self._ui_.folderEdit_.setCompleter(completer)
     self._isUpdating = False
     
   def enableControls(self, isEnabled):

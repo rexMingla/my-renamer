@@ -40,7 +40,7 @@ def setLogMode(mode):
 def setLogLevel(level):
   """ level 0 -> always print. level 2 -> print only in debug """
   global LOG_LEVEL
-  LOG_LEVEL = 0
+  LOG_LEVEL = level
 
 def out(s, level = 0):
   """ print to standard out and log """
