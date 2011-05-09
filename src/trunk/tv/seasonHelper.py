@@ -40,7 +40,7 @@ class SeasonHelper:
   def episodeNumFromLastNumInFilename(ep):
     utils.verifyType(ep, str)
     episodeRegex = "^.*?(\\d\\d?)\\D*\\.[^\\.]*$"
-    m = re.match(episodeRegex, ep, flags=re.IGNORECASE)
+    m = re.match(episodeRegex, fileHelper.FileHelper.basename(ep), flags=re.IGNORECASE)
     epNum = episode.UNRESOLVED_KEY
     if m:
       epNum = int(m.group(1))
@@ -54,10 +54,11 @@ class SeasonHelper:
     utils.verifyType(files, list)
     epMap = episode.EpisodeMap()
     epRegex = "^.{%d}(\\d\\d?).*\\.[^\\.]*$" % index
+    re.compile
     for f in files:
       epNum = episode.UNRESOLVED_KEY
       if index >= 0:
-        m = re.match(epRegex, f)
+        m = re.match(epRegex, fileHelper.FileHelper.basename(f))
         if m:
           epNum = utils.toInt(m.group(1))
       epMap.addItem(episode.SourceEpisode(epNum, f))

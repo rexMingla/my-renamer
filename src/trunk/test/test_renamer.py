@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import copy
 import unittest
 
-from common import extension
+from common import extension, utils
 from tv import episode, moveItem, outputFormat, season, seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -79,11 +79,14 @@ class SeriesTest(unittest.TestCase):
   def test_episodeNumFromInvalidFilename(self):
     act = seasonHelper.SeasonHelper.episodeNumFromLastNumInFilename("bad.avi")
     self.assertEqual(act, episode.UNRESOLVED_KEY)
+    
+  def test_episodeNumInPathNotFilename(self):
+    act = seasonHelper.SeasonHelper.episodeNumFromLastNumInFilename("c:/Season 1/bad.avi")
+    self.assertEqual(act, episode.UNRESOLVED_KEY)
 
   def test_getMatchIndex(self):
-    exp = 1
     act = seasonHelper.SeasonHelper.getMatchIndex(["a01.avi", "a02.avi", "a03.avi"])
-    self.assertEqual(act, exp)
+    self.assertEqual(act, 1)
   
   def test_getDestinationEpisodeMapFromTVDB(self):
     exp = episode.EpisodeMap()
@@ -111,6 +114,15 @@ class SeriesTest(unittest.TestCase):
                     4:episode.SourceEpisode(4,"a04x01.avi")}
     act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "a02.avi", "a03.avi", "a04x01.avi"])
     self.assertEqual(act, exp)
+
+  def test_getSourceEpisodeMapFromFilenames2(self):
+    exp = episode.EpisodeMap()
+    exp.matches_ = {1:episode.SourceEpisode(1,"a01.avi"), \
+                    2:episode.SourceEpisode(2,"xxx-a02.avi"), \
+                    3:episode.SourceEpisode(3,"xxx-a03.avi"), \
+                    4:episode.SourceEpisode(4,"xxx-a04.avi")}
+    act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "xxx-a02.avi", "xxx-a03.avi", "xxx-a04.avi"])
+    self.assertEqual(act, exp)    
     
 # --------------------------------------------------------------------------------------------------------------------
 class MoveTest(unittest.TestCase):
@@ -248,4 +260,5 @@ class OutputFormatTest(unittest.TestCase):
 
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
+  utils.setLogLevel(2)
   unittest.main()
