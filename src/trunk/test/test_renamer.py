@@ -122,7 +122,81 @@ class SeriesTest(unittest.TestCase):
                     3:episode.SourceEpisode(3,"xxx-a03.avi"), \
                     4:episode.SourceEpisode(4,"xxx-a04.avi")}
     act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "xxx-a02.avi", "xxx-a03.avi", "xxx-a04.avi"])
-    self.assertEqual(act, exp)    
+    self.assertEqual(act, exp)
+    
+# --------------------------------------------------------------------------------------------------------------------
+class RealDataTest(unittest.TestCase):  
+  def test_1(self):
+    exp = episode.EpisodeMap()
+    folder = ""
+    exp.matches_ = {1:episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
+                    2:episode.SourceEpisode(2, folder + '02 - Flight 1.avi'),
+                    3:episode.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
+                    4:episode.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
+    source = [folder + '01 - For Those Who Think Young.avi',
+              folder + '02 - Flight 1.avi',
+              folder + '03 - The Benefactor.avi', 
+              folder + '04 - Three Sundays.avi']
+    act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(source)
+    self.assertEqual(act, exp)
+
+  def test_2(self):
+    exp = episode.EpisodeMap()
+    folder = "Season 1/"
+    exp.matches_ = {1:episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
+                    2:episode.SourceEpisode(2, folder + '02 - Flight 1.avi'),
+                    3:episode.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
+                    4:episode.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
+    source = [folder + '01 - For Those Who Think Young.avi', 
+              folder + '02 - Flight 1.avi', 
+              folder + '03 - The Benefactor.avi', 
+              folder + '04 - Three Sundays.avi']
+    act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(source)
+    self.assertEqual(act, exp)
+
+  def test_3(self):
+    #test were first two files in dir are not that good a match
+    exp = episode.EpisodeMap()
+    exp.matches_ = {2:episode.SourceEpisode(2, 'Mad.Men.S04302.avi'),
+                3:episode.SourceEpisode(3, 'Mad.Men.S04E03.360p.HDTV.XviD.avi'),
+                4:episode.SourceEpisode(4, 'Mad.Men.S04E04.360p.HDTV.XviD.avi'),
+                5:episode.SourceEpisode(5, 'Mad.Men.S04E05.320p.HDTV.H264.mp4'),
+                6:episode.SourceEpisode(6, 'Mad.Men.S04E06.320p.HDTV.H264.mp4'),
+                7:episode.SourceEpisode(7, 'Mad.Men.S04E07.320p.HDTV.H264.mp4'),
+                8:episode.SourceEpisode(8, 'Mad.Men.S04E08.320p.HDTV.H264.mp4'),
+                9:episode.SourceEpisode(9, 'Mad.Men.S04E09.320p.HDTV.H264.mp4'),
+                10:episode.SourceEpisode(10, 'Mad.Men.S04E10.320p.HDTV.H264.mp4'),
+                11:episode.SourceEpisode(11, 'Mad.Men.S04E11.320p.HDTV.H264.mp4'),
+                12:episode.SourceEpisode(12, 'Mad.Men.S04E12.480p.HDTV.H264.mp4'),
+                13:episode.SourceEpisode(13, 'Mad.Men.S04E13.480p.HDTV.H264.mp4')}
+    source = ['Mad.Men.S04302.avi',
+              'Mad.Men.S04E03.360p.HDTV.XviD.avi', 
+              'Mad.Men.S04E04.360p.HDTV.XviD.avi', 
+              'Mad.Men.S04E05.320p.HDTV.H264.mp4', 
+              'Mad.Men.S04E06.320p.HDTV.H264.mp4', 
+              'Mad.Men.S04E07.320p.HDTV.H264.mp4', 
+              'Mad.Men.S04E08.320p.HDTV.H264.mp4', 
+              'Mad.Men.S04E09.320p.HDTV.H264.mp4', 
+              'Mad.Men.S04E10.320p.HDTV.H264.mp4', 
+              'Mad.Men.S04E11.320p.HDTV.H264.mp4', 
+              'Mad.Men.S04E12.480p.HDTV.H264.mp4', 
+              'Mad.Men.S04E13.480p.HDTV.H264.mp4']
+    act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(source)
+    self.assertEqual(act, exp)
+
+  def test_4(self):
+    #test were filename match is found but is not the best match. ie. starting from 1. 
+    exp = episode.EpisodeMap()
+    exp.matches_ = {1:episode.SourceEpisode(1, '01 - Chapter 7.avi'),
+                    2:episode.SourceEpisode(2, '02 - Chapter 8.avi'),
+                    3:episode.SourceEpisode(3, '03 - Chapter 9.avi'),
+                    4:episode.SourceEpisode(4, '04 - Chapter 10.avi')}
+    source = ['01 - Chapter 7.avi',
+              '02 - Chapter 8.avi',
+              '03 - Chapter 9.avi',
+              '04 - Chapter 10.avi']
+    act = seasonHelper.SeasonHelper.getSourceEpisodeMapFromFilenames(source)
+    self.assertEqual(act, exp)      
     
 # --------------------------------------------------------------------------------------------------------------------
 class MoveTest(unittest.TestCase):

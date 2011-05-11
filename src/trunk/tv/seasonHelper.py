@@ -54,7 +54,6 @@ class SeasonHelper:
     utils.verifyType(files, list)
     epMap = episode.EpisodeMap()
     epRegex = "^.{%d}(\\d\\d?).*\\.[^\\.]*$" % index
-    re.compile
     for f in files:
       epNum = episode.UNRESOLVED_KEY
       if index >= 0:
@@ -72,20 +71,44 @@ class SeasonHelper:
       epNum = SeasonHelper.episodeNumFromLastNumInFilename(f)
       epMap.addItem(episode.SourceEpisode(epNum, f))
     return epMap
-
+  
   @staticmethod
-  def getMatchIndex(files):
-    """search for two concecutive numbers where the second ones are the same"""
-    """a little dodgy. should check for best matching files"""
+  def _getMatchTestFiles(files):
+    left = None
+    right = None
+    bestMatchIndex = -1
+    for i in range(len(files)):
+      fileA = fileHelper.FileHelper.basename(files[i])
+      for j in range(i+1,len(files)):
+        fileB = fileHelper.FileHelper.basename(files[j])
+        minLen = len(fileA)
+        if len(fileB) < minLen:
+          minLen = len(fileB)
+        matchIndex = 0
+        for k in range(minLen):
+          if not fileA[k] == fileB[k]:
+            matchIndex = k
+            break
+        if matchIndex > bestMatchIndex:
+          left = fileA
+          right = fileB
+          bestMatchIndex = matchIndex
+    return left, right
+    
+  @staticmethod
+  def getMatchIndex(files, startIndex=0):
     utils.verifyType(files, list)
+    utils.verifyType(startIndex, int)
     index = -1
     if len(files) > 1:
-      fileA = files[0]
-      fileB = files[1]
+      fileA, fileB = SeasonHelper._getMatchTestFiles(files)
+      if not fileA:
+        fileA = files[0]
+        fileB = files[1]
       minLen = len(fileA)
       if len(fileB) < minLen:
         minLen = len(fileB)
-      for i in range(minLen-1):
+      for i in range(startIndex, minLen-1):
         if fileA[i] == fileB[i]:
           a = fileA[i:i+2]
           b = fileB[i:i+2]
@@ -117,12 +140,14 @@ class SeasonHelper:
     utils.verifyType(files, list)    
     
     tmpMaps = []
-    eps = SeasonHelper.episodeMapFromFilenames(files)    
+    eps = None     
     index = SeasonHelper.getMatchIndex(files)
     if index != -1:
-      tmpMaps.append(SeasonHelper.episodeMapFromIndex(index, files)) #may be other technicques for filename
+      match = SeasonHelper.episodeMapFromIndex(index, files)
+      tmpMaps.append(match)
+    tmpMaps.append(SeasonHelper.episodeMapFromFilenames(files))
     for m in tmpMaps:
-      if len(m.matches_) > len(eps.matches_):
+      if not eps or len(m.matches_) > len(eps.matches_):
         eps = m    
     return eps 
   
