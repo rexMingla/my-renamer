@@ -7,6 +7,12 @@
 # --------------------------------------------------------------------------------------------------------------------
 from py2exe.build_exe import py2exe
 from distutils.core import setup
+import os
+
+uiFiles = []
+for f in os.listdir("ui"):
+ if f.endswith(".ui"):
+   uiFiles.append("ui/" + f)
 
 setup(
     version = "0.0.1",
@@ -22,9 +28,7 @@ setup(
     ],
     options = 
     {
-      "py2exe": 
-      {
-        "includes":["sip", "PyQt4.uic", "PyQt4.QtCore"]
-      } 
-    }
+      "py2exe":{"includes":["sip", "PyQt4.uic", "PyQt4.QtCore"],} 
+    },
+    data_files=[("ui", uiFiles)]
 )
