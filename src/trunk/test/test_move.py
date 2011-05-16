@@ -161,6 +161,33 @@ class MoveItemTest(unittest.TestCase):
     self.assertEqual(res, fileHelper.MoveItemActioner.INVALID_FILENAME)
     fileHelper.FileHelper.removeFile(dest)
     
+  def test_badFilename2(self):
+    mover = fileHelper.MoveItemActioner(canOverwrite=True, keepSource=False)
+    src = "src.txt"
+    dest = "dest:.txt"
+    createTestFile(src)
+    res = mover.performAction(src, dest)
+    self.assertEqual(res, fileHelper.MoveItemActioner.INVALID_FILENAME)
+    fileHelper.FileHelper.removeFile(src)
+    
+  def test_badFilename3(self):
+    mover = fileHelper.MoveItemActioner(canOverwrite=True, keepSource=False)
+    src = "src.txt"
+    dest = "c:/src/dest:.txt"
+    createTestFile(src)
+    res = mover.performAction(src, dest)
+    self.assertEqual(res, fileHelper.MoveItemActioner.INVALID_FILENAME)
+    fileHelper.FileHelper.removeFile(src)
+
+  def test_badFilename4(self):
+    mover = fileHelper.MoveItemActioner(canOverwrite=True, keepSource=False)
+    src = "src.txt"
+    dest = "c:/wtf:src/dest.txt"
+    createTestFile(src)
+    res = mover.performAction(src, dest)
+    self.assertEqual(res, fileHelper.MoveItemActioner.INVALID_FILENAME)
+    fileHelper.FileHelper.removeFile(src)
+
   def test_badSource(self):
     copier = fileHelper.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = ""

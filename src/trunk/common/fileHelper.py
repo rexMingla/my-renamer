@@ -16,9 +16,9 @@ import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class FileHelper:
-  _VALID_FILENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
+  _VALID_BASENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
                                            string.digits, \
-                                           " :!#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
+                                           " !#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
   
   @staticmethod
   def isFile(f):
@@ -39,6 +39,11 @@ class FileHelper:
   def basename(f):
     utils.verifyType(f, str)
     return os.path.basename(f)
+  
+  @staticmethod
+  def splitDrive(p):
+    utils.verifyType(p, str)
+    return os.path.splitdrive(p)
   
   @staticmethod
   def joinPath(d, f):
@@ -82,8 +87,9 @@ class FileHelper:
   @staticmethod
   def isValidFilename(f):
     utils.verifyType(f, str)
-    validFilenameCharsRegex = "^([%s])+$" % re.escape(FileHelper._VALID_FILENAME_CHARACTERS)
-    return not not re.match(validFilenameCharsRegex, FileHelper.basename(f))
+    drive, tail = FileHelper.splitDrive(f)    
+    validFilenameCharsRegex = "^([%s])+$" % re.escape(FileHelper._VALID_BASENAME_CHARACTERS)
+    return not not re.match(validFilenameCharsRegex, tail)
     
   @staticmethod
   def sanitizeFilename(f, replaceChar="_"):
@@ -91,8 +97,10 @@ class FileHelper:
     utils.verifyType(replaceChar, str)
     ret = f
     if not FileHelper.isValidFilename(f):
-      invalidFilenameCharsRegex = "[^%s]" % re.escape(FileHelper._VALID_FILENAME_CHARACTERS)
-      ret = re.sub(invalidFilenameCharsRegex, replaceChar, f)
+      drive, tail = FileHelper.splitDrive(f)
+      invalidFilenameCharsRegex = "[^%s]" % re.escape(FileHelper._VALID_BASENAME_CHARACTERS)
+      tail = re.sub(invalidFilenameCharsRegex, replaceChar, tail)
+      ret = FileHelper.joinPath(drive, tail)
     return ret
   
   @staticmethod

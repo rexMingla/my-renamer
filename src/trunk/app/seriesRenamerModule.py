@@ -145,6 +145,7 @@ class SeriesRenamerModule(QtCore.QObject):
                                      ep.destination_.epName_)
           outputBaseName = oFormat.outputToString(im, ep.source_.extension_)
           newName = fileHelper.FileHelper.joinPath(outputFolder, outputBaseName)
+          newName = fileHelper.FileHelper.sanitizeFilename(newName)
           filenames.append((ep.source_.filename_, newName))
     utils.verify(filenames, "Must have files to have gotten this far")
     actioner = fileHelper.MoveItemActioner(canOverwrite= not formatSettings.doNotOverwrite_, \
