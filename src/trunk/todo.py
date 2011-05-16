@@ -26,7 +26,7 @@
 #    2011-05-08                  Impr          Clean up EpisodeMap.setKeyForFilename
 #    2011-05-16                  Impr          Colour unresolved folders in list
 #    2011-05-16  2011-05-16      Impr          Select/deselect all option
-#    2011-05-16                  Impr          Tooltips
-#    2011-05-16                  Impr          file extension filtering. *.avi will break it at the moment
+#    2011-05-16  2011-05-16      Impr          Tooltips
+#    2011-05-16  2011-05-16      Impr          file extension filtering. *.avi will break it at the moment
 
 

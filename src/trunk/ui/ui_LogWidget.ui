@@ -33,6 +33,9 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="toolTip">
+        <string>Clear log list</string>
+       </property>
        <property name="text">
         <string>Clear</string>
        </property>
@@ -44,7 +47,7 @@
         <string>Clear before every run</string>
        </property>
        <property name="text">
-        <string>Auto clear</string>
+        <string>Auto Clear</string>
        </property>
       </widget>
      </item>

@@ -39,7 +39,7 @@
    <item row="0" column="1">
     <widget class="QLineEdit" name="folderEdit_">
      <property name="toolTip">
-      <string>Folder location to show</string>
+      <string>Folder location to show.</string>
      </property>
     </widget>
    </item>
@@ -57,6 +57,9 @@
        <height>24</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Select folder location</string>
+     </property>
      <property name="text">
       <string>...</string>
      </property>
@@ -72,12 +75,15 @@
    <item row="1" column="1">
     <widget class="QLineEdit" name="fileExtensionEdit_">
      <property name="toolTip">
-      <string>Only include listed extensions</string>
+      <string>Only include listed dot extensions. The following formats are accepted .mpg *.avi vod</string>
      </property>
     </widget>
    </item>
    <item row="2" column="0">
     <widget class="QCheckBox" name="isRecursiveCheckBox_">
+     <property name="toolTip">
+      <string>Include/ignore child folders</string>
+     </property>
      <property name="text">
       <string>Explore sub folders</string>
      </property>
@@ -90,6 +96,9 @@
      </property>
      <item>
       <widget class="QPushButton" name="loadButton_">
+       <property name="toolTip">
+        <string>Explore contents of folder</string>
+       </property>
        <property name="text">
         <string>Explore</string>
        </property>
