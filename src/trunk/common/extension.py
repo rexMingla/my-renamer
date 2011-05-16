@@ -28,14 +28,23 @@ class FileExtensions:
   def setExtensionsFromList(self, l):
     utils.verifyType(l, list)
     isAll = not l
+    sanitized = []
     for item in l:
       if item in ["*", "*.*", ".*"]:
         isAll = True
         break
+      else:
+        #leave in format of .ext
+        if item.startswith("*"):
+          sanitized.append(item[1:])
+        elif not item.startswith("."):
+          sanitized.append(".%s" % item)
+        else:
+          sanitized.append(item)
     if isAll:
       self._extensions_ = [FileExtensions.ALL_FILES] #make a copy
     else:
-      self._extensions_ = l
+      self._extensions_ = sanitized
   
   def extensionString(self):
     return FileExtensions.delimiter().join(self._extensions_)

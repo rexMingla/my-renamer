@@ -306,6 +306,8 @@ class TreeModel(QtCore.QAbstractItemModel):
     counter = { QtCore.Qt.Unchecked : 0,
                 QtCore.Qt.PartiallyChecked : 0,
                 QtCore.Qt.Checked : 0 }
+    if not self.rootItem_.childCount():
+      return None
     for i in range(self.rootItem_.childCount()):
       item = self.rootItem_.child(i)
       counter[item.checkState()] += 1

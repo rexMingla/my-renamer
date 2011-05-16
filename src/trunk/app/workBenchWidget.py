@@ -51,7 +51,6 @@ class WorkBenchWidget(QtGui.QWidget):
     self._ui_.view_.expandAll()
     self._ui_.editEpisodeButton_.setEnabled(False)
     self._ui_.editSeasonButton_.setEnabled(False)
-    self._ui_.selectAllCheckBox_.setEnabled(True)
     
   def seasons(self):
     seasons = self._model_.seasons()
@@ -98,6 +97,9 @@ class WorkBenchWidget(QtGui.QWidget):
   def _onWorkBenchChanged(self, hasChecked):
     utils.verifyType(hasChecked, bool)
     cs = self._model_.overallCheckedState()
+    self._ui_.selectAllCheckBox_.setEnabled(cs <> None)
+    if cs == None:
+      cs = QtCore.Qt.Unchecked
     self._ui_.selectAllCheckBox_.setCheckState(cs)
     self.workBenchChangedSignal_.emit(hasChecked)
     

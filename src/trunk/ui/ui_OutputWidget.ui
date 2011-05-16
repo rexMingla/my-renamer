@@ -45,7 +45,11 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="formatEdit_"/>
+      <widget class="QLineEdit" name="formatEdit_">
+       <property name="toolTip">
+        <string>Output file format</string>
+       </property>
+      </widget>
      </item>
      <item row="1" column="1">
       <widget class="QLabel" name="formatExampleLabel_">
@@ -87,6 +91,9 @@
       </property>
       <item>
        <widget class="QRadioButton" name="useSourceDirectoryRadio_">
+        <property name="toolTip">
+         <string>Use the source folder for output</string>
+        </property>
         <property name="text">
          <string>Use source folder</string>
         </property>
@@ -102,6 +109,9 @@
         </property>
         <item>
          <widget class="QRadioButton" name="useSpecificDirectoryRadio_">
+          <property name="toolTip">
+           <string>Specify a specific output folder. This can be a partial or absolute path.</string>
+          </property>
           <property name="text">
            <string>Use specific folder</string>
           </property>
@@ -131,6 +141,9 @@
             <height>24</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>Select specific folder</string>
+          </property>
           <property name="text">
            <string>...</string>
           </property>
@@ -143,6 +156,9 @@
    </item>
    <item>
     <widget class="QCheckBox" name="keepSourceCheckBox_">
+     <property name="toolTip">
+      <string>Keep original files</string>
+     </property>
      <property name="text">
       <string>Keep source files</string>
      </property>
@@ -150,6 +166,9 @@
    </item>
    <item>
     <widget class="QCheckBox" name="doNotOverwriteCheckBox_">
+     <property name="toolTip">
+      <string>Prevent overwriting if a file exists in the output location</string>
+     </property>
      <property name="text">
       <string>Do not overwrite existing files</string>
      </property>
@@ -167,6 +186,9 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string>Rename marked files</string>
        </property>
        <property name="text">
         <string>Rename</string>
