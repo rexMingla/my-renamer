@@ -30,7 +30,7 @@ class FileExtensions:
     isAll = not l
     sanitized = []
     for item in l:
-      if item in ["*", "*.*", ".*"]:
+      if item in ["", "*", "*.*", ".*"]:
         isAll = True
         break
       else:
