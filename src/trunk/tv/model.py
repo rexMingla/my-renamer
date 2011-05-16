@@ -91,7 +91,10 @@ class TreeItem(object):
     if self.isMoveItem():
       return self.raw_.canMove_
     else:
-      return True
+      for c in self.childItems_:
+        if c.canCheck():
+          return True
+      return False
   
   def checkState(self):
     cs = QtCore.Qt.Checked
@@ -310,7 +313,8 @@ class TreeModel(QtCore.QAbstractItemModel):
       return None
     for i in range(self.rootItem_.childCount()):
       item = self.rootItem_.child(i)
-      counter[item.checkState()] += 1
+      if item.canCheck():
+        counter[item.checkState()] += 1
     ret = QtCore.Qt.PartiallyChecked
     if not counter[QtCore.Qt.PartiallyChecked] and not counter[QtCore.Qt.Checked]:
       ret = QtCore.Qt.Unchecked
