@@ -30,6 +30,9 @@
      </property>
      <item>
       <widget class="QPushButton" name="editSeasonButton_">
+       <property name="toolTip">
+        <string>Edit selected season</string>
+       </property>
        <property name="text">
         <string>Edit Season</string>
        </property>
@@ -37,8 +40,24 @@
      </item>
      <item>
       <widget class="QPushButton" name="editEpisodeButton_">
+       <property name="toolTip">
+        <string>Edit selected episode</string>
+       </property>
        <property name="text">
         <string>Edit Episode</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="selectAllCheckBox_">
+       <property name="toolTip">
+        <string>Select/deselect all files</string>
+       </property>
+       <property name="text">
+        <string>Select / Deselect All</string>
+       </property>
+       <property name="tristate">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
