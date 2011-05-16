@@ -41,14 +41,17 @@ class WorkBenchWidget(QtGui.QWidget):
     
     self._ui_.editEpisodeButton_.setEnabled(False)
     self._ui_.editSeasonButton_.setEnabled(False)
+    self._ui_.selectAllCheckBox_.setEnabled(False)
+    self._ui_.selectAllCheckBox_.clicked.connect(self._model_.setOverallCheckedState)
     
-    self._model_.workBenchChangedSignal_.connect(self.workBenchChangedSignal_)
+    self._model_.workBenchChangedSignal_.connect(self._onWorkBenchChanged)
     
   def updateModel(self, seasons):
     self._model_.setSeasons(seasons)
     self._ui_.view_.expandAll()
     self._ui_.editEpisodeButton_.setEnabled(False)
     self._ui_.editSeasonButton_.setEnabled(False)
+    self._ui_.selectAllCheckBox_.setEnabled(True)
     
   def seasons(self):
     seasons = self._model_.seasons()
@@ -91,4 +94,10 @@ class WorkBenchWidget(QtGui.QWidget):
     seasonNum = self._changeSeasonWidget_.seasonNumber()
     var = QtCore.QVariant.fromList([QtCore.QVariant(seasonName), QtCore.QVariant(seasonNum)])
     self._model_.setData(self._currentIndex_, var, model.RAW_DATA_ROLE)
+    
+  def _onWorkBenchChanged(self, hasChecked):
+    utils.verifyType(hasChecked, bool)
+    cs = self._model_.overallCheckedState()
+    self._ui_.selectAllCheckBox_.setCheckState(cs)
+    self.workBenchChangedSignal_.emit(hasChecked)
     

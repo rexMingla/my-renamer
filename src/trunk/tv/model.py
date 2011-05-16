@@ -302,6 +302,29 @@ class TreeModel(QtCore.QAbstractItemModel):
         seasons.append(raw)
     return seasons
   
+  def overallCheckedState(self):
+    counter = { QtCore.Qt.Unchecked : 0,
+                QtCore.Qt.PartiallyChecked : 0,
+                QtCore.Qt.Checked : 0 }
+    for i in range(self.rootItem_.childCount()):
+      item = self.rootItem_.child(i)
+      counter[item.checkState()] += 1
+    ret = QtCore.Qt.PartiallyChecked
+    if not counter[QtCore.Qt.PartiallyChecked] and not counter[QtCore.Qt.Checked]:
+      ret = QtCore.Qt.Unchecked
+    elif not counter[QtCore.Qt.Unchecked] and not counter[QtCore.Qt.PartiallyChecked]:
+      ret = QtCore.Qt.Checked
+    return ret
+  
+  def setOverallCheckedState(self, isChecked):
+    utils.verifyType(isChecked, bool)
+    cs = QtCore.Qt.Checked
+    if not isChecked:
+      cs = QtCore.Qt.Unchecked
+    for i in range(self.rootItem_.childCount()):
+      idx = self.index(i, Columns.COL_OLD_NAME, QtCore.QModelIndex())
+      self.setData(idx, cs, QtCore.Qt.CheckStateRole)   
+  
   def _hasMoveableItems(self):
     ret = False
     for i in range(self.rootItem_.childCount()):

@@ -6,23 +6,27 @@
 # Purpose of document: TODO list
 # --------------------------------------------------------------------------------------------------------------------
 #
-# Date Reported  Date Completed  Item                        
+# Date Reported  Date Completed  Bug/Impr/Feat Item
 # --------------------------------------------------------------------------------------------------------------------
-#    2011-04-29  2011-05-01      Model Items should be composed of source and destination items
-#    2011-04-29  2011-05-01      Move/copy file functionality
-#    2011-04-29                  Convert config to json (maybe rework save/load objs)
-#    2011-04-29  2011-05-02      Figure out cause of: "QObject::startTimer: QTimer can only be used with threads started with QThread"
-#    2011-05-01  2011-05-01      Enable/disable buttons
-#    2011-05-02  2011-05-02      Save window layout
-#    2011-05-02  2011-05-02      Use dock widgets
-#    2011-05-02                  Improve logging
-#    2011-05-04  2011-05-04      Restructure libs
-#    2011-05-04  2011-05-11      Package with py2exe
-#    2011-05-05  2011-05-05      Fix Filename resolution bug: "/Season 2/.track" -> epNum: 2 not -1 
-#    2011-05-05  2011-05-09      Thread out move/copy
-#    2011-05-05                  Remove qt from common module
-#    2011-05-05  2011-05-11      Transition from READY to MISSING_NEW is incorrect in work bench
-#    2011-05-05  2011-05-08      Add filename completer to file/folder dialogs
-#    2011-05-08                  Clean up EpisodeMap.setKeyForFilename
+#    2011-04-29  2011-05-01      Impr          Model Items should be composed of source and destination items
+#    2011-04-29  2011-05-01      Feat          Move/copy file functionality
+#    2011-04-29                  Impr          Convert config to json (maybe rework save/load objs)
+#    2011-04-29  2011-05-02      Bug           Figure out cause of: "QObject::startTimer: QTimer ..."
+#    2011-05-01  2011-05-01      Impr          Enable/disable buttons
+#    2011-05-02  2011-05-02      Impr          Save window layout
+#    2011-05-02  2011-05-02      Impr          Use dock widgets
+#    2011-05-02                  Impr          Improve logging
+#    2011-05-04  2011-05-04      Impr          Restructure libs
+#    2011-05-04  2011-05-11      Feat          Package with py2exe
+#    2011-05-05  2011-05-05      Bug           Fix Filename resolution bug: "/Season 2/.track" -> epNum: 2 not -1 
+#    2011-05-05  2011-05-09      Impr          Thread out move/copy
+#    2011-05-05                  Impr          Remove qt from common module
+#    2011-05-05  2011-05-11      Bug           Transition from READY to MISSING_NEW is incorrect in work bench
+#    2011-05-05  2011-05-08      Impr          Add filename completer to file/folder dialogs
+#    2011-05-08                  Impr          Clean up EpisodeMap.setKeyForFilename
+#    2011-05-16                  Impr          Colour unresolved folders in list
+#    2011-05-16  2011-05-16      Impr          Select/deselect all option
+#    2011-05-16                  Impr          Tooltips
+#    2011-05-16                  Impr          file extension filtering. *.avi will break it at the moment
 
 
