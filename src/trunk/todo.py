@@ -10,7 +10,6 @@
 # --------------------------------------------------------------------------------------------------------------------
 #    2011-04-29  2011-05-01      Impr          Model Items should be composed of source and destination items
 #    2011-04-29  2011-05-01      Feat          Move/copy file functionality
-#    2011-04-29                  Impr          Convert config to json (maybe rework save/load objs)
 #    2011-04-29  2011-05-02      Bug           Figure out cause of: "QObject::startTimer: QTimer ..."
 #    2011-05-01  2011-05-01      Impr          Enable/disable buttons
 #    2011-05-02  2011-05-02      Impr          Save window layout

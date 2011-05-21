@@ -25,17 +25,20 @@ class LogLevel:
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogColumns:
-  COL_LEVEL   = 0
+  #COL_LEVEL   = 0
+  COL_ACTION  = 2
   COL_MESSAGE = 1
   NUM_COLS    = 2
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogItem:
-  def __init__(self, logLevel, shortMessage, longMessage=""):
+  def __init__(self, logLevel, action, shortMessage, longMessage=""):
     utils.verifyType(logLevel, int)
+    utils.verifyType(action, str)
     utils.verifyType(shortMessage, str)
     utils.verifyType(longMessage, str)
     self.logLevel_ = logLevel
+    self.action_ = action
     self.shortMessage_ = shortMessage
     self.longMessage_ = longMessage or shortMessage
 
@@ -56,8 +59,10 @@ class LogModel(QtCore.QAbstractTableModel):
       return None
     
     item = self.items_[index.row()]
-    if index.column() == LogColumns.COL_LEVEL: 
-      return logging.getLevelName(item.logLevel_)
+    #if index.column() == LogColumns.COL_LEVEL: 
+    #  return logging.getLevelName(item.logLevel_)
+    if index.column() == LogColumns.COL_ACTION:
+      return item.action_
     elif index.column() == LogColumns.COL_MESSAGE: 
       if role == QtCore.Qt.DisplayRole:
         return item.shortMessage_
@@ -70,8 +75,10 @@ class LogModel(QtCore.QAbstractTableModel):
     if role <> QtCore.Qt.DisplayRole or orientation == QtCore.Qt.Vertical:
       return None
     
-    if section == LogColumns.COL_LEVEL: 
-      return "Type"
+    #if section == LogColumns.COL_LEVEL: 
+    #  return "Type"
+    if section == LogColumns.COL_ACTION:
+      return "Action"
     elif section == LogColumns.COL_MESSAGE: 
       return "Message"
   

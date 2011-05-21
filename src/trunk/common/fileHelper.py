@@ -198,7 +198,10 @@ class MoveItemActioner:
         shortText = "%s: %s -> %s" % (MoveItemActioner.resultStr(res), \
                                      FileHelper.basename(item[0]),
                                      FileHelper.basename(item[1])) 
-        self.messageCallback_(logModel.LogItem(logModel.LogLevel.CRITICAL, shortText, longText))
+        self.messageCallback_(logModel.LogItem(logModel.LogLevel.CRITICAL, \
+                                               MoveItemActioner.resultStr(res), \
+                                               shortText, \
+                                               longText))
     return results
   
   def performAction(self, source, dest):
