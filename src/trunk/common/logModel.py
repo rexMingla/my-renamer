@@ -26,7 +26,7 @@ class LogLevel:
 # --------------------------------------------------------------------------------------------------------------------
 class LogColumns:
   #COL_LEVEL   = 0
-  COL_ACTION  = 2
+  COL_ACTION  = 0
   COL_MESSAGE = 1
   NUM_COLS    = 2
 
@@ -44,6 +44,8 @@ class LogItem:
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogModel(QtCore.QAbstractTableModel):
+  LOG_LEVEL_ROLE = QtCore.Qt.UserRole + 1
+  
   def __init__(self, parent):
     super(QtCore.QAbstractTableModel, self).__init__(parent)
     self.items_ = []
@@ -55,19 +57,24 @@ class LogModel(QtCore.QAbstractTableModel):
     return LogColumns.NUM_COLS
   
   def data(self, index, role):
-    if not index.isValid() or (role <> QtCore.Qt.DisplayRole and role <> QtCore.Qt.ToolTipRole):
+    if not index.isValid():
+      return None
+    
+    if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, LogModel.LOG_LEVEL_ROLE):
       return None
     
     item = self.items_[index.row()]
+    if role == LogModel.LOG_LEVEL_ROLE:
+      return QtCore.QVariant(item.logLevel_)
     #if index.column() == LogColumns.COL_LEVEL: 
     #  return logging.getLevelName(item.logLevel_)
     if index.column() == LogColumns.COL_ACTION:
-      return item.action_
+      return QtCore.QVariant(item.action_)
     elif index.column() == LogColumns.COL_MESSAGE: 
       if role == QtCore.Qt.DisplayRole:
-        return item.shortMessage_
+        return QtCore.QVariant(item.shortMessage_)
       else:
-        return item.longMessage_
+        return QtCore.QVariant(item.longMessage_)
     else: 
       return None  
   
@@ -78,9 +85,9 @@ class LogModel(QtCore.QAbstractTableModel):
     #if section == LogColumns.COL_LEVEL: 
     #  return "Type"
     if section == LogColumns.COL_ACTION:
-      return "Action"
+      return QtCore.QVariant("Action")
     elif section == LogColumns.COL_MESSAGE: 
-      return "Message"
+      return QtCore.QVariant("Message")
   
   def addItem(self, item):
     utils.verifyType(item, LogItem)
