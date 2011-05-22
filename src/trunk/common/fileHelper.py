@@ -179,6 +179,16 @@ class MoveItemActioner:
   def sendMessage(self, msg):
     if self.messageCallback_:
       self.messageCallback_(message)
+      
+  def summaryText(self, results):
+    utils.verifyType(results, dict)
+    ret = ""
+    count = 0
+    for key in results.keys():
+      ret += "%s (%d) " % (MoveItemActioner.resultStr(key), results[key])
+      count += 1
+    ret += "Total (%d)" % count
+    return ret
 
   def performActions(self, items):
     results = {}
@@ -194,14 +204,17 @@ class MoveItemActioner:
         prog = 100 * (i + 1) / count
         self.percentageCompleteCallback_(prog)
       if self.messageCallback_:
-        longText = "%s: %s -> %s" % (MoveItemActioner.resultStr(res), item[0], item[1]) 
-        shortText = "%s: %s -> %s" % (MoveItemActioner.resultStr(res), \
-                                     FileHelper.basename(item[0]),
-                                     FileHelper.basename(item[1])) 
-        self.messageCallback_(logModel.LogItem(logModel.LogLevel.CRITICAL, \
+        longText = "%s -> %s" % (item[0], item[1]) 
+        shortText = "%s -> %s" % (FileHelper.basename(item[0]), FileHelper.basename(item[1]))
+        level = logModel.LogLevel.INFO
+        if res <> MoveItemActioner.SUCCESS:
+          level = logModel.LogLevel.ERROR
+        self.messageCallback_(logModel.LogItem(level, \
                                                MoveItemActioner.resultStr(res), \
                                                shortText, \
                                                longText))
+    if self.messageCallback_:
+      self.messageCallback_(logModel.LogItem(logModel.LogLevel.INFO, "Complete", self.summaryText(results)))      
     return results
   
   def performAction(self, source, dest):

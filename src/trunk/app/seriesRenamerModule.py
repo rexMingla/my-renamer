@@ -152,17 +152,10 @@ class SeriesRenamerModule(QtCore.QObject):
                                            keepSource=formatSettings.keepSourceFiles_)
     actioner.setPercentageCompleteCallback(self._updateProgress)
     actioner.setMessageCallback(self._addMessage)
-    self._addMessage(logModel.LogItem(logModel.LogLevel.CRITICAL, "Starting...", ""))
+    self._addMessage(logModel.LogItem(logModel.LogLevel.INFO, "Starting...", ""))
     ret = MyThread.runFunc(_performRename, actioner, filenames)
-    self._sendSummaryMessages(ret)
     self._enableControls(True)
     #self._sendSummaryMessages(results)
-
-  def _sendSummaryMessages(self, results):
-    utils.verifyType(results, dict)
-    for key in results.keys():
-      text = "*** %s: %d" % (fileHelper.MoveItemActioner.resultStr(key), results[key])
-      self._addMessage(logModel.LogItem(logModel.LogLevel.CRITICAL, "Copy", text))
     
   def _updateProgress(self, percentageComplete):
     utils.verifyType(percentageComplete, int)
