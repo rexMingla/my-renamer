@@ -12,7 +12,7 @@ import copy
 import unittest
 
 from common import extension, utils
-from tv import episode, moveItem, outputFormat, season, seasonHelper
+from tv import episode, moveItemCandidate, outputFormat, season, seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
@@ -216,18 +216,18 @@ class MoveTest(unittest.TestCase):
     self.season_ = season.Season("Test", 1, source, destination, "")
    
   def test_ready(self):
-    item = moveItem.MoveItem(self.readySrc_, self.readyDest_)
-    exists = item in self.season_.moveItems_
+    item = moveItemCandidate.MoveItemCandidate(self.readySrc_, self.readyDest_)
+    exists = item in self.season_.moveItemCandidates_
     self.assertTrue(exists)
   
   def test_missingNew(self):
-    item = moveItem.MoveItem(self.missingNewSrc_, episode.DestinationEpisode.createUnresolvedDestination())
-    exists = item in self.season_.moveItems_
+    item = moveItemCandidate.MoveItemCandidate(self.missingNewSrc_, episode.DestinationEpisode.createUnresolvedDestination())
+    exists = item in self.season_.moveItemCandidates_
     self.assertTrue(exists)
   
   def test_missingOld(self):
-    item = moveItem.MoveItem(episode.SourceEpisode.createUnresolvedSource(), self.missingOldDest_)
-    exists = item in self.season_.moveItems_
+    item = moveItemCandidate.MoveItemCandidate(episode.SourceEpisode.createUnresolvedSource(), self.missingOldDest_)
+    exists = item in self.season_.moveItemCandidates_
     self.assertTrue(exists)
       
 # --------------------------------------------------------------------------------------------------------------------

@@ -14,12 +14,12 @@
 #    2011-05-01  2011-05-01      Impr          Enable/disable buttons
 #    2011-05-02  2011-05-02      Impr          Save window layout
 #    2011-05-02  2011-05-02      Impr          Use dock widgets
-#    2011-05-02                  Impr          Improve logging
+#    2011-05-02  2011-05-22      Impr          Improve logging
 #    2011-05-04  2011-05-04      Impr          Restructure libs
 #    2011-05-04  2011-05-11      Feat          Package with py2exe
 #    2011-05-05  2011-05-05      Bug           Fix Filename resolution bug: "/Season 2/.track" -> epNum: 2 not -1 
 #    2011-05-05  2011-05-09      Impr          Thread out move/copy
-#    2011-05-05                  Impr          Remove qt from common module
+#    2011-05-05                  Impr          Reorganise library. ie. Remove qt from common module
 #    2011-05-05  2011-05-11      Bug           Transition from READY to MISSING_NEW is incorrect in work bench
 #    2011-05-05  2011-05-08      Impr          Add filename completer to file/folder dialogs
 #    2011-05-08                  Impr          Clean up EpisodeMap.setKeyForFilename
