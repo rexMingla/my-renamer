@@ -58,30 +58,30 @@ class WorkBenchWidget(QtGui.QWidget):
     
   def _onClicked(self, modelIndex):
     self._currentIndex_ = modelIndex
-    moveItemData, isMoveItem = self._model_.data(modelIndex, model.RAW_DATA_ROLE)
-    self._ui_.editEpisodeButton_.setEnabled(isMoveItem and moveItemData.canEdit_)
-    self._ui_.editSeasonButton_.setEnabled(not isMoveItem)
+    moveItemCandidateData, isMoveItemCandidate = self._model_.data(modelIndex, model.RAW_DATA_ROLE)
+    self._ui_.editEpisodeButton_.setEnabled(isMoveItemCandidate and moveItemCandidateData.canEdit_)
+    self._ui_.editSeasonButton_.setEnabled(not isMoveItemCandidate)
 
   def _onDoubleClicked(self, modelIndex):
     utils.verifyType(modelIndex, QtCore.QModelIndex)
-    moveItemData, isMoveItem = self._model_.data(modelIndex, model.RAW_DATA_ROLE)
-    if isMoveItem and moveItemData.canEdit_:
+    moveItemCandidateData, isMoveItemCandidate = self._model_.data(modelIndex, model.RAW_DATA_ROLE)
+    if isMoveItemCandidate and moveItemCandidateData.canEdit_:
       self._editEpisode()
     else:
       self._editSeason()
         
   def _editSeason(self):
-    seasonData, isMoveItem = self._model_.data(self._currentIndex_, model.RAW_DATA_ROLE)
-    if not isMoveItem: #maybe get the parent
+    seasonData, isMoveItemCandidate = self._model_.data(self._currentIndex_, model.RAW_DATA_ROLE)
+    if not isMoveItemCandidate: #maybe get the parent
       self._changeSeasonWidget_.setData(seasonData.inputFolder_, seasonData.seasonName_, seasonData.seasonNum_)
       self._changeSeasonWidget_.show()
   
   def _editEpisode(self):
-    moveItemData, isMoveItem = self._model_.data(self._currentIndex_, model.RAW_DATA_ROLE)
-    if isMoveItem and moveItemData.canEdit_:
-      seasonData, isMoveItem = self._model_.data(self._currentIndex_.parent(), model.RAW_DATA_ROLE)
-      utils.verify(not isMoveItem, "Must be move item")
-      self._changeEpisodeWidget_.setData(seasonData, moveItemData)
+    moveItemCandidateData, isMoveItemCandidate = self._model_.data(self._currentIndex_, model.RAW_DATA_ROLE)
+    if isMoveItemCandidate and moveItemCandidateData.canEdit_:
+      seasonData, isMoveItemCandidate = self._model_.data(self._currentIndex_.parent(), model.RAW_DATA_ROLE)
+      utils.verify(not isMoveItemCandidate, "Must be move item")
+      self._changeEpisodeWidget_.setData(seasonData, moveItemCandidateData)
       self._changeEpisodeWidget_.show()
       
   def _onChangeEpisodeFinished(self):

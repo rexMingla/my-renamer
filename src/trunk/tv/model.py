@@ -11,7 +11,7 @@ from PyQt4 import QtCore
 from common import utils
 import episode
 import fileHelper
-import moveItem
+import moveItemCandidate
 import season
 import seasonHelper
 
@@ -48,7 +48,7 @@ class TreeItem(object):
     if role <> QtCore.Qt.DisplayRole and role <> QtCore.Qt.ToolTipRole:
       return None
     
-    if self.isMoveItem():
+    if self.isMoveItemCandidate():
       if column == Columns.COL_OLD_NAME:
         if role == QtCore.Qt.ToolTipRole:
           return self.raw_.source_.filename_
@@ -62,7 +62,7 @@ class TreeItem(object):
       elif column == Columns.COL_NEW_NAME:
         return self.raw_.destination_.epName_
       elif column == Columns.COL_STATUS:
-        return moveItem.MoveItem.typeStr(self.raw_.matchType())
+        return moveItemCandidate.MoveItemCandidate.typeStr(self.raw_.matchType())
     elif self.isSeason() and column == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.ToolTipRole:
         return "Folder: %s" % self.raw_.inputFolder_
@@ -84,11 +84,11 @@ class TreeItem(object):
   def isSeason(self):
     return isinstance(self.raw_, season.Season)
   
-  def isMoveItem(self):
-    return isinstance(self.raw_, moveItem.MoveItem)
+  def isMoveItemCandidate(self):
+    return isinstance(self.raw_, moveItemCandidate.MoveItemCandidate)
   
   def canCheck(self):
-    if self.isMoveItem():
+    if self.isMoveItemCandidate():
       return self.raw_.canMove_
     else:
       for c in self.childItems_:
@@ -98,7 +98,7 @@ class TreeItem(object):
   
   def checkState(self):
     cs = QtCore.Qt.Checked
-    if self.isMoveItem():
+    if self.isMoveItemCandidate():
       if not self.raw_.performMove_:
         cs = QtCore.Qt.Unchecked
     elif self.isSeason():
@@ -120,7 +120,7 @@ class TreeItem(object):
   
   def setCheckState(self, cs):
     isChecked = cs == QtCore.Qt.Checked
-    if self.isMoveItem() and self.raw_.canMove_:
+    if self.isMoveItemCandidate() and self.raw_.canMove_:
       self.raw_.performMove_ = isChecked
     elif self.isSeason():
       self.raw_.performMove_ = isChecked
@@ -142,7 +142,7 @@ class TreeModel(QtCore.QAbstractItemModel):
       return None
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
-      return (item.raw_, item.isMoveItem())
+      return (item.raw_, item.isMoveItemCandidate())
     
     item = index.internalPointer()
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
@@ -159,7 +159,7 @@ class TreeModel(QtCore.QAbstractItemModel):
     
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
-      if item.isMoveItem():
+      if item.isMoveItemCandidate():
         parentItem = item.parent()
         parentIndex = index.parent()
         utils.verify(parentItem.isSeason(), "Not a Season")
@@ -171,7 +171,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         newSourceMap.setKeyForFilename(intVal, item.raw_.source_.filename_)
         parentItem.raw_.updateSource(newSourceMap)
         parentItem.childItems_ = []
-        for mi in parentItem.raw_.moveItems_:
+        for mi in parentItem.raw_.moveItemCandidates_:
           parentItem.appendChild(TreeItem(mi, parentItem))
         self.endRemoveRows()
         self.beginInsertRows(parentIndex, 0, parentItem.childCount() - 1)
@@ -187,7 +187,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         newDestMap = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seasonNum)
         item.raw_.updateDestination(seasonName, seasonNum, newDestMap)
         item.childItems_ = []
-        for mi in item.raw_.moveItems_:
+        for mi in item.raw_.moveItemCandidates_:
           item.appendChild(TreeItem(mi, item))
         self.endRemoveRows()
         self.beginInsertRows(index, 0, item.childCount() - 1)
@@ -203,7 +203,7 @@ class TreeModel(QtCore.QAbstractItemModel):
           child.setCheckState(value)
           changedIndex = index.child(Columns.COL_OLD_NAME, child.row())
           self.dataChanged.emit(changedIndex, changedIndex)
-      elif item.isMoveItem():
+      elif item.isMoveItemCandidate():
         self.dataChanged.emit(index.parent(), index.parent())
       ret = True
     if ret:   
@@ -221,9 +221,9 @@ class TreeModel(QtCore.QAbstractItemModel):
       f |= QtCore.Qt.ItemIsEnabled 
       if index.column() == Columns.COL_OLD_NAME:
         f |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsTristate
-      #elif index.column() == Columns.COL_NEW_NAME and item.isMoveItem() and item.raw_.oldName_:
+      #elif index.column() == Columns.COL_NEW_NAME and item.isMoveItemCandidate() and item.raw_.oldName_:
       #  f |= QtCore.Qt.ItemIsEditable
-    elif item.isMoveItem() and item.raw_.canEdit_:
+    elif item.isMoveItemCandidate() and item.raw_.canEdit_:
       f |= QtCore.Qt.ItemIsEnabled       
     return f
 
@@ -290,7 +290,7 @@ class TreeModel(QtCore.QAbstractItemModel):
       for season in self._seasons_:
         ti = TreeItem(season, self.rootItem_)
         self.rootItem_.appendChild(ti)
-        for mi in season.moveItems_:
+        for mi in season.moveItemCandidates_:
           ti.appendChild(TreeItem(mi, ti))   
       self.endInsertRows()      
     self._emitWorkBenchChanged()

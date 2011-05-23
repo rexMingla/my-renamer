@@ -38,7 +38,7 @@ def _runNonGUI(cl):
   seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(cl.folder_, cl.isRecursive_, extension.DEFAULT_VIDEO_EXTENSIONS)
   for season in seasons:
     utils.out(season)
-    for item in season.moveItems_:
+    for item in season.moveItemCandidates_:
       utils.out(item)
 
 # --------------------------------------------------------------------------------------------------------------------

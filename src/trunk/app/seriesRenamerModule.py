@@ -11,7 +11,7 @@ import os
 import re
 from PyQt4 import QtCore, QtGui
 
-from common import extension, fileHelper, logModel, utils
+from common import extension, fileHelper, moveItemActioner, logModel, utils
 from tv import outputFormat, season, seasonHelper
 
 import inputWidget
@@ -25,7 +25,7 @@ def _performRename(args):
   utils.verify(len(args) == 2, "Must have 2 args")
   actioner = args[0]
   items = args[1]
-  utils.verifyType(actioner, fileHelper.MoveItemActioner)
+  utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
   utils.verifyType(items, list)
   results = actioner.performActions(items)
   return results
@@ -137,7 +137,7 @@ class SeriesRenamerModule(QtCore.QObject):
       if outputFolder == outputWidget.USE_SOURCE_DIRECTORY:
         outputFolder = season.inputFolder_
       oFormat = outputFormat.OutputFormat(formatSettings.outputFileFormat_)
-      for ep in season.moveItems_:
+      for ep in season.moveItemCandidates_:
         if ep.performMove_:
           im = outputFormat.InputMap(season.seasonName_, 
                                      season.seasonNum_, 
@@ -148,7 +148,7 @@ class SeriesRenamerModule(QtCore.QObject):
           newName = fileHelper.FileHelper.sanitizeFilename(newName)
           filenames.append((ep.source_.filename_, newName))
     utils.verify(filenames, "Must have files to have gotten this far")
-    actioner = fileHelper.MoveItemActioner(canOverwrite= not formatSettings.doNotOverwrite_, \
+    actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings.doNotOverwrite_, \
                                            keepSource=formatSettings.keepSourceFiles_)
     actioner.setPercentageCompleteCallback(self._updateProgress)
     actioner.setMessageCallback(self._addMessage)
