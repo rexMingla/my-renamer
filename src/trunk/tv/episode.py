@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: State classes storing input and output file information
 # --------------------------------------------------------------------------------------------------------------------
 import copy
 import os
@@ -16,6 +16,7 @@ UNRESOLVED_NAME = ""
 
 # --------------------------------------------------------------------------------------------------------------------
 class SourceEpisode:
+  """ Information about an input file """
   def __init__(self, epNum, filename):
     utils.verifyType(epNum, int)
     utils.verifyType(filename, str)
@@ -41,6 +42,7 @@ class SourceEpisode:
   
 # --------------------------------------------------------------------------------------------------------------------
 class DestinationEpisode:
+  """ Information about an output file """
   def __init__(self, epNum, epName):
     utils.verifyType(epNum, int)
     utils.verifyType(epName, str)
@@ -65,6 +67,10 @@ class DestinationEpisode:
   
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap:
+  """ 
+  Collection of input or output files mapped by key. In the case of duplicate keys, the first is accepted 
+  and all duplicates thereafter are considered unresolved.
+  """
   def __init__(self):
     self.matches_ = {}
     self.unresolved_ = []
@@ -81,6 +87,7 @@ class EpisodeMap:
       self.matches_[item.epNum_] = item
   
   def setKeyForFilename(self, newKey, filename):
+    """ Set a new key for a given filename, performing required sanitization in the event of key collisions. """
     utils.verifyType(newKey, int)
     utils.verifyType(filename, str)
     

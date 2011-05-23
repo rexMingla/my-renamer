@@ -3,21 +3,23 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Helper functions associated with tv series 
 # --------------------------------------------------------------------------------------------------------------------
-import copy
 import os
 import re
 
-from tvdb_api import tvdb_api
+try:
+  from tvdb_api import tvdb_api
+except ImportError:
+  assert(False)
 
 from common import extension, utils
 import episode
 import fileHelper
-import outputFormat
 import season
 
 class SeasonHelper:
+  """ Collection of tv series functions. """
   @staticmethod
   def seasonFromFolderName(folder):
     utils.verifyType(folder, str)
@@ -158,7 +160,7 @@ class SeasonHelper:
     folders = []
     rootFolder = rootFolder.replace("\\", "/")
     if not isRecursive:
-      if os.path.exists(rootFolder):
+      if fileHelper.FileHelper.dirExists(rootFolder):
         folders.append(rootFolder)
     else:
       for root, dirs, files in os.walk(rootFolder):

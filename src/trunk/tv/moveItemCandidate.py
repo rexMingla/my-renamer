@@ -3,13 +3,14 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: An item that may be selected for move/copy action
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
 import episode
 
 # -----------------------------------------------------------------------------------
 class MoveItemCandidate:
+  """ An item that may be selected for move/copy action. """
   READY          = 1
   MISSING_NEW    = 2
   MISSING_OLD    = 3

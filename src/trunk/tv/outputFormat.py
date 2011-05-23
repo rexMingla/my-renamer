@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Generates an output filename based on InputMap attributes
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
 
@@ -12,7 +12,8 @@ def leftPad(val):
   return ret
 
 # --------------------------------------------------------------------------------------------------------------------
-class InputMap:    
+class InputMap:
+  """ Configurable attributes for output. """
   KEY_SHOW_NAME  = "[show_name]"
   KEY_SERIES_NUM = "[season_num]"
   KEY_EP_NUM     = "[ep_num]"   
@@ -33,6 +34,17 @@ EXAMPLE_INPUT_MAP = InputMap("Entourage", 1, 7, "The Scene")
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:
+  """ 
+  Resolution of input map to create output filename. 
+  Eg. 
+  input_map.data_ = {"[show_name]":  "Entourage", 
+                     "[season_num]": 1, 
+                     "[ep_num]":     7, 
+                     "[ep_name]":    "The Scene"}
+  output_format = OutputFormat("[show_name] S[season_num]E[ep_num] [ep_name])
+  output_format.outputToString(input_map, ".mpg")
+  Resolves to "Entourage S01E07 The Scene.mpg"
+  """
   def __init__(self, formatStr):
     utils.verifyType(formatStr, str)
     self.formatStr_ = formatStr

@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Class responsible for the moving/copying of files
 # --------------------------------------------------------------------------------------------------------------------
 import fileHelper
 import logModel
@@ -11,6 +11,7 @@ import utils
   
 # --------------------------------------------------------------------------------------------------------------------
 class MoveItemActioner:
+  """ Class responsible for the moving/copying of files from source to destination """ 
   SOURCE_DOES_NOT_EXIST = -4
   COULD_NOT_OVERWRITE   = -3
   FAILED                = -2
@@ -36,16 +37,15 @@ class MoveItemActioner:
     self.messageCallback_ = None
   
   def setPercentageCompleteCallback(self, cb):
+    """ Set callback notifying of the overall progress. """
     self.percentageCompleteCallback_ = cb
     
   def setMessageCallback(self, cb):
+    """ Set callback triggered after performing each move/copy. """
     self.messageCallback_ = cb
-    
-  def sendMessage(self, msg):
-    if self.messageCallback_:
-      self.messageCallback_(message)
-      
+          
   def summaryText(self, results):
+    """ Returns pretty print summary of results. """
     utils.verifyType(results, dict)
     ret = ""
     count = 0
@@ -55,7 +55,8 @@ class MoveItemActioner:
     ret += "Total (%d)" % count
     return ret
 
-  def performActions(self, items):
+  def performActions(self, items):    
+    """ Move/Copy multiple files from source to destination. """
     results = {}
     utils.verifyType(items, list)
     count = len(items)
@@ -83,6 +84,7 @@ class MoveItemActioner:
     return results
   
   def performAction(self, source, dest):
+    """ Move/Copy a file from source to destination. """
     utils.verifyType(source, str)
     utils.verifyType(dest, str)
     #sanity checks

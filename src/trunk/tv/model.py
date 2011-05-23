@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Model and other classes pertaining to the set of tv seasons to be modified in the workbench
 # --------------------------------------------------------------------------------------------------------------------
 import copy
 from PyQt4 import QtCore
@@ -17,6 +17,7 @@ import seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class Columns:
+  """ Columns used in workbench model. """
   COL_OLD_NAME = 0
   COL_NEW_NUM  = 1
   COL_NEW_NAME = 2
@@ -27,6 +28,7 @@ RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
   
 # --------------------------------------------------------------------------------------------------------------------
 class TreeItem(object):
+  """ Individual item in the workbench model. The item may represent a season or a moveItemCandidate. """ 
   def __init__(self, rawData=None, parent=None):
     self.parent_ = parent
     self.raw_ = rawData
@@ -127,6 +129,10 @@ class TreeItem(object):
       
 # --------------------------------------------------------------------------------------------------------------------
 class TreeModel(QtCore.QAbstractItemModel):
+  """ 
+  Represents 0 or more tv seasons. Each folder (season) contains a collection of moveItemCandiates. 
+  At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
+  """
   workBenchChangedSignal_ = QtCore.pyqtSignal(bool)
   
   def __init__(self, parent=None):

@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: The input widget and settings
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui, uic
 
@@ -11,7 +11,7 @@ from common import logModel, logStyledDelegate, serializer, utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogSettings():
-  """"""
+  """ Settings serialized on application start up/shut down."""
   def __init__(self):
     self.autoClear_ = True
 
@@ -25,8 +25,7 @@ class LogSettings():
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogWidget(QtGui.QWidget):
-  """"""
-  
+  """ Widget allowing for the configuration of output """
   def __init__(self, parent=None):
     super(QtGui.QWidget, self).__init__(parent)
     self._ui_ = uic.loadUi("ui/ui_LogWidget.ui", self)
@@ -62,6 +61,7 @@ class LogWidget(QtGui.QWidget):
     self._ui_._model_.clearItems()
     
   def _onStateChanged(self):
+    """ Update from settings """
     self._isUpdating = False
     self.logSettings_.fromDictionary(self.dataItem_.data_)
     self._ui_.autoClearCheckBox_.setChecked(self.logSettings_.autoClear_)

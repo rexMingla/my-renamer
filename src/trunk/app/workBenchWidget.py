@@ -89,9 +89,9 @@ class WorkBenchWidget(QtGui.QWidget):
     self._model_.setData(self._currentIndex_, QtCore.QVariant(newKey), model.RAW_DATA_ROLE)
     
   def _onChangeSeasonFinished(self):
-    seasonName = self._changeSeasonWidget_.seasonName()
+    showName = self._changeSeasonWidget_.showName()
     seasonNum = self._changeSeasonWidget_.seasonNumber()
-    var = QtCore.QVariant.fromList([QtCore.QVariant(seasonName), QtCore.QVariant(seasonNum)])
+    var = QtCore.QVariant.fromList([QtCore.QVariant(showName), QtCore.QVariant(seasonNum)])
     self._model_.setData(self._currentIndex_, var, model.RAW_DATA_ROLE)
     
   def _onWorkBenchChanged(self, hasChecked):

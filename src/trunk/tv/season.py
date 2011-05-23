@@ -3,19 +3,16 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Main class for working the tv seasons
 # --------------------------------------------------------------------------------------------------------------------
-import os
-import re
-
 from common import utils
 import episode
-import extension
 import moveItemCandidate
 import seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class Season:
+  """ Creates a list of moveItemCandidates given a source and destination input map. """
   OK                = 1
   UNBALANCED_FILES  = -1
   SEASON_UNRESOLVED = -2

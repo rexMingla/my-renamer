@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: The input widget and settings
 # --------------------------------------------------------------------------------------------------------------------
 import os
 
@@ -13,7 +13,7 @@ from common import serializer, utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class InputSettings():
-  """"""
+  """ Settings serialized on application start up/shut down."""
   def __init__(self):
     self.showRecursive_ = True
     self.folder_ = os.getcwd()
@@ -35,7 +35,7 @@ class InputSettings():
       
 # --------------------------------------------------------------------------------------------------------------------
 class InputWidget(QtGui.QWidget):
-  """"""
+  """ Widget allowing for the configuration of source folders """
   exploreSignal_ = QtCore.pyqtSignal()
   
   def __init__(self, parent=None):
@@ -70,6 +70,7 @@ class InputWidget(QtGui.QWidget):
       self.dataItem_.setData(self.inputSettings_.toDictionary())
     
   def _onStateChanged(self):
+    """ Update from settings """
     self._isUpdating  = True
     self.inputSettings_.fromDictionary(self.dataItem_.data_)
     self._ui_.folderEdit_.setText(self.inputSettings_.folder_)

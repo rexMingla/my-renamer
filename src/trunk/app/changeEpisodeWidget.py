@@ -47,8 +47,9 @@ class ChangeEpisodeWidget(QtGui.QDialog):
     self._ui_.episodeComboBox_.setEnabled(index <> -1)
     
   def episodeNumber(self):
-    """ Returns the currently selected episode number from the dialog. 
-        Returns episode.UNRESOLVED_KEY if non is selected. 
+    """ 
+    Returns the currently selected episode number from the dialog. 
+    Returns episode.UNRESOLVED_KEY if non is selected. 
     """
     if self._ui_.ignoreRadio_.isChecked():
       return episode.UNRESOLVED_KEY

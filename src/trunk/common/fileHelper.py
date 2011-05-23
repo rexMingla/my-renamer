@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Interface to python's file libraries
 # --------------------------------------------------------------------------------------------------------------------
 import os
 import re
@@ -15,6 +15,7 @@ import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class FileHelper:
+  """ Collection of static functions abstracting the python libraries. """
   _VALID_BASENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
                                            string.digits, \
                                            " !#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
