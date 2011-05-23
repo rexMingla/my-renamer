@@ -3,14 +3,21 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Command line arguments for the program
 # --------------------------------------------------------------------------------------------------------------------
 import utils
 import getopt
 import os
 
 class CommandLineParser:
+  """ 
+  Currently there are 3 modes of operation for the application:
+  1) Qt Gui (Under active development).
+  2) Command line. (Not really supported at the moment).
+  3) Unit tests. Run all the unit tests for the project.
+  """
   def usageMessage(self):
+    """ Help message text displayed to user on start up error or if requested by the user. """
     ret = self.name_ + " [-h | -u | -c configFile | -n options]\n" + \
            "  -h -? --help        Show this message\n" + \
            "  -u --unit-tests     Run unit tests\n" + \

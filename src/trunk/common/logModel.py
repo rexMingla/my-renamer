@@ -4,7 +4,7 @@
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Website:             http://code.google.com/p/dps-x509/
-# Purpose of document: All the generic functions that don't have a more appropriate home
+# Purpose of document: Log related classes
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore
 import logging
@@ -13,7 +13,7 @@ import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogLevel:
-  """ copied from logging for now """
+  """ Log levels copied from logging. """
   CRITICAL = 50
   FATAL = CRITICAL
   ERROR = 40
@@ -25,6 +25,7 @@ class LogLevel:
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogColumns:
+  """ Columns used in log model. """
   #COL_LEVEL   = 0
   COL_ACTION  = 0
   COL_MESSAGE = 1
@@ -32,6 +33,7 @@ class LogColumns:
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogItem:
+  """ Information contained in a log entry. """
   def __init__(self, logLevel, action, shortMessage, longMessage=""):
     utils.verifyType(logLevel, int)
     utils.verifyType(action, str)
@@ -44,6 +46,7 @@ class LogItem:
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogModel(QtCore.QAbstractTableModel):
+  """ Collection of LogItems wrapped in a QAbstractTableModel """
   LOG_LEVEL_ROLE = QtCore.Qt.UserRole + 1
   
   def __init__(self, parent):

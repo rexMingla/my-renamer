@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: The output widget and settings
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui, uic
 
@@ -14,7 +14,7 @@ USE_SOURCE_DIRECTORY = ""
 
 # --------------------------------------------------------------------------------------------------------------------
 class OutputSettings():
-  """"""
+  """ Settings serialized on application start up/shut down."""
   def __init__(self):
     self.outputFileFormat_ = outputFormat.DEFAULT_FORMAT.formatStr_
     self.outputFolder_     = USE_SOURCE_DIRECTORY
@@ -40,7 +40,7 @@ class OutputSettings():
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputWidget(QtGui.QWidget):
-  """"""
+  """ Widget allowing for the configuration of output """
   renameSignal_ = QtCore.pyqtSignal()
   
   def __init__(self, parent=None):
@@ -87,6 +87,7 @@ class OutputWidget(QtGui.QWidget):
     self._ui_.formatExampleLabel_.setText(formattedText)
     
   def _readbackGUI(self):
+    """ Update from settings """    
     if not self._isUpdating:
       self.outputSettings_.outputFileFormat_ = utils.toString(self._ui_.formatEdit_.text())
       outputDir = self._ui_.specificDirectoryEdit_.text()

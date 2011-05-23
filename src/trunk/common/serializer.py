@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Interface of loading and saving objects
 # --------------------------------------------------------------------------------------------------------------------
 import pickle
 import sys
@@ -18,8 +18,8 @@ import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class DataItem(QtCore.QObject):
-  """ Interface of loading and saving objects """
-  onChangedSignal_ = QtCore.pyqtSignal()
+  """ Interface of loading and saving objects. Additionally, the object can notify listener when it has changed. """
+  onChangedSignal_ = QtCore.pyqtSignal() #TODO: remove the dependance on Qt
 
   def __init__(self, defaultValue, parent = None):
     super(QtCore.QObject, self).__init__(parent)
@@ -46,10 +46,9 @@ class DataItem(QtCore.QObject):
   data_ = property(getData, setData)
   defaultValue_ = property(getDefaultValue)    
 
-
 # --------------------------------------------------------------------------------------------------------------------
 class Serializer:
-  
+  """ Performs the action serialization of DataItem objects """
   def __init__(self, output):
     utils.verifyType(output, str, "Serializer.__init__ output type")
     self.items_ = {}

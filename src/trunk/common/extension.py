@@ -3,14 +3,21 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Class associated with all things FileExtensions
 # --------------------------------------------------------------------------------------------------------------------
-import re
-
 import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class FileExtensions:
+  """ 
+  Handling of file extensions. Extensions can be loaded from a string or a list. 
+  Strings will be FileExtensions.delimiter separated before being cleaned as follows (using mpg as the example extension):
+  *.mpg -> .mpg
+  .mpg  -> .mpg
+  mpg   -> .mpg
+  Additionally, an extension list that contains "", "*", "*.*", ".*" will be resolved to FileExtensions.ALL_FILES
+  for the entire list.
+  """
   ALL_FILES = ".*"
   
   def __init__(self, extensions):
@@ -49,18 +56,8 @@ class FileExtensions:
   def extensionString(self):
     return FileExtensions.delimiter().join(self._extensions_)
   
-  def escapedFileTypeString(self):
-    ret = ""
-    if self == ALL_FILE_EXTENSIONS:
-      ret = "(?:\\..*)"
-    else:
-      temp = []
-      for item in self._extensions_:
-        temp.append(re.escape(item))
-        ret = "(?:%s)" % "|".join(temp)
-    return ret
-  
   def filterFiles(self, files):
+    """ Return list of files matching extension filter """
     utils.verifyType(files, list)
     ret = []
     if self == ALL_FILE_EXTENSIONS:

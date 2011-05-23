@@ -4,7 +4,7 @@
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Website:             http://code.google.com/p/dps-x509/
-# Purpose of document: All the generic functions that don't have a more appropriate home
+# Purpose of document: Class used to decorate the LogModel
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui
 
@@ -14,6 +14,7 @@ import logModel
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogStyledDelegate(QtGui.QStyledItemDelegate):
+  """ Display error message in the log in a noticable fashion. """
   def paint(self, painter, option, index):
     level, isOk = index.model().data(index, logModel.LogModel.LOG_LEVEL_ROLE).toInt()
     utils.verify(isOk, "Cast to int ok")
@@ -27,4 +28,4 @@ class LogStyledDelegate(QtGui.QStyledItemDelegate):
       painter.restore()    
     else:
       QtGui.QStyledItemDelegate.paint(self, painter, option, index)
-    #super(QtGui.QStyledItemDelegate, self).paint(painter, option, index)
+      

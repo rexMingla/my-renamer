@@ -27,5 +27,7 @@
 #    2011-05-16  2011-05-16      Impr          Select/deselect all option
 #    2011-05-16  2011-05-16      Impr          Tooltips
 #    2011-05-16  2011-05-16      Impr          file extension filtering. *.avi will break it at the moment
+#    2011-05-23                  Impr          Show preview in changeSeasonWidget denoting how many episode are in the season
+#    2011-05-23                  Impr          Remove dependence on Qt in serialization
 
 

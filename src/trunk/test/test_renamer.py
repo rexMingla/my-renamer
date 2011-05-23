@@ -308,16 +308,6 @@ def test_switchUnresolvedKeyForUnresolvedKey(self):
     self.assertEqual(before, after)
 
 # --------------------------------------------------------------------------------------------------------------------
-class ExtensionTest(unittest.TestCase):
-  def test_basic(self):
-    ext = extension.FileExtensions([".mov",".avi"])
-    self.assertEqual(ext.escapedFileTypeString(), "(?:\\.mov|\\.avi)")
-    
-  def test_all(self):
-    ext = extension.FileExtensions([".mov",".*"])
-    self.assertEqual(ext.escapedFileTypeString(), "(?:\\..*)")
-
-# --------------------------------------------------------------------------------------------------------------------
 class OutputFormatTest(unittest.TestCase):
   def setUp(self):
     self.in_ = outputFormat.InputMap("Entourage", 1, 3, "Talk Show")

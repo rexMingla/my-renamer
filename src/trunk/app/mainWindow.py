@@ -13,7 +13,7 @@ import seriesRenamerModule
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
-  """ """
+  """ Window widget for the application. """
   def __init__(self, parent = None):
     super(QtGui.QMainWindow, self).__init__(parent)
 
@@ -47,7 +47,6 @@ class MainWindow(QtGui.QMainWindow):
                                       "windowState":self._ui_.saveState()})
     self.serializer_.saveItems()
     event.accept()
-
     
   def _addDockWidget(self, widget, areas, defaultArea, name):
     utils.verifyType(widget, QtGui.QWidget)

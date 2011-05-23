@@ -3,25 +3,21 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: ??
+# Purpose of document: Module responsible for the renaming of tv series
 # --------------------------------------------------------------------------------------------------------------------
-import glob
-import logging
-import os
-import re
 from PyQt4 import QtCore, QtGui
 
 from common import extension, fileHelper, moveItemActioner, logModel, utils
 from tv import outputFormat, season, seasonHelper
 
 import inputWidget
-import logging
 import logWidget
 import outputWidget
 import workBenchWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 def _performRename(args):
+  """ threaded function that performs the copy/renaming of files """
   utils.verify(len(args) == 2, "Must have 2 args")
   actioner = args[0]
   items = args[1]
@@ -31,6 +27,7 @@ def _performRename(args):
   return results
   
 def _performExplore(args):
+  """ threaded function that searches for tv series based given a set of input folders """
   utils.verify(len(args) == 3, "Must have 3 args")
   folder = args[0]
   isRecursive = args[1]
@@ -43,6 +40,7 @@ def _performExplore(args):
   
 # --------------------------------------------------------------------------------------------------------------------
 class MyThread(QtCore.QThread):
+  """ Custom thread used to perform expensive functions that do not require interaction with Qt GUI elements. """
   def __init__(self, func, *args):
     super(QtCore.QThread, self).__init__()
     self.func_ = func
@@ -50,6 +48,7 @@ class MyThread(QtCore.QThread):
     self.ret_ = None
     
   def run(self):
+    """ Protected function of QThread. """
     try:
       utils.out("running %s" % self.func_.func_name, 1)
       self.ret_ = self.func_(self.args_)
@@ -60,14 +59,19 @@ class MyThread(QtCore.QThread):
     
   @staticmethod
   def runFunc(func, *args):
+    """ Helper function that creates a MyThread and waits for its completion. """
     myThread = MyThread(func, args)
     myThread.start()
     while myThread.isRunning():
-      QtCore.QCoreApplication.processEvents()
+      QtCore.QCoreApplication.processEvents() #Filthy. TODO: remove this!
     return myThread.ret_
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesRenamerModule(QtCore.QObject):
+  """ 
+  Class responsible for the input, output, working and logging components.
+  This class manages all interactions required between the components.
+  """
   _postProgressSignal_ = QtCore.pyqtSignal(int)
   _postMessageSignal_ = QtCore.pyqtSignal(object)
   
@@ -97,16 +101,6 @@ class SeriesRenamerModule(QtCore.QObject):
     self._postMessageSignal_.connect(self._postedAddMessage)
     self.lastLogMessage_ = None
   
-  def _getFolders(self, rootFolder, isRecursive):
-    dirs = []
-    rootFolder = rootFolder.replace("\\", "/")
-    if not isRecursive:
-      dirs.append(rootFolder)
-    else:
-      for root, dirs, files in os.walk(rootFolder):
-        dirs.append(root)      
-    return dirs 
-
   def _explore(self):
     self._enableControls(False)
     self.inputProgressBar_.setVisible(True)
@@ -155,13 +149,13 @@ class SeriesRenamerModule(QtCore.QObject):
     self._addMessage(logModel.LogItem(logModel.LogLevel.INFO, "Starting...", ""))
     ret = MyThread.runFunc(_performRename, actioner, filenames)
     self._enableControls(True)
-    #self._sendSummaryMessages(results)
     
   def _updateProgress(self, percentageComplete):
     utils.verifyType(percentageComplete, int)
     self._postProgressSignal_.emit(percentageComplete)
     
   def _postedUpdateProgress(self, percentageComplete):
+    """ Update progress. Assumed to be main thread """
     utils.verifyType(percentageComplete, int)
     self.outputProgressBar_.setValue(percentageComplete)
 
@@ -170,4 +164,5 @@ class SeriesRenamerModule(QtCore.QObject):
     self._postMessageSignal_.emit(msg)
 
   def _postedAddMessage(self, msg):
+    """ Add message to log. Assumed to be main thread """
     self.logWidget_.appendMessage(msg)

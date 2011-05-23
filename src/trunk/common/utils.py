@@ -13,6 +13,7 @@ import errors
 
 # --------------------------------------------------------------------------------------------------------------------
 def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
+  """ Print the function name. Useful in debugging """
   ret = "??"
   try:
     ret = inspect.stack()[index][3]
@@ -22,14 +23,14 @@ def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogOutputModes:
-  """ defines the output formats for logging """
+  """ Defines the output formats for logging. """
   NONE = 0  
   LOG_ONLY = 1
   PRINT_ONLY = 2
   LOG_AND_PRINT = 3
   
 def setLogMode(mode):
-  """ set the global log mode """
+  """ Set the global log mode """
   global LOG_MODE
   assert(mode == LogOutputModes.NONE or \
          mode == LogOutputModes.LOG_ONLY or \
@@ -38,12 +39,12 @@ def setLogMode(mode):
   LOG_MODE = mode
 
 def setLogLevel(level):
-  """ level 0 -> always print. level 2 -> print only in debug """
+  """ Set the log level. level 0 -> always print. level 2 -> print only in debug. """
   global LOG_LEVEL
   LOG_LEVEL = level
 
 def out(s, level = 0):
-  """ print to standard out and log """
+  """ Print to standard out and log """
   global LOG_LEVEL
   global LOG_MODE
   
@@ -61,12 +62,7 @@ def out(s, level = 0):
 
 # --------------------------------------------------------------------------------------------------------------------
 def verify(test, message):
-  """ if test is not true throw
-  @param test: test to assert on
-  @type  test: bool
-  @param message: to display on error
-  @type  message: string
-  @raise errors.AssertionError: if test == False """
+  """ If test is not true print and throw. """
   if not test:
     text = "assertion failed: %s stack: %s" % (message, stackFunctionName(2))
     out(text)
@@ -74,12 +70,7 @@ def verify(test, message):
       
 # --------------------------------------------------------------------------------------------------------------------
 def verifyType(obj, class_or_type_or_tuple, msg=""):
-  """ if test is not true throw
-  @param test: test to assert on
-  @type  test: bool
-  @param message: to display on error
-  @type  message: string
-  @raise errors.AssertionError: if different """
+  """ Compare type and object are of the same class. If not true print and throw. """
   if not isinstance(obj, class_or_type_or_tuple):
     text = "%s type mismatch: %s is not %s. real type: %s" % (stackFunctionName(2), toString(obj), str(class_or_type_or_tuple), type(obj))
     out(text)
@@ -87,7 +78,9 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
 
 # --------------------------------------------------------------------------------------------------------------------
 def listCompare(left, right):
-  #assumes lists are already ordered
+  """ 
+  Compare two lists (both assumed to already be sorted). 
+  Returns False if the lists are different sizes or their contents do not match up and True othewise. """
   verifyType(left, list)
   verifyType(right, list)
   isSame = len(left) == len(right)
@@ -103,6 +96,8 @@ def listCompare(left, right):
   
 # --------------------------------------------------------------------------------------------------------------------
 def dictCompare(left, right):
+  """ Compare two dictionaries. 
+  Returns False if the dictionaries are different sizes or their contents do not match up and True othewise. """
   verifyType(left, dict)
   verifyType(right, dict)
   isSame = len(left) == len(right)
@@ -127,11 +122,8 @@ def dictCompare(left, right):
 
 # --------------------------------------------------------------------------------------------------------------------
 def toString(value, defaultIfNull=""):
-  """ 
-  attempt to convert string. returns defaultIfNull if null 
-  @rtype: string 
-  """
-  verify(isinstance(defaultIfNull, str), "type mismatch: defaultIfNull")
+  """ Attempt to convert string. returns defaultIfNull if null. """
+  verify(isinstance(defaultIfNull, str), "type mismatch: defaultIfNull") #will go recursive if we use verifyType() here
   v = defaultIfNull
   try:
     v = str(value)
@@ -142,10 +134,7 @@ def toString(value, defaultIfNull=""):
 
 # --------------------------------------------------------------------------------------------------------------------
 def toInt(value):
-  """ 
-  attempt to convert string to int. returns 0 if it is not possible
-  @rtype: int
-  """
+  """ Attempt to convert string to int. Returns 0 if it is not possible. """
   v = 0
   try:
     v = int(value)
@@ -156,6 +145,7 @@ def toInt(value):
 
 # --------------------------------------------------------------------------------------------------------------------
 def strToBool(value):
+  """ Cast a string to a Boolean """
   verifyType(value, str)
   return value.lower() in ("yes", "true", "t", "1")
 
