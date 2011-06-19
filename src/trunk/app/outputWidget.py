@@ -73,6 +73,12 @@ class OutputWidget(QtGui.QWidget):
     fsModel.setRootPath("")
     completer.setModel(fsModel)
     self._ui_.specificDirectoryEdit_.setCompleter(completer)
+    
+    #tooltip
+    toolTipText = ["Avaible options:"]
+    for key in outputFormat.HELP_INPUT_MAP.data_:
+      toolTipText.append("%s -> %s" % (key, outputFormat.HELP_INPUT_MAP.data_[key]))
+    self._ui_.formatEdit_.setToolTip("\n".join(toolTipText))
 
     self._isUpdating = False
     

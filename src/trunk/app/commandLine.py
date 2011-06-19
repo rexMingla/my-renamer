@@ -28,7 +28,7 @@ class CommandLineParser:
            "  -r --recursive      Recurse sub folders. Default False\n" + \
            "  -t --test-only      Show changes without moving files. Default False\n"
     if self.errorMessage_:
-      ret += "Error: " + self.errorMessage_
+      ret += "Error: " + utils.toString(self.errorMessage_)
     return ret
 
   def __init__(self, argv, defaultConfig=""):
