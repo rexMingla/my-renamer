@@ -13,9 +13,8 @@ try:
 except ImportError:
   assert(False)
 
-from common import extension, utils
+from common import extension, fileHelper, utils
 import episode
-import fileHelper
 import season
 
 class SeasonHelper:
