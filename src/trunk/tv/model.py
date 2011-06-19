@@ -8,9 +8,8 @@
 import copy
 from PyQt4 import QtCore
 
-from common import utils
+from common import fileHelper, utils
 import episode
-import fileHelper
 import moveItemCandidate
 import season
 import seasonHelper

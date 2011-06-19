@@ -19,9 +19,10 @@ if hasQt:
 
 import unittest
 
-from app import commandLine, utils
+from app import commandLine
+from common import extension, utils
 from test import test_app, test_renamer
-from tv import seasonHelper, outputFormat, extension
+from tv import seasonHelper, outputFormat
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runGUI(cl):  

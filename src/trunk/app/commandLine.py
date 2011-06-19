@@ -5,9 +5,10 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Command line arguments for the program
 # --------------------------------------------------------------------------------------------------------------------
-import utils
 import getopt
 import os
+
+from common import utils
 
 class CommandLineParser:
   """ 
