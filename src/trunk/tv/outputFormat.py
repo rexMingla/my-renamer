@@ -57,5 +57,5 @@ class OutputFormat:
       ret = ret.replace(key, inputs.data_[key])
     return ret + ext
 
-DEFAULT_FORMAT = OutputFormat("[ep_num] - [ep_name]")
+DEFAULT_FORMAT = OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name]")
   

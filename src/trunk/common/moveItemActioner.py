@@ -51,7 +51,7 @@ class MoveItemActioner:
     count = 0
     for key in results.keys():
       ret += "%s (%d) " % (MoveItemActioner.resultStr(key), results[key])
-      count += 1
+      count += results[key]
     ret += "Total (%d)" % count
     return ret
 
