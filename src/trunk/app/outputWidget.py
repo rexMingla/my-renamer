@@ -29,7 +29,7 @@ class OutputWidget(QtGui.QWidget):
     self._ui_.useSpecificDirectoryRadio_.toggled.connect(self._ui_.specificDirectoryButton_.setEnabled)
     self._ui_.formatEdit_.textChanged.connect(self._updatePreviewText)
     self._updatePreviewText()
-
+    
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)
     fsModel.setRootPath("")
@@ -37,12 +37,16 @@ class OutputWidget(QtGui.QWidget):
     self._ui_.specificDirectoryEdit_.setCompleter(completer)
     
     #tooltip
-    toolTipText = ["Avaible options:"]
-    for key in outputFormat.HELP_INPUT_MAP.data_:
-      toolTipText.append("%s -> %s" % (key, outputFormat.HELP_INPUT_MAP.data_[key]))
+    toolTipText = ["Available options:"]
+    for key, value in outputFormat.TvInputMap.exampleInputMap().data.items():
+      toolTipText.append("%s -> %s" % (key, value))
     self._ui_.formatEdit_.setToolTip("\n".join(toolTipText))
 
     self.stopActioning()
+    self._mode = None
+    
+  def setMode(self, mode):
+    self._mode = mode
     
   def enableControls(self, isEnabled):
     self._ui_.renameButton_.setEnabled(isEnabled)
@@ -50,7 +54,7 @@ class OutputWidget(QtGui.QWidget):
   def _updatePreviewText(self):
     text = utils.toString(self._ui_.formatEdit_.text())
     oFormat = outputFormat.OutputFormat(text)
-    formattedText = oFormat.outputToString(outputFormat.EXAMPLE_INPUT_MAP)
+    formattedText = oFormat.outputToString(outputFormat.TvInputMap.exampleInputMap())
     formattedText = "Example: %s" % fileHelper.FileHelper.sanitizeFilename(formattedText)
     self._ui_.formatExampleLabel_.setText(formattedText)
     
@@ -83,11 +87,10 @@ class OutputWidget(QtGui.QWidget):
     return data
   
   def setConfig(self, data):
-    self._ui_.formatEdit_.setText(data.get("format", outputFormat.DEFAULT_FORMAT.formatStr_))
+    self._ui_.formatEdit_.setText(data.get("format", outputFormat.TvInputMap.defaultFormatStr()))
     outputDir = data.get("folder", USE_SOURCE_DIRECTORY)
     self._ui_.useSourceDirectoryRadio_.setChecked(outputDir == USE_SOURCE_DIRECTORY)
     if outputDir != USE_SOURCE_DIRECTORY:
       self._ui_.specificDirectoryEdit_.setText(outputDir)
     self._ui_.moveRadio_.setChecked(data.get("move", True))
     self._ui_.doNotOverwriteCheckBox_.setChecked(data.get("dontOverwrite", True))
-    self._isUpdating  = False
