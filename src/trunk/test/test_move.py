@@ -10,8 +10,8 @@ import os
 sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import unittest
 
-from app import outputWidget, utils
-from common import fileHelper, moveItemActioner
+from app import outputWidget
+from common import fileHelper, moveItemActioner, utils
 from tv import moveItemCandidate
 
 # --------------------------------------------------------------------------------------------------------------------

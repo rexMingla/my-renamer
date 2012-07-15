@@ -21,7 +21,7 @@ import unittest
 
 from app import commandLine
 from common import extension, utils
-from test import test_app, test_renamer
+from test import test_renamer, test_move
 from tv import seasonHelper, outputFormat
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -36,8 +36,8 @@ def _runGUI(cl):
 # --------------------------------------------------------------------------------------------------------------------
 def _runTests():
   suite = unittest.TestSuite([
-    unittest.TestLoader().loadTestsFromModule(test_app),
-    unittest.TestLoader().loadTestsFromModule(test_renamer)
+    unittest.TestLoader().loadTestsFromModule(test_renamer),
+    #unittest.TestLoader().loadTestsFromModule(test_move)
   ])
   
   runner = unittest.TextTestRunner(verbosity=2)

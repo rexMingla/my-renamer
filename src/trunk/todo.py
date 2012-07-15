@@ -31,14 +31,15 @@
 #    2011-05-23  2012-07-15      Impr          Remove dependence on Qt in serialization (removed serialization)
 
 #    v 0.2
-#    2012-07-13  2012-07-16      Impr          Replace serialization with jsonpickle lib
+#    2012-07-13  2012-07-15      Impr          Replace serialization with jsonpickle lib
 #    2012-07-13                  Impr          Save log to file
 #    2012-07-13                  Impr          Increase logging. timing, etc.
-#    2012-07-13  2012-07-16      Impr          Allow stopping of search / rename
+#    2012-07-13  2012-07-15      Impr          Allow stopping of search / rename
 #    2012-07-13                  Impr          Better gui for tv series lookup (and episode rename)
-#    2012-07-13                  Impr          Cache tv series lookups
-#    2012-07-13  2012-07-16      Impr          Show progress for folder search
+#    2012-07-13  2012-07-15      Impr          Cache tv series lookups
+#    2012-07-13  2012-07-15      Impr          Show progress for folder search
 #    2012-07-13                  Impr          Integrate with movie code
+#    2012-07-15                  Impr          Fix setup.py
 
 
 

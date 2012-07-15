@@ -8,6 +8,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 import logging
 import inspect
+import time
 
 import errors
 
@@ -148,6 +149,16 @@ def strToBool(value):
   """ Cast a string to a Boolean """
   verifyType(value, str)
   return value.lower() in ("yes", "true", "t", "1")
+
+# --------------------------------------------------------------------------------------------------------------------
+def printTiming(func):
+  def wrapper(*arg):
+      t1 = time.time()
+      res = func(*arg)
+      t2 = time.time()
+      print "%s(%s) took %0.3f ms" % (func.func_name, ",".join(map(str, arg)), (t2-t1) * 1000.0)
+      return res
+  return wrapper
 
 # --------------------------------------------------------------------------------------------------------------------
 #set the filthy globals...
