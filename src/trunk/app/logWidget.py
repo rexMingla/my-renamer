@@ -7,21 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui, uic
 
-from common import logModel, logStyledDelegate, serializer, utils
-
-# --------------------------------------------------------------------------------------------------------------------
-class LogSettings():
-  """ Settings serialized on application start up/shut down."""
-  def __init__(self):
-    self.autoClear_ = True
-
-  def toDictionary(self):
-    return {"autoClear":utils.toString(self.autoClear_)}
-
-  def fromDictionary(self, dic):
-    utils.verifyType(dic, dict)
-    if dic.has_key("autoClear") and isinstance(dic["autoClear"], str):  
-      self.autoClear_ = utils.strToBool(dic["autoClear"])
+from common import logModel, logStyledDelegate, utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogWidget(QtGui.QWidget):
@@ -32,13 +18,6 @@ class LogWidget(QtGui.QWidget):
     self._ui_.clearButton_.clicked.connect(self._clearLog)
     self._ui_.clearButton_.setEnabled(True)
 
-    self._ui_.autoClearCheckBox_.toggled.connect(self._readbackGUI)
-    
-    self.logSettings_ = LogSettings()
-    self.dataItem_ = serializer.DataItem(self.logSettings_.toDictionary())
-    self.dataItem_.onChangedSignal_.connect(self._onStateChanged)
-    self._onStateChanged()
-    
     self._model_ = logModel.LogModel(self)
     self._ui_.logView_.setModel(self._model_)
     self._ui_.logView_.setItemDelegate(logStyledDelegate.LogStyledDelegate())
@@ -50,7 +29,7 @@ class LogWidget(QtGui.QWidget):
     self._isUpdating = False
     
   def onRename(self):
-    if self.logSettings_.autoClear_:
+    if self._ui_.autoClearCheckBox_.isChecked():
       self._clearLog()
     
   def appendMessage(self, item):
@@ -60,15 +39,10 @@ class LogWidget(QtGui.QWidget):
   def _clearLog(self):
     self._ui_._model_.clearItems()
     
-  def _onStateChanged(self):
+  def setConfig(self, data):
     """ Update from settings """
-    self._isUpdating = False
-    self.logSettings_.fromDictionary(self.dataItem_.data_)
-    self._ui_.autoClearCheckBox_.setChecked(self.logSettings_.autoClear_)
-    self._isUpdating  = False
+    self._ui_.autoClearCheckBox_.setChecked(data.get("autoClear", False))
   
-  def _readbackGUI(self):
-    if not self._isUpdating:
-      self.logSettings_.autoClear_ = self._ui_.autoClearCheckBox_.isChecked()
-      self.dataItem_.setData(self.logSettings_.toDictionary())      
+  def getConfig(self):
+    return {"autoClear" : self._ui_.autoClearCheckBox_.isChecked()}
     

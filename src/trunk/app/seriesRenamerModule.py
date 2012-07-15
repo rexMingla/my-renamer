@@ -5,6 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module responsible for the renaming of tv series
 # --------------------------------------------------------------------------------------------------------------------
+import collections
 from PyQt4 import QtCore, QtGui
 
 from common import extension, fileHelper, moveItemActioner, logModel, utils
@@ -15,72 +16,96 @@ import logWidget
 import outputWidget
 import workBenchWidget
 
-# --------------------------------------------------------------------------------------------------------------------
-def _performRename(args):
-  """ threaded function that performs the copy/renaming of files """
-  utils.verify(len(args) == 2, "Must have 2 args")
-  actioner = args[0]
-  items = args[1]
-  utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
-  utils.verifyType(items, list)
-  results = actioner.performActions(items)
-  return results
-  
-def _performExplore(args):
-  """ threaded function that searches for tv series based given a set of input folders """
-  utils.verify(len(args) == 3, "Must have 3 args")
-  folder = args[0]
-  isRecursive = args[1]
-  ext = args[2]
-  utils.verifyType(folder, str)
-  utils.verifyType(isRecursive, bool)
-  utils.verifyType(ext, extension.FileExtensions)
-  seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(folder, isRecursive, ext)
-  return seasons
-  
-# --------------------------------------------------------------------------------------------------------------------
 class MyThread(QtCore.QThread):
-  """ Custom thread used to perform expensive functions that do not require interaction with Qt GUI elements. """
-  def __init__(self, func, *args):
-    super(QtCore.QThread, self).__init__()
-    self.func_ = func
-    self.args_ = args[0]
-    self.ret_ = None
+  progressSignal_ = QtCore.pyqtSignal(int)
+  logSignal_ = QtCore.pyqtSignal(object)
+  newDataSignal_ = QtCore.pyqtSignal(object)
+
+  def __init__(self):
+    super(MyThread, self).__init__()
+    self.userStopped = False
+  
+  def __del__(self):
+    self.join()
+    
+  def join(self):
+    self.userStopped = True
+    
+  def _onLog(self, msg):
+    self.logSignal_.emit(msg)
+  
+  def _onProgress(self, percentage):
+    self.progressSignal_.emit(percentage)
+    
+  def _onNewData(self, data):
+    self.newDataSignal_.emit(data)
+
+class RenameThread(MyThread):  
+  def __init__(self, actioner, items):
+    super(RenameThread, self).__init__()
+    utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
+    utils.verifyType(items, list)
+    self._actioner = actioner
+    self._items = items
     
   def run(self):
-    """ Protected function of QThread. """
+    results = {} #hist
+    for i, item in enumerate(self._items):
+      source, dest = item
+      if self.userStopped:
+        return
+      res = self._actioner.performAction(source, dest)
+      self._onLog(moveItemActioner.MoveItemActioner.resultToLogItem(res, source, dest))
+      if not results.has_key(res):
+        results[res] = 0  
+      results[res] += 1  
+      self._onProgress(int(100 * (i + 1) / len(self._items)))
+    self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+                                 "Rename / move complete", 
+                                 moveItemActioner.MoveItemActioner.summaryText(results)))      
+    
+class ExploreThread(MyThread):
+  def __init__(self, folder, isRecursive, ext):
+    super(ExploreThread, self).__init__()
+    utils.verifyType(folder, str)
+    utils.verifyType(isRecursive, bool)
+    utils.verifyType(ext, extension.FileExtensions)
+    self._folder = folder
+    self._isRecursive = isRecursive
+    self._ext = ext
+    
+  def run(self):
+    dirs = seasonHelper.SeasonHelper.getFolders(self._folder, self._isRecursive)
+    for i, d in enumerate(dirs):
+      if self.userStopped:
+        return
+      s = seasonHelper.SeasonHelper.getSeasonForFolder(d, self._ext)
+      if s:
+        self._onNewData(s)
+      self._onProgress(int(100 * (i + 1) / len(dirs)))
+      
+    """ Protected function of QThread.
     try:
       utils.out("running %s" % self.func_.func_name, 1)
       self.ret_ = self.func_(self.args_)
       utils.out("finished: %s success" % self.func_.func_name, 1)
     except:
       utils.out("finished: %s failed" % self.func_.func_name)
-      pass
-    
-  @staticmethod
-  def runFunc(func, *args):
-    """ Helper function that creates a MyThread and waits for its completion. """
-    myThread = MyThread(func, args)
-    myThread.start()
-    while myThread.isRunning():
-      QtCore.QCoreApplication.processEvents() #Filthy. TODO: remove this!
-    return myThread.ret_
+      pass"""
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesRenamerModule(QtCore.QObject):
   """ 
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
-  """
-  _postProgressSignal_ = QtCore.pyqtSignal(int)
-  _postMessageSignal_ = QtCore.pyqtSignal(object)
-  
+  """  
   def __init__(self, parent=None):
     super(QtCore.QObject, self).__init__(parent)
     
     #input widget
     self.inputWidget_ = inputWidget.InputWidget(parent)
     self.inputWidget_.exploreSignal_.connect(self._explore)
+    self.inputWidget_.stopSignal_.connect(self._stopSearch)
     
     #workbench widget
     self.workBenchWidget_ = workBenchWidget.WorkBenchWidget(parent)
@@ -94,43 +119,47 @@ class SeriesRenamerModule(QtCore.QObject):
     
     #progress widget
     self.outputProgressBar_ = self.outputWidget_.progressBar_
-    self._postProgressSignal_.connect(self._postedUpdateProgress)
+    self.outputProgressBar_.setVisible(False)
     
     #log widget
     self.logWidget_ = logWidget.LogWidget(parent)
-    self._postMessageSignal_.connect(self._postedAddMessage)
+    #self._postMessageSignal_.connect(self._postedAddMessage)
     self.lastLogMessage_ = None
-  
+    
+    self._workerThread = None
+    self._isShuttingDown = False
+    
+  def __del__(self):
+    self._isShuttingDown = True
+    self._stopThread()
+    
   def _explore(self):
     self._enableControls(False)
-    self.inputProgressBar_.setVisible(True)
-    ext = extension.FileExtensions([])
-    ext.setExtensionsFromString(self.inputWidget_.inputSettings_.extensions_)
-    seasons = MyThread.runFunc(_performExplore, \
-                               self.inputWidget_.inputSettings_.folder_, \
-                               self.inputWidget_.inputSettings_.showRecursive_, \
-                               ext)
-    self.workBenchWidget_.updateModel(seasons)
-    self.inputProgressBar_.setVisible(False)
-    self._enableControls(True)
-    
-  def _enableControls(self, isEnabled=True):
-    self.inputWidget_.enableControls(isEnabled)
-    self.workBenchWidget_.setEnabled(isEnabled)
-    self.outputWidget_.enableControls(isEnabled)
-    
+    self.workBenchWidget_.setSeasons([])
+    self.inputWidget_.startSearching()
+    data = self.inputWidget_.getConfig()
+    assert(not self._workerThread or not self._workerThread.isRunning())
+    self._workerThread = ExploreThread(data["folder"], 
+                                       data["recursive"], 
+                                       extension.FileExtensions(data["extensions"].split()))
+    self._workerThread.progressSignal_.connect(self._updateSearchProgress)
+    self._workerThread.newDataSignal_.connect(self._onSeasonFound)
+    self._workerThread.finished.connect(self._onThreadFinished)
+    self._workerThread.terminated.connect(self._onThreadFinished)    
+    self._workerThread.start()    
+
   def _rename(self):
     self._enableControls(False)
     self.logWidget_.onRename()
-    formatSettings = self.outputWidget_.outputSettings_
+    formatSettings = self.outputWidget_.getConfig()
     filenames = []
     seasons = self.workBenchWidget_.seasons()
     utils.verify(seasons, "Must have seasons to have gotten this far")
     for season in seasons:
-      outputFolder = formatSettings.outputFolder_
+      outputFolder = formatSettings["folder"]
       if outputFolder == outputWidget.USE_SOURCE_DIRECTORY:
         outputFolder = season.inputFolder_
-      oFormat = outputFormat.OutputFormat(formatSettings.outputFileFormat_)
+      oFormat = outputFormat.OutputFormat(formatSettings["format"])
       for ep in season.moveItemCandidates_:
         if ep.performMove_:
           im = outputFormat.InputMap(season.seasonName_, 
@@ -142,27 +171,54 @@ class SeriesRenamerModule(QtCore.QObject):
           newName = fileHelper.FileHelper.sanitizeFilename(newName)
           filenames.append((ep.source_.filename_, newName))
     utils.verify(filenames, "Must have files to have gotten this far")
-    actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings.doNotOverwrite_, \
-                                           keepSource=formatSettings.keepSourceFiles_)
-    actioner.setPercentageCompleteCallback(self._updateProgress)
-    actioner.setMessageCallback(self._addMessage)
+    actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings["dontOverwrite"], \
+                                                 keepSource=not formatSettings["move"])
+    assert(not self._workerThread or not self._workerThread.isRunning())
     self._addMessage(logModel.LogItem(logModel.LogLevel.INFO, "Starting...", ""))
-    ret = MyThread.runFunc(_performRename, actioner, filenames)
-    self._enableControls(True)
     
-  def _updateProgress(self, percentageComplete):
+    self.outputWidget_.startActioning()
+    self._workerThread = RenameThread(actioner, filenames)
+    self._workerThread.progressSignal_.connect(self._updateRenameProgress)
+    self._workerThread.logSignal_.connect(self._addMessage)
+    self._workerThread.finished.connect(self._onThreadFinished)
+    self._workerThread.terminated.connect(self._onThreadFinished)    
+    self._workerThread.start()
+    
+  def _stopThread(self):
+    self._workerThread.join()
+    
+  def _onThreadFinished(self):    
+    if not self._isShuttingDown:
+      self.inputWidget_.stopSearching()
+      self.outputWidget_.stopActioning()
+      self._enableControls(True)      
+      
+  def _stopRename(self):
+    self._stopThread()
+   
+  def _stopSearch(self):
+    self._stopThread()
+    
+  def _enableControls(self, isEnabled=True):
+    self.inputWidget_.enableControls(isEnabled)
+    self.workBenchWidget_.setEnabled(isEnabled)
+    self.outputWidget_.enableControls(isEnabled)
+    
+  def _onSeasonFound(self, season):
+    if season:
+      self.workBenchWidget_.addSeason(season)    
+    
+  def _updateSearchProgress(self, percentageComplete):
+    """ Update progress. Assumed to be main thread """
     utils.verifyType(percentageComplete, int)
-    self._postProgressSignal_.emit(percentageComplete)
-    
-  def _postedUpdateProgress(self, percentageComplete):
+    self.inputProgressBar_.setValue(percentageComplete)
+
+  def _addMessage(self, msg):
+    """ Add message to log. Assumed to be main thread """
+    self.logWidget_.appendMessage(msg)
+
+  def _updateRenameProgress(self, percentageComplete):
     """ Update progress. Assumed to be main thread """
     utils.verifyType(percentageComplete, int)
     self.outputProgressBar_.setValue(percentageComplete)
 
-  def _addMessage(self, msg):
-    utils.verifyType(msg, logModel.LogItem)
-    self._postMessageSignal_.emit(msg)
-
-  def _postedAddMessage(self, msg):
-    """ Add message to log. Assumed to be main thread """
-    self.logWidget_.appendMessage(msg)

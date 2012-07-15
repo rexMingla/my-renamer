@@ -28,6 +28,17 @@
 #    2011-05-16  2011-05-16      Impr          Tooltips
 #    2011-05-16  2011-05-16      Impr          file extension filtering. *.avi will break it at the moment
 #    2011-05-23                  Impr          Show preview in changeSeasonWidget denoting how many episode are in the season
-#    2011-05-23                  Impr          Remove dependence on Qt in serialization
+#    2011-05-23  2012-07-15      Impr          Remove dependence on Qt in serialization (removed serialization)
+
+#    v 0.2
+#    2012-07-13  2012-07-16      Impr          Replace serialization with jsonpickle lib
+#    2012-07-13                  Impr          Save log to file
+#    2012-07-13                  Impr          Increase logging. timing, etc.
+#    2012-07-13  2012-07-16      Impr          Allow stopping of search / rename
+#    2012-07-13                  Impr          Better gui for tv series lookup (and episode rename)
+#    2012-07-13                  Impr          Cache tv series lookups
+#    2012-07-13  2012-07-16      Impr          Show progress for folder search
+#    2012-07-13                  Impr          Integrate with movie code
+
 
 
