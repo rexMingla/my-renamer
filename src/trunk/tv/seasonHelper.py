@@ -9,7 +9,7 @@ import os
 import re
 
 try:
-  from tvdb_api import tvdb_api
+  import tvdb_api
 except ImportError:
   assert(False)
 
@@ -173,19 +173,25 @@ class SeasonHelper:
     utils.verifyType(extensionFilter, extension.FileExtensions)
     seasons = []
     dirs = SeasonHelper.getFolders(rootFolder, isRecursive)
-    for d in dirs:
-      seasonName, seriesNum = SeasonHelper.seasonFromFolderName(d)
-      tempFiles = extensionFilter.filterFiles(os.listdir(d))
-      files = []
-      for f in tempFiles:
-        filename = fileHelper.FileHelper.joinPath(d, f) 
-        if fileHelper.FileHelper.isFile(filename):
-          files.append(filename)
-      if not seasonName == episode.UNRESOLVED_NAME or len(files):
-        sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
-        destMap = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
-        s = season.Season(seasonName, seriesNum, sourceMap, destMap, d)
-        s.inputFolder_ = d
-        seasons.append(s)
+    for d in enumerate(dirs):
+      s= SeasonHelper.getSeasonForFolder(d, extensionFilter)
+      seasons.append(s)
     return seasons
 
+  @staticmethod
+  def getSeasonForFolder(folder, extensionFilter):
+    seasonName, seriesNum = SeasonHelper.seasonFromFolderName(folder)
+    tempFiles = extensionFilter.filterFiles(os.listdir(folder))
+    files = []
+    for f in tempFiles:
+      filename = fileHelper.FileHelper.joinPath(folder, f) 
+      if fileHelper.FileHelper.isFile(filename):
+        files.append(filename)
+    s = None
+    if not seasonName == episode.UNRESOLVED_NAME or len(files):
+      sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
+      destMap = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
+      s = season.Season(seasonName, seriesNum, sourceMap, destMap, folder)
+      s.inputFolder_ = folder
+    return s
+    

@@ -282,11 +282,24 @@ class TreeModel(QtCore.QAbstractItemModel):
 
     return parent_.childCount()
   
+  def addSeason(self, s):
+    utils.verifyType(s, season.Season)
+    #check if already in list
+    self.beginInsertRows(QtCore.QModelIndex(), len(self._seasons_), len(self._seasons_))
+    ti = TreeItem(s, self.rootItem_)
+    self.rootItem_.appendChild(ti)
+    for mi in s.moveItemCandidates_:
+      ti.appendChild(TreeItem(mi, ti))  
+    self._seasons_.append(s)
+    self.endInsertRows()      
+    self._emitWorkBenchChanged()
+  
   def setSeasons(self, seasons):
     utils.verifyType(seasons, list)
     if self._seasons_:
       self.beginRemoveRows(QtCore.QModelIndex(), 0, len(self._seasons_) - 1)
       self.rootItem_ = TreeItem()
+      self._seasons_ = []
       self.endRemoveRows()
     
     self._seasons_ = seasons

@@ -46,7 +46,11 @@ class WorkBenchWidget(QtGui.QWidget):
     
     self._model_.workBenchChangedSignal_.connect(self._onWorkBenchChanged)
     
-  def updateModel(self, seasons):
+  def addSeason(self, season):
+    self._model_.addSeason(season)
+    self._ui_.view_.expandAll()
+    
+  def setSeasons(self, seasons):
     self._model_.setSeasons(seasons)
     self._ui_.view_.expandAll()
     self._ui_.editEpisodeButton_.setEnabled(False)

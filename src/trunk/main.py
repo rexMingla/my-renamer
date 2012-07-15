@@ -32,15 +32,6 @@ def _runGUI(cl):
   mw.show()
   
   app.exec_()
-  
-# --------------------------------------------------------------------------------------------------------------------
-def _runNonGUI(cl):   
-  utils.verify(cl.folder_, "Folder is not empty")
-  seasons = seasonHelper.SeasonHelper.getSeasonsForFolders(cl.folder_, cl.isRecursive_, extension.DEFAULT_VIDEO_EXTENSIONS)
-  for season in seasons:
-    utils.out(season)
-    for item in season.moveItemCandidates_:
-      utils.out(item)
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runTests():

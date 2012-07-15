@@ -44,7 +44,8 @@ class MoveItemActioner:
     """ Set callback triggered after performing each move/copy. """
     self.messageCallback_ = cb
           
-  def summaryText(self, results):
+  @staticmethod
+  def summaryText(results):
     """ Returns pretty print summary of results. """
     utils.verifyType(results, dict)
     ret = ""
@@ -60,28 +61,21 @@ class MoveItemActioner:
     results = {}
     utils.verifyType(items, list)
     count = len(items)
-    for i in range(count):
-      item = items[i]
+    for i, item in enumerate(items):
       res = self.performAction(item[0], item[1])
       if not results.has_key(res):
         results[res] = 0  
       results[res] += 1
-      if self.percentageCompleteCallback_:
-        prog = 100 * (i + 1) / count
-        self.percentageCompleteCallback_(prog)
-      if self.messageCallback_:
-        longText = "%s -> %s" % (item[0], item[1]) 
-        shortText = "%s -> %s" % (fileHelper.FileHelper.basename(item[0]), fileHelper.FileHelper.basename(item[1]))
-        level = logModel.LogLevel.INFO
-        if res <> MoveItemActioner.SUCCESS:
-          level = logModel.LogLevel.ERROR
-        self.messageCallback_(logModel.LogItem(level, \
-                                               MoveItemActioner.resultStr(res), \
-                                               shortText, \
-                                               longText))
-    if self.messageCallback_:
-      self.messageCallback_(logModel.LogItem(logModel.LogLevel.INFO, "Complete", self.summaryText(results)))      
     return results
+  
+  @staticmethod
+  def resultToLogItem(res, source, dest):
+    longText = "%s -> %s" % (source, dest) 
+    shortText = "%s -> %s" % (fileHelper.FileHelper.basename(source), fileHelper.FileHelper.basename(dest))
+    level = logModel.LogLevel.INFO
+    if res <> MoveItemActioner.SUCCESS:
+      level = logModel.LogLevel.ERROR
+    return logModel.LogItem(level, MoveItemActioner.resultStr(res), shortText, longText)
   
   def performAction(self, source, dest):
     """ Move/Copy a file from source to destination. """

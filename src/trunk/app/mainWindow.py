@@ -5,18 +5,24 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: MainWindow for the application
 # --------------------------------------------------------------------------------------------------------------------
-from PyQt4 import QtGui, QtCore, uic
+import os
 
-from common import serializer, utils
+from PyQt4 import QtGui, QtCore, uic
+import jsonpickle
+jsonpickle.set_encoder_options("simplejson", indent=2)
+
+from common import utils
 
 import seriesRenamerModule
+
+
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
   """ Window widget for the application. """
-  def __init__(self, parent = None):
+  def __init__(self, configFile="config.txt", parent = None):
     super(QtGui.QMainWindow, self).__init__(parent)
-
+    self.configFile = configFile
     self.seriesModule_ = seriesRenamerModule.SeriesRenamerModule(self)
 
     self._ui_ = uic.loadUi("ui/ui_MainWindow.ui", self)
@@ -28,24 +34,18 @@ class MainWindow(QtGui.QMainWindow):
     self._addDockWidget(self.seriesModule_.outputWidget_, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
     self._addDockWidget(self.seriesModule_.logWidget_, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
-    self.mainWindowDataItem_ = serializer.DataItem({"geometry":self._ui_.saveGeometry(), \
-                                                    "windowState":self._ui_.saveState()})
-    self.mainWindowDataItem_.onChangedSignal_.connect(self._mainWindowSettingsChanged)
     self.isShuttingDown_ = False
     
     #serializer
-    self.serializer_ = serializer.Serializer("config.p")
-    self.serializer_.addItem("input", self.seriesModule_.inputWidget_.dataItem_)
-    self.serializer_.addItem("output", self.seriesModule_.outputWidget_.dataItem_)
-    self.serializer_.addItem("log", self.seriesModule_.logWidget_.dataItem_)
-    self.serializer_.addItem("mainWindow", self.mainWindowDataItem_)
-    self.serializer_.loadItems()
+    self.configItems = {"input" : self.seriesModule_.inputWidget_,
+                        "output" : self.seriesModule_.outputWidget_,
+                        "log" : self.seriesModule_.logWidget_,
+                        "mainWindow" : self}
+    self.loadConfig()
     
   def closeEvent(self, event):
     self.isShuttingDown_ = True
-    self.mainWindowDataItem_.setData({"geometry":self._ui_.saveGeometry(), \
-                                      "windowState":self._ui_.saveState()})
-    self.serializer_.saveItems()
+    self.saveConfig()
     event.accept()
     
   def _addDockWidget(self, widget, areas, defaultArea, name):
@@ -59,11 +59,34 @@ class MainWindow(QtGui.QMainWindow):
     dock.setAllowedAreas(areas)
     self._ui_.addDockWidget(defaultArea, dock)
     return dock
+  
+  def getConfig(self):
+    data = {"geometry" : utils.toString(self._ui_.saveGeometry().toBase64()), 
+            "windowState" : utils.toString(self._ui_.saveState().toBase64())}  
+    return data
     
-  def _mainWindowSettingsChanged(self):
-    if not self.isShuttingDown_:
-      geo = self.mainWindowDataItem_.data_["geometry"]
-      state = self.mainWindowDataItem_.data_["windowState"]
-      self._ui_.restoreGeometry(geo)
-      self._ui_.restoreState(state)      
+  def setConfig(self, data):
+    x = data.get("geometry", "")
+    geo = QtCore.QByteArray.fromBase64(data.get("geometry", "AdnQywABAAAAAACWAAAAlgAAA6sAAAKmAAAAngAAALQAAAOjAAACngAAAAAAAA=="))
+    state = QtCore.QByteArray.fromBase64(data.get("windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAMGAAAAafwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAADBgAAAOQA////AAAAAwAAAwYAAADa/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAdwAAAFIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAHcAAABKgAAAMkA////AAADBgAAAKAAAAAEAAAABAAAAAgAAAAI/AAAAAA="))
+    self._ui_.restoreGeometry(geo)
+    self._ui_.restoreState(state)
+      
+  def loadConfig(self):
+    obj = None
+    if os.path.exists(self.configFile):
+      f = open(self.configFile, "r")
+      obj = jsonpickle.decode(f.read())
+    if not isinstance(obj, dict):
+      obj = {}
+    for key, widget in self.configItems.items():
+      widget.setConfig(obj.get(key, {}))
+  
+  def saveConfig(self):
+    data = {}
+    for key, widget in self.configItems.items():
+      data[key] = widget.getConfig()
+    f = open(self.configFile, "w")
+    f.write(jsonpickle.encode(data))
+    f.close()
     
