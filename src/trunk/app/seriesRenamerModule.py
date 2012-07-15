@@ -52,15 +52,19 @@ class RenameThread(MyThread):
     results = {} #hist
     for i, item in enumerate(self._items):
       source, dest = item
-      if self.userStopped:
-        return
       res = self._actioner.performAction(source, dest)
       self._onLog(moveItemActioner.MoveItemActioner.resultToLogItem(res, source, dest))
       if not results.has_key(res):
         results[res] = 0  
       results[res] += 1  
       self._onProgress(int(100 * (i + 1) / len(self._items)))
+      if self.userStopped:
+        self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+                                     "Rename / move",
+                                     "User cancelled. %d of %d files actioned." % (i, len(self._items))))              
+        break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+                                 "Rename / move",
                                  "Rename / move complete", 
                                  moveItemActioner.MoveItemActioner.summaryText(results)))      
     
@@ -77,21 +81,18 @@ class ExploreThread(MyThread):
   def run(self):
     dirs = seasonHelper.SeasonHelper.getFolders(self._folder, self._isRecursive)
     for i, d in enumerate(dirs):
-      if self.userStopped:
-        return
       s = seasonHelper.SeasonHelper.getSeasonForFolder(d, self._ext)
       if s:
         self._onNewData(s)
+        if self.userStopped:
+          self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+                                       "Search", 
+                                       "User cancelled. %d of %d folders processed." % (i, len(dirs))))              
+          break
       self._onProgress(int(100 * (i + 1) / len(dirs)))
-      
-    """ Protected function of QThread.
-    try:
-      utils.out("running %s" % self.func_.func_name, 1)
-      self.ret_ = self.func_(self.args_)
-      utils.out("finished: %s success" % self.func_.func_name, 1)
-    except:
-      utils.out("finished: %s failed" % self.func_.func_name)
-      pass"""
+    self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+                                 "Search", 
+                                 "Search complete. %d folders processed." % (len(dirs))))
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesRenamerModule(QtCore.QObject):
@@ -144,6 +145,7 @@ class SeriesRenamerModule(QtCore.QObject):
                                        extension.FileExtensions(data["extensions"].split()))
     self._workerThread.progressSignal_.connect(self._updateSearchProgress)
     self._workerThread.newDataSignal_.connect(self._onSeasonFound)
+    self._workerThread.logSignal_.connect(self._addMessage)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()    
@@ -194,9 +196,11 @@ class SeriesRenamerModule(QtCore.QObject):
       self._enableControls(True)      
       
   def _stopRename(self):
+    self.outputWidget_.stopButton_.setEnabled(False)
     self._stopThread()
    
   def _stopSearch(self):
+    self.inputWidget_.stopButton_.setEnabled(False)
     self._stopThread()
     
   def _enableControls(self, isEnabled=True):

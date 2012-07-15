@@ -57,6 +57,7 @@ class OutputWidget(QtGui.QWidget):
   def startActioning(self):
     self._ui_.progressBar_.setValue(0)    
     self._ui_.progressBar_.setVisible(True)
+    self._ui_.stopButton_.setEnabled(True)
     self._ui_.stopButton_.setVisible(True)
     self._ui_.renameButton_.setVisible(False)
 

@@ -7,8 +7,8 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore, QtGui, uic
 
-from common import serializer, utils
-from tv import model
+from common import utils
+from tv import model, seasonHelper
 
 import changeEpisodeWidget
 import changeSeasonWidget
@@ -59,6 +59,13 @@ class WorkBenchWidget(QtGui.QWidget):
   def seasons(self):
     seasons = self._model_.seasons()
     return seasons
+  
+  def getConfig(self):
+    return {"cache": seasonHelper.SeasonHelper.cache()}
+  
+  def setConfig(self, data):
+    utils.verifyType(data, dict)
+    seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
     
   def _onClicked(self, modelIndex):
     self._currentIndex_ = modelIndex

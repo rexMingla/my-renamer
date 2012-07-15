@@ -6,6 +6,7 @@
 # Purpose of document: Main class for working the tv seasons
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
+
 import episode
 import moveItemCandidate
 import seasonHelper
@@ -29,7 +30,7 @@ class Season:
   
   def __str__(self):
     return "season: %s season #: %d status: %s" % (self.seasonName_, self.seasonNum_, Season.resultStr(self.status_))
-    
+  
   def __init__(self, seasonName, seasonNum, source, destination, inputFolder):
     utils.verifyType(seasonName, str)
     utils.verifyType(seasonNum, int)

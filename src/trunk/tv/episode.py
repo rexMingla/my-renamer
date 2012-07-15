@@ -11,11 +11,11 @@ import os
 from common import utils
 import episode
 
-UNRESOLVED_KEY = -1 
+UNRESOLVED_KEY = -1
 UNRESOLVED_NAME = "" 
 
 # --------------------------------------------------------------------------------------------------------------------
-class SourceEpisode:
+class SourceEpisode(object):
   """ Information about an input file """
   def __init__(self, epNum, filename):
     utils.verifyType(epNum, int)
@@ -41,7 +41,7 @@ class SourceEpisode:
     return SourceEpisode(self.epNum_, self.filename_)
   
 # --------------------------------------------------------------------------------------------------------------------
-class DestinationEpisode:
+class DestinationEpisode(object):
   """ Information about an output file """
   def __init__(self, epNum, epName):
     utils.verifyType(epNum, int)
@@ -66,25 +66,27 @@ class DestinationEpisode:
     return DestinationEpisode(self.epNum_, self.epName_)
   
 # --------------------------------------------------------------------------------------------------------------------
-class EpisodeMap:
+class EpisodeMap(object):
   """ 
   Collection of input or output files mapped by key. In the case of duplicate keys, the first is accepted 
   and all duplicates thereafter are considered unresolved.
   """
   def __init__(self):
+    super(EpisodeMap, self).__init__()
     self.matches_ = {}
     self.unresolved_ = []
   
   def addItem(self, item):
+    epNumStr = str(item.epNum_)
     if item.epNum_ == UNRESOLVED_KEY:
       self.unresolved_.append(item)
-    elif self.matches_.has_key(item.epNum_):
+    elif epNumStr in self.matches_:
       utils.out("key already exists: %d" % item.epNum_, 1)
       tempItem = copy.copy(item)
       tempItem.epNum_ = UNRESOLVED_KEY
       self.unresolved_.append(tempItem)
     else:
-      self.matches_[item.epNum_] = item
+      self.matches_[epNumStr] = item #jsonpickle converts dicts with int keys to string keys :(
   
   def setKeyForFilename(self, newKey, filename):
     """ Set a new key for a given filename, performing required sanitization in the event of key collisions. """
@@ -92,9 +94,9 @@ class EpisodeMap:
     utils.verifyType(filename, str)
     
     sourceEp = None
-    for key in self.matches_.keys():
-      if self.matches_[key].filename_ == filename:
-        sourceEp = self.matches_[key]
+    for key, source in self.matches_.items():
+      if source.filename_ == filename:
+        sourceEp = source
         break
     if not sourceEp:
       for ep in self.unresolved_:
@@ -105,26 +107,29 @@ class EpisodeMap:
     if not sourceEp or sourceEp.epNum_ == newKey:
       return
 
+    #todo: filthy. clean me!!
     oldEpNum = sourceEp.epNum_
     sourceEp.epNum_ = newKey
     if oldEpNum == episode.UNRESOLVED_KEY:
       utils.verify(not newKey == episode.UNRESOLVED_KEY, "old key <> new key")
       self.unresolved_.remove(sourceEp)
-      if self.matches_.has_key(newKey):
-        oldEp = copy.copy(self.matches_[newKey])
+      newKeyStr = str(newKey)
+      if newKeyStr in self.matches_:
+        oldEp = copy.copy(self.matches_[newKeyStr])
         oldEp.epNum_ = episode.UNRESOLVED_KEY
         self.unresolved_.append(oldEp)
-      self.matches_[sourceEp.epNum_] = sourceEp
+      self.matches_[str(sourceEp.epNum_)] = sourceEp
     else: #oldEpNum in matches
-      del self.matches_[oldEpNum]
+      del self.matches_[str(oldEpNum)]
       if newKey == episode.UNRESOLVED_KEY:
         self.unresolved_.append(sourceEp)
       else: #newEp in matches
-        if self.matches_.has_key(newKey):
-          oldEp = copy.copy(self.matches_[newKey])
+        newKeyStr = str(newKey)
+        if newKeyStr in self.matches_:
+          oldEp = copy.copy(self.matches_[newKeyStr])
           oldEp.epNum_ = episode.UNRESOLVED_KEY          
           self.unresolved_.append(oldEp)
-        self.matches_[sourceEp.epNum_] = sourceEp
+        self.matches_[str(sourceEp.epNum_)] = sourceEp
 
   def __eq__(self, other):
     utils.verifyType(other, EpisodeMap)

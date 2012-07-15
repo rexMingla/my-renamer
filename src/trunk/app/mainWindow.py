@@ -15,8 +15,6 @@ from common import utils
 
 import seriesRenamerModule
 
-
-
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
   """ Window widget for the application. """
@@ -40,6 +38,7 @@ class MainWindow(QtGui.QMainWindow):
     self.configItems = {"input" : self.seriesModule_.inputWidget_,
                         "output" : self.seriesModule_.outputWidget_,
                         "log" : self.seriesModule_.logWidget_,
+                        "workBench" : self.seriesModule_.workBenchWidget_,
                         "mainWindow" : self}
     self.loadConfig()
     

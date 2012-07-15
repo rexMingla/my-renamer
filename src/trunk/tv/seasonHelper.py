@@ -5,6 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Helper functions associated with tv series 
 # --------------------------------------------------------------------------------------------------------------------
+import copy
 import os
 import re
 
@@ -17,6 +18,8 @@ from common import extension, fileHelper, utils
 import episode
 import season
 
+_CACHE = {}
+
 class SeasonHelper:
   """ Collection of tv series functions. """
   @staticmethod
@@ -28,7 +31,7 @@ class SeasonHelper:
     splitFolderRegex = "^.*/(.*)/(?:season|series)\\s+(\\d+)$"     #/show/season
     sameFolderRegex  = "^.*/(.*)\\s+\\-\\s+(?:season|series)\\s+(\\d+)$"  #/show - season
     show = episode.UNRESOLVED_NAME
-    seriesNum = -1
+    seriesNum = episode.UNRESOLVED_KEY
     m = re.match(splitFolderRegex, folder, flags=re.IGNORECASE)
     if not m:
       m = re.match(sameFolderRegex, folder, flags=re.IGNORECASE)
@@ -78,10 +81,10 @@ class SeasonHelper:
     left = None
     right = None
     bestMatchIndex = -1
-    for i in range(len(files)):
-      fileA = fileHelper.FileHelper.basename(files[i])
-      for j in range(i+1,len(files)):
-        fileB = fileHelper.FileHelper.basename(files[j])
+    for i, fa in enumerate(files):
+      fileA = fileHelper.FileHelper.basename(fa)
+      for fb in files[i+1:]:
+        fileB = fileHelper.FileHelper.basename(fb)
         minLen = len(fileA)
         if len(fileB) < minLen:
           minLen = len(fileB)
@@ -121,10 +124,12 @@ class SeasonHelper:
     return index
   
   @staticmethod
+  @utils.printTiming
   def getDestinationEpisodeMapFromTVDB(show, seasonNum):
     utils.verifyType(show, str)
     utils.verifyType(seasonNum, int)
     eps = episode.EpisodeMap()
+    import timeit
     try:
       tv = tvdb_api.Tvdb()
       season = tv[show][seasonNum]
@@ -143,7 +148,7 @@ class SeasonHelper:
     tmpMaps = []
     eps = None     
     index = SeasonHelper.getMatchIndex(files)
-    if index != -1:
+    if index != episode.UNRESOLVED_KEY:
       match = SeasonHelper.episodeMapFromIndex(index, files)
       tmpMaps.append(match)
     tmpMaps.append(SeasonHelper.episodeMapFromFilenames(files))
@@ -190,8 +195,34 @@ class SeasonHelper:
     s = None
     if not seasonName == episode.UNRESOLVED_NAME or len(files):
       sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
-      destMap = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
+      destMap = episode.EpisodeMap()
+      if seasonName != episode.UNRESOLVED_NAME:
+        destMap = SeasonHelper.getSeason(seasonName, seriesNum)
       s = season.Season(seasonName, seriesNum, sourceMap, destMap, folder)
       s.inputFolder_ = folder
     return s
     
+  @staticmethod
+  def setCache(data):
+    utils.verifyType(data, dict)
+    global _CACHE
+    _CACHE = data
+
+  @staticmethod
+  def cache():
+    global _CACHE
+    return _CACHE
+  
+  @staticmethod
+  def getSeason(seasonName, seriesNum):
+    """ retrieves season from cache or tvdb if not present """
+    cacheKey = "%s (%s)" % (seasonName, seriesNum)
+    global _CACHE
+    ret = None
+    if cacheKey in _CACHE:
+      ret = _CACHE[cacheKey]
+    else:
+      ret = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
+      if ret != episode.EpisodeMap():
+        _CACHE[cacheKey] = copy.copy(ret)
+    return ret    
