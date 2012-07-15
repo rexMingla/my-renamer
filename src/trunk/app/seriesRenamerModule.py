@@ -5,42 +5,16 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module responsible for the renaming of tv series
 # --------------------------------------------------------------------------------------------------------------------
-import collections
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore
 
 from common import extension, fileHelper, moveItemActioner, logModel, utils
 from tv import outputFormat, season, seasonHelper
 
-import inputWidget
-import logWidget
+import renamerModule
 import outputWidget
-import workBenchWidget
 
-class MyThread(QtCore.QThread):
-  progressSignal_ = QtCore.pyqtSignal(int)
-  logSignal_ = QtCore.pyqtSignal(object)
-  newDataSignal_ = QtCore.pyqtSignal(object)
-
-  def __init__(self):
-    super(MyThread, self).__init__()
-    self.userStopped = False
-  
-  def __del__(self):
-    self.join()
-    
-  def join(self):
-    self.userStopped = True
-    
-  def _onLog(self, msg):
-    self.logSignal_.emit(msg)
-  
-  def _onProgress(self, percentage):
-    self.progressSignal_.emit(percentage)
-    
-  def _onNewData(self, data):
-    self.newDataSignal_.emit(data)
-
-class RenameThread(MyThread):  
+# --------------------------------------------------------------------------------------------------------------------
+class RenameThread(renamerModule.MyThread):  
   def __init__(self, actioner, items):
     super(RenameThread, self).__init__()
     utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
@@ -65,10 +39,10 @@ class RenameThread(MyThread):
         break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  "Rename / move",
-                                 "Rename / move complete", 
                                  moveItemActioner.MoveItemActioner.summaryText(results)))      
     
-class ExploreThread(MyThread):
+# --------------------------------------------------------------------------------------------------------------------
+class ExploreThread(renamerModule.MyThread):
   def __init__(self, folder, isRecursive, ext):
     super(ExploreThread, self).__init__()
     utils.verifyType(folder, str)
@@ -95,50 +69,30 @@ class ExploreThread(MyThread):
                                  "Search complete. %d folders processed." % (len(dirs))))
 
 # --------------------------------------------------------------------------------------------------------------------
-class SeriesRenamerModule(QtCore.QObject):
+class SeriesRenamerModule(renamerModule.RenamerModule):
   """ 
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, parent=None):
-    super(QtCore.QObject, self).__init__(parent)
-    
-    #input widget
-    self.inputWidget_ = inputWidget.InputWidget(parent)
-    self.inputWidget_.exploreSignal_.connect(self._explore)
-    self.inputWidget_.stopSignal_.connect(self._stopSearch)
-    
-    #workbench widget
-    self.workBenchWidget_ = workBenchWidget.WorkBenchWidget(parent)
-    
-    #output widget
-    self.outputWidget_ = outputWidget.OutputWidget(parent)
-    self.outputWidget_.renameSignal_.connect(self._rename)
-    self.workBenchWidget_.workBenchChangedSignal_.connect(self.outputWidget_.enableControls)
-    self.inputProgressBar_ = self.inputWidget_.progressBar_
-    self.inputProgressBar_.setVisible(False)
-    
-    #progress widget
-    self.outputProgressBar_ = self.outputWidget_.progressBar_
-    self.outputProgressBar_.setVisible(False)
-    
-    #log widget
-    self.logWidget_ = logWidget.LogWidget(parent)
-    #self._postMessageSignal_.connect(self._postedAddMessage)
-    self.lastLogMessage_ = None
-    
-    self._workerThread = None
-    self._isShuttingDown = False
-    
-  def __del__(self):
-    self._isShuttingDown = True
-    self._stopThread()
-    
+  def __init__(self, inputWidget, outputWidget, workbenchWidget, logWidget, parent=None):
+    super(SeriesRenamerModule, self).__init__(renamerModule.Mode.TV_MODE, 
+                                              inputWidget, 
+                                              outputWidget, 
+                                              workbenchWidget, 
+                                              logWidget, 
+                                              parent)
+  
+  def _setActive(self):
+    self._workBenchWidget.movieButton.setVisible(True)
+  
+  def _setInactive(self):
+    self._workBenchWidget.movieButton.setVisible(False)
+  
   def _explore(self):
     self._enableControls(False)
-    self.workBenchWidget_.setSeasons([])
-    self.inputWidget_.startSearching()
-    data = self.inputWidget_.getConfig()
+    self._workBenchWidget.setSeasons([])
+    self._inputWidget.startSearching()
+    data = self._inputWidget.getConfig()
     assert(not self._workerThread or not self._workerThread.isRunning())
     self._workerThread = ExploreThread(data["folder"], 
                                        data["recursive"], 
@@ -152,10 +106,10 @@ class SeriesRenamerModule(QtCore.QObject):
 
   def _rename(self):
     self._enableControls(False)
-    self.logWidget_.onRename()
-    formatSettings = self.outputWidget_.getConfig()
+    self._logWidget.onRename()
+    formatSettings = self._outputWidget.getConfig()
     filenames = []
-    seasons = self.workBenchWidget_.seasons()
+    seasons = self._workBenchWidget.seasons()
     utils.verify(seasons, "Must have seasons to have gotten this far")
     for season in seasons:
       outputFolder = formatSettings["folder"]
@@ -164,10 +118,10 @@ class SeriesRenamerModule(QtCore.QObject):
       oFormat = outputFormat.OutputFormat(formatSettings["format"])
       for ep in season.moveItemCandidates_:
         if ep.performMove_:
-          im = outputFormat.InputMap(season.seasonName_, 
-                                     season.seasonNum_, 
-                                     ep.destination_.epNum_, 
-                                     ep.destination_.epName_)
+          im = outputFormat.TvInputMap(season.seasonName_, 
+                                       season.seasonNum_, 
+                                       ep.destination_.epNum_, 
+                                       ep.destination_.epName_)
           outputBaseName = oFormat.outputToString(im, ep.source_.extension_)
           newName = fileHelper.FileHelper.joinPath(outputFolder, outputBaseName)
           newName = fileHelper.FileHelper.sanitizeFilename(newName)
@@ -178,7 +132,7 @@ class SeriesRenamerModule(QtCore.QObject):
     assert(not self._workerThread or not self._workerThread.isRunning())
     self._addMessage(logModel.LogItem(logModel.LogLevel.INFO, "Starting...", ""))
     
-    self.outputWidget_.startActioning()
+    self._outputWidget.startActioning()
     self._workerThread = RenameThread(actioner, filenames)
     self._workerThread.progressSignal_.connect(self._updateRenameProgress)
     self._workerThread.logSignal_.connect(self._addMessage)
@@ -186,43 +140,7 @@ class SeriesRenamerModule(QtCore.QObject):
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()
     
-  def _stopThread(self):
-    self._workerThread.join()
-    
-  def _onThreadFinished(self):    
-    if not self._isShuttingDown:
-      self.inputWidget_.stopSearching()
-      self.outputWidget_.stopActioning()
-      self._enableControls(True)      
-      
-  def _stopRename(self):
-    self.outputWidget_.stopButton_.setEnabled(False)
-    self._stopThread()
-   
-  def _stopSearch(self):
-    self.inputWidget_.stopButton_.setEnabled(False)
-    self._stopThread()
-    
-  def _enableControls(self, isEnabled=True):
-    self.inputWidget_.enableControls(isEnabled)
-    self.workBenchWidget_.setEnabled(isEnabled)
-    self.outputWidget_.enableControls(isEnabled)
-    
   def _onSeasonFound(self, season):
     if season:
-      self.workBenchWidget_.addSeason(season)    
+      self._workBenchWidget.addSeason(season)    
     
-  def _updateSearchProgress(self, percentageComplete):
-    """ Update progress. Assumed to be main thread """
-    utils.verifyType(percentageComplete, int)
-    self.inputProgressBar_.setValue(percentageComplete)
-
-  def _addMessage(self, msg):
-    """ Add message to log. Assumed to be main thread """
-    self.logWidget_.appendMessage(msg)
-
-  def _updateRenameProgress(self, percentageComplete):
-    """ Update progress. Assumed to be main thread """
-    utils.verifyType(percentageComplete, int)
-    self.outputProgressBar_.setValue(percentageComplete)
-

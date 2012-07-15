@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Generates an output filename based on InputMap attributes
+# Purpose of document: Generates an output filename based on TvInputMap attributes
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
 
@@ -12,7 +12,26 @@ def leftPad(val):
   return ret
 
 # --------------------------------------------------------------------------------------------------------------------
-class InputMap:
+class InputMap(object):
+  def __init__(self):
+    super(InputMap, self).__init__()
+    self.data = {}
+    
+  @staticmethod
+  def helpInputMap():
+    raise NotImplementedError("InputMap.helpInputMap not implemented")
+
+  @staticmethod
+  def exampleInputMap():
+    raise NotImplementedError("InputMap.exampleInputMap not implemented")
+  
+  @staticmethod
+  def defaultFormatStr():
+    raise NotImplementedError("InputMap.defaultFormatStr not implemented")
+    
+
+# --------------------------------------------------------------------------------------------------------------------
+class TvInputMap(InputMap):
   """ Configurable attributes for output. """
   KEY_SHOW_NAME  = "[show_name]"
   KEY_SERIES_NUM = "[season_num]"
@@ -20,17 +39,27 @@ class InputMap:
   KEY_EP_NAME    = "[ep_name]"  
 
   def __init__(self, showName, seriesNum, epNum, epName):
+    super(TvInputMap, self).__init__()
     utils.verifyType(showName, str)
     utils.verify(isinstance(seriesNum, str) or isinstance(seriesNum, int), "str or int")
     utils.verify(isinstance(epNum, str) or isinstance(epNum, int), "str or int")
-    utils.verifyType(epName, str)
-    self.data_ = {InputMap.KEY_SHOW_NAME:  showName,
-                  InputMap.KEY_SERIES_NUM: leftPad(seriesNum),
-                  InputMap.KEY_EP_NUM:     leftPad(epNum),
-                  InputMap.KEY_EP_NAME:    epName}
+    utils.verifyType(epName, basestring)
+    self.data = {TvInputMap.KEY_SHOW_NAME:  showName,
+                 TvInputMap.KEY_SERIES_NUM: leftPad(seriesNum),
+                 TvInputMap.KEY_EP_NUM:     leftPad(epNum),
+                 TvInputMap.KEY_EP_NAME:    epName}
 
-HELP_INPUT_MAP    = InputMap("Show Name", "Series Number", "Episode Number", "Episode Name")
-EXAMPLE_INPUT_MAP = InputMap("Entourage", 1, 7, "The Scene")
+  @staticmethod
+  def helpInputMap():
+    return TvInputMap("Show Name", "Series Number", "Episode Number", "Episode Name")
+
+  @staticmethod
+  def exampleInputMap():
+    return TvInputMap("Entourage", 1, 7, "The Scene")
+  
+  @staticmethod
+  def defaultFormatStr():
+    return "[show_name] - S[season_num]E[ep_num] - [ep_name]"
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:
@@ -47,15 +76,14 @@ class OutputFormat:
   """
   def __init__(self, formatStr):
     utils.verifyType(formatStr, str)
-    self.formatStr_ = formatStr
+    self.formatStr = formatStr
     
   def outputToString(self, inputs, ext=""):
     utils.verifyType(inputs, InputMap)
     utils.verifyType(ext, str)
-    ret = self.formatStr_
-    for key in inputs.data_.keys():
-      ret = ret.replace(key, inputs.data_[key])
+    ret = self.formatStr
+    for key, value in inputs.data.items(): #todo: fix this.
+      ret = ret.replace(key, value)
     return ret + ext
 
-DEFAULT_FORMAT = OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name]")
   
