@@ -72,13 +72,13 @@ class WorkBenchWidget(QtGui.QWidget):
   def _onClicked(self, modelIndex):
     self._currentIndex_ = modelIndex
     moveItemCandidateData, isMoveItemCandidate = self._model.data(modelIndex, model.RAW_DATA_ROLE)
-    self._ui.editEpisodeButton.setEnabled(isMoveItemCandidate and moveItemCandidateData.canEdit_)
+    self._ui.editEpisodeButton.setEnabled(isMoveItemCandidate and moveItemCandidateData.canEdit)
     self._ui.editSeasonButton.setEnabled(not isMoveItemCandidate)
 
   def _onDoubleClicked(self, modelIndex):
     utils.verifyType(modelIndex, QtCore.QModelIndex)
     moveItemCandidateData, isMoveItemCandidate = self._model.data(modelIndex, model.RAW_DATA_ROLE)
-    if isMoveItemCandidate and moveItemCandidateData.canEdit_:
+    if isMoveItemCandidate and moveItemCandidateData.canEdit:
       self._editEpisode()
     else:
       self._editSeason()
@@ -86,12 +86,12 @@ class WorkBenchWidget(QtGui.QWidget):
   def _editSeason(self):
     seasonData, isMoveItemCandidate = self._model.data(self._currentIndex_, model.RAW_DATA_ROLE)
     if not isMoveItemCandidate: #maybe get the parent
-      self._changeSeasonWidget_.setData(seasonData.inputFolder_, seasonData.seasonName_, seasonData.seasonNum_)
+      self._changeSeasonWidget_.setData(seasonData.inputFolder_, seasonData.seasonName, seasonData.seasonNum)
       self._changeSeasonWidget_.show()
   
   def _editEpisode(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex_, model.RAW_DATA_ROLE)
-    if isMoveItemCandidate and moveItemCandidateData.canEdit_:
+    if isMoveItemCandidate and moveItemCandidateData.canEdit:
       seasonData, isMoveItemCandidate = self._model.data(self._currentIndex_.parent(), model.RAW_DATA_ROLE)
       utils.verify(not isMoveItemCandidate, "Must be move item")
       self._changeEpisodeWidget.setData(seasonData, moveItemCandidateData)

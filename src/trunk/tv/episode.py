@@ -20,8 +20,8 @@ class SourceEpisode(object):
   def __init__(self, epNum, filename):
     utils.verifyType(epNum, int)
     utils.verifyType(filename, str)
-    self.epNum_ = epNum
-    self.filename_ = filename
+    self.epNum = epNum
+    self.filename = filename
     (dummy, self.extension_) = os.path.splitext(filename)
     
   @staticmethod
@@ -29,16 +29,16 @@ class SourceEpisode(object):
     return SourceEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
 
   def __str__(self):
-    return "<SourceEpisode: #:%d name:%s>" % (self.epNum_, self.filename_)   
+    return "<SourceEpisode: #:%d name:%s>" % (self.epNum, self.filename)   
     
   def __eq__(self, other):
-    return self.epNum_ == other.epNum_ and self.filename_ == other.filename_
+    return self.epNum == other.epNum and self.filename == other.filename
   
   def __hash__(self):
-    return hash(self.epNum_) + hash(self.filename_)
+    return hash(self.epNum) + hash(self.filename)
   
   def __copy__(self):
-    return SourceEpisode(self.epNum_, self.filename_)
+    return SourceEpisode(self.epNum, self.filename)
   
 # --------------------------------------------------------------------------------------------------------------------
 class DestinationEpisode(object):
@@ -46,24 +46,24 @@ class DestinationEpisode(object):
   def __init__(self, epNum, epName):
     utils.verifyType(epNum, int)
     utils.verifyType(epName, str)
-    self.epNum_ = epNum
-    self.epName_ = epName
+    self.epNum = epNum
+    self.epName = epName
     
   @staticmethod
   def createUnresolvedDestination():
     return DestinationEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
 
   def __str__(self):
-    return "<DestinationEpisode: #:%d name:%s>" % (self.epNum_, self.epName_)   
+    return "<DestinationEpisode: #:%d name:%s>" % (self.epNum, self.epName)   
 
   def __eq__(self, other):
-    return self.epNum_ == other.epNum_ and self.epName_ == other.epName_
+    return self.epNum == other.epNum and self.epName == other.epName
   
   def __hash__(self):
-    return hash(self.epNum_) + hash(self.epName_)
+    return hash(self.epNum) + hash(self.epName)
 
   def __copy__(self):
-    return DestinationEpisode(self.epNum_, self.epName_)
+    return DestinationEpisode(self.epNum, self.epName)
   
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeMap(object):
@@ -73,20 +73,20 @@ class EpisodeMap(object):
   """
   def __init__(self):
     super(EpisodeMap, self).__init__()
-    self.matches_ = {}
-    self.unresolved_ = []
+    self.matches = {}
+    self.unresolved = []
   
   def addItem(self, item):
-    epNumStr = str(item.epNum_)
-    if item.epNum_ == UNRESOLVED_KEY:
-      self.unresolved_.append(item)
-    elif epNumStr in self.matches_:
-      utils.out("key already exists: %d" % item.epNum_, 1)
+    epNumStr = str(item.epNum)
+    if item.epNum == UNRESOLVED_KEY:
+      self.unresolved.append(item)
+    elif epNumStr in self.matches:
+      utils.out("key already exists: %d" % item.epNum, 1)
       tempItem = copy.copy(item)
-      tempItem.epNum_ = UNRESOLVED_KEY
-      self.unresolved_.append(tempItem)
+      tempItem.epNum = UNRESOLVED_KEY
+      self.unresolved.append(tempItem)
     else:
-      self.matches_[epNumStr] = item #jsonpickle converts dicts with int keys to string keys :(
+      self.matches[epNumStr] = item #jsonpickle converts dicts with int keys to string keys :(
   
   def setKeyForFilename(self, newKey, filename):
     """ Set a new key for a given filename, performing required sanitization in the event of key collisions. """
@@ -94,55 +94,55 @@ class EpisodeMap(object):
     utils.verifyType(filename, str)
     
     sourceEp = None
-    for key, source in self.matches_.items():
-      if source.filename_ == filename:
+    for key, source in self.matches.items():
+      if source.filename == filename:
         sourceEp = source
         break
     if not sourceEp:
-      for ep in self.unresolved_:
-        if ep.filename_ == filename:
+      for ep in self.unresolved:
+        if ep.filename == filename:
           sourceEp = ep
           break
         
-    if not sourceEp or sourceEp.epNum_ == newKey:
+    if not sourceEp or sourceEp.epNum == newKey:
       return
 
     #todo: filthy. clean me!!
-    oldEpNum = sourceEp.epNum_
-    sourceEp.epNum_ = newKey
+    oldEpNum = sourceEp.epNum
+    sourceEp.epNum = newKey
     if oldEpNum == episode.UNRESOLVED_KEY:
       utils.verify(not newKey == episode.UNRESOLVED_KEY, "old key <> new key")
-      self.unresolved_.remove(sourceEp)
+      self.unresolved.remove(sourceEp)
       newKeyStr = str(newKey)
-      if newKeyStr in self.matches_:
-        oldEp = copy.copy(self.matches_[newKeyStr])
-        oldEp.epNum_ = episode.UNRESOLVED_KEY
-        self.unresolved_.append(oldEp)
-      self.matches_[str(sourceEp.epNum_)] = sourceEp
+      if newKeyStr in self.matches:
+        oldEp = copy.copy(self.matches[newKeyStr])
+        oldEp.epNum = episode.UNRESOLVED_KEY
+        self.unresolved.append(oldEp)
+      self.matches[str(sourceEp.epNum)] = sourceEp
     else: #oldEpNum in matches
-      del self.matches_[str(oldEpNum)]
+      del self.matches[str(oldEpNum)]
       if newKey == episode.UNRESOLVED_KEY:
-        self.unresolved_.append(sourceEp)
+        self.unresolved.append(sourceEp)
       else: #newEp in matches
         newKeyStr = str(newKey)
-        if newKeyStr in self.matches_:
-          oldEp = copy.copy(self.matches_[newKeyStr])
-          oldEp.epNum_ = episode.UNRESOLVED_KEY          
-          self.unresolved_.append(oldEp)
-        self.matches_[str(sourceEp.epNum_)] = sourceEp
+        if newKeyStr in self.matches:
+          oldEp = copy.copy(self.matches[newKeyStr])
+          oldEp.epNum = episode.UNRESOLVED_KEY          
+          self.unresolved.append(oldEp)
+        self.matches[str(sourceEp.epNum)] = sourceEp
 
   def __eq__(self, other):
     utils.verifyType(other, EpisodeMap)
-    return utils.listCompare(self.unresolved_, other.unresolved_) and utils.dictCompare(self.matches_, other.matches_)
+    return utils.listCompare(self.unresolved, other.unresolved) and utils.dictCompare(self.matches, other.matches)
   
   def __str__(self):
-    return "<EpisodeMap: #matches:%d #unresolved:%d>" % (len(self.matches_), len(self.unresolved_))
+    return "<EpisodeMap: #matches:%d #unresolved:%d>" % (len(self.matches), len(self.unresolved))
   
   def __copy__(self):
     ret = EpisodeMap()
-    for key in self.matches_:
-      ret.matches_[key] = copy.copy(self.matches_[key])
-    for item in self.unresolved_:
-      ret.unresolved_.append(copy.copy(item))
+    for key in self.matches:
+      ret.matches[key] = copy.copy(self.matches[key])
+    for item in self.unresolved:
+      ret.unresolved.append(copy.copy(item))
     return ret
       

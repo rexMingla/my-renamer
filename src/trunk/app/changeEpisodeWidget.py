@@ -35,19 +35,19 @@ class ChangeEpisodeWidget(QtGui.QDialog):
     utils.verifyType(ssn, season.Season)
     utils.verifyType(ep, moveItemCandidate.MoveItemCandidate)
     self._ui.episodeComboBox_.clear()
-    moveItemCandidates = copy.copy(ssn.moveItemCandidates_)
-    moveItemCandidates = sorted(moveItemCandidates, key=lambda item: item.destination_.epNum_)
+    moveItemCandidates = copy.copy(ssn.moveItemCandidates)
+    moveItemCandidates = sorted(moveItemCandidates, key=lambda item: item.destination.epNum)
     for mi in moveItemCandidates:
-      if mi.destination_.epName_ <> episode.UNRESOLVED_NAME:
-        displayName = "%d: %s" % (mi.destination_.epNum_, mi.destination_.epName_)
-        self._ui.episodeComboBox_.addItem(displayName, mi.destination_.epNum_)
-    index = self._ui.episodeComboBox_.findData(ep.source_.epNum_)
+      if mi.destination.epName <> episode.UNRESOLVED_NAME:
+        displayName = "%d: %s" % (mi.destination.epNum, mi.destination.epName)
+        self._ui.episodeComboBox_.addItem(displayName, mi.destination.epNum)
+    index = self._ui.episodeComboBox_.findData(ep.source.epNum)
     if index <> -1:
       self._ui.pickFromListRadio_.setChecked(True)
       self._ui.episodeComboBox_.setCurrentIndex(index)
     else:
       self._ui.ignoreRadio_.setChecked(True)
-    self._ui.filenameLabel_.setText(ep.source_.filename_)
+    self._ui.filenameLabel_.setText(ep.source.filename)
     self._ui.episodeComboBox_.setEnabled(index <> -1)
     
   def episodeNumber(self):

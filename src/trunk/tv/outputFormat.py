@@ -29,7 +29,6 @@ class InputMap(object):
   def defaultFormatStr():
     raise NotImplementedError("InputMap.defaultFormatStr not implemented")
     
-
 # --------------------------------------------------------------------------------------------------------------------
 class TvInputMap(InputMap):
   """ Configurable attributes for output. """
