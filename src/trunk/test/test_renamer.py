@@ -48,7 +48,7 @@ class SeriesTest(unittest.TestCase):
     exp = episode.EpisodeMap()
     exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c01.avi")]
+    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c01.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
     self.assertEqual(act, exp)
 
@@ -62,7 +62,7 @@ class SeriesTest(unittest.TestCase):
 
   def test_episodeMapFromInvalidIndex(self):
     exp = episode.EpisodeMap()
-    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi"), \
+    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi"), \
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi"), \
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(-1, ["a01.avi", "b02.avi", "c03.avi"])
@@ -253,7 +253,7 @@ class SwitchFilesTest(unittest.TestCase):
     exp = episode.EpisodeMap()
     exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"c03.avi")}
-    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi")]
+    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi")]
     act = copy.copy(before)
     act.setKeyForFilename(2, "c03.avi")
     self.assertEqual(act, exp)
@@ -269,7 +269,7 @@ class SwitchFilesTest(unittest.TestCase):
     exp = episode.EpisodeMap()
     exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
+    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
     act.setKeyForFilename(episode.UNRESOLVED_KEY, "c03.avi")
     self.assertEqual(act, exp)
     
@@ -277,7 +277,7 @@ class SwitchFilesTest(unittest.TestCase):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "a01b.avi", "b02.avi"])
     exp = episode.EpisodeMap()
     exp.matches = {"2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01b.avi"),
+    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01b.avi"),
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")] #maybe you would want this to get resolve now but for now not 
     act = copy.copy(before)
     act.setKeyForFilename(episode.UNRESOLVED_KEY, "a01.avi")
@@ -297,7 +297,7 @@ class SwitchFilesTest(unittest.TestCase):
     exp = episode.EpisodeMap()
     exp.matches = {"1":episode.SourceEpisode(1,"c01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")]
+    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")]
     act.setKeyForFilename(1, "c01.avi")
     self.assertEqual(act, exp)
 
@@ -310,16 +310,16 @@ def test_switchUnresolvedKeyForUnresolvedKey(self):
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormatTest(unittest.TestCase):
   def setUp(self):
-    self.in_ = outputFormat.InputMap("Entourage", 1, 3, "Talk Show")
+    self.ip = outputFormat.TvInputMap("Entourage", 1, 3, "Talk Show")
     
   def test_normal(self):
-    format = outputFormat.OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name]")
-    out = format.outputToString(self.in_)
+    fmt = outputFormat.OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name]")
+    out = fmt.outputToString(self.ip)
     self.assertEqual(out, "Entourage - S01E03 - Talk Show")
  
   def test_missing(self):
-    format = outputFormat.OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name ]")
-    out = format.outputToString(self.in_)
+    fmt = outputFormat.OutputFormat("[show_name] - S[season_num]E[ep_num] - [ep_name ]")
+    out = fmt.outputToString(self.ip)
     self.assertEqual(out, "Entourage - S01E03 - [ep_name ]")
 
 # --------------------------------------------------------------------------------------------------------------------
