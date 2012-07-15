@@ -45,14 +45,14 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="formatEdit_">
+      <widget class="QLineEdit" name="formatEdit">
        <property name="toolTip">
         <string>Output file format</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLabel" name="formatExampleLabel_">
+      <widget class="QLabel" name="formatExampleLabel">
        <property name="minimumSize">
         <size>
          <width>200</width>
@@ -90,7 +90,7 @@
        <number>4</number>
       </property>
       <item>
-       <widget class="QRadioButton" name="useSourceDirectoryRadio_">
+       <widget class="QRadioButton" name="useSourceDirectoryRadio">
         <property name="toolTip">
          <string>Use the source folder for output</string>
         </property>
@@ -108,7 +108,7 @@
          <number>4</number>
         </property>
         <item>
-         <widget class="QRadioButton" name="useSpecificDirectoryRadio_">
+         <widget class="QRadioButton" name="useSpecificDirectoryRadio">
           <property name="toolTip">
            <string>Specify a specific output folder. This can be a partial or absolute path.</string>
           </property>
@@ -118,14 +118,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="specificDirectoryEdit_">
+         <widget class="QLineEdit" name="specificDirectoryEdit">
           <property name="enabled">
            <bool>false</bool>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="specificDirectoryButton_">
+         <widget class="QPushButton" name="specificDirectoryButton">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -179,7 +179,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QRadioButton" name="moveRadio_">
+       <widget class="QRadioButton" name="moveRadio">
         <property name="text">
          <string>Move</string>
         </property>
@@ -189,7 +189,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="copyRadio_">
+       <widget class="QRadioButton" name="copyRadio">
         <property name="text">
          <string>Copy</string>
         </property>
@@ -212,7 +212,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="doNotOverwriteCheckBox_">
+    <widget class="QCheckBox" name="doNotOverwriteCheckBox">
      <property name="toolTip">
       <string>Prevent overwriting if a file exists in the output location</string>
      </property>
@@ -227,7 +227,7 @@
       <number>4</number>
      </property>
      <item>
-      <widget class="QPushButton" name="renameButton_">
+      <widget class="QPushButton" name="renameButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -243,7 +243,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="stopButton_">
+      <widget class="QPushButton" name="stopButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -256,7 +256,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QProgressBar" name="progressBar_">
+      <widget class="QProgressBar" name="progressBar">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>1</horstretch>

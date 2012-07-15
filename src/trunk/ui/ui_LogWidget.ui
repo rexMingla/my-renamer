@@ -26,7 +26,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="clearButton_">
+      <widget class="QPushButton" name="clearButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>1</horstretch>
@@ -42,7 +42,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="autoClearCheckBox_">
+      <widget class="QCheckBox" name="autoClearCheckBox">
        <property name="toolTip">
         <string>Clear before every run</string>
        </property>
@@ -70,7 +70,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QTableView" name="logView_">
+    <widget class="QTableView" name="logView">
      <property name="selectionMode">
       <enum>QAbstractItemView::NoSelection</enum>
      </property>

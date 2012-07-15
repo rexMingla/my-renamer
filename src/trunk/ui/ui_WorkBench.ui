@@ -21,7 +21,7 @@
     <number>4</number>
    </property>
    <item>
-    <widget class="QTreeView" name="view_"/>
+    <widget class="QTreeView" name="view"/>
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -29,7 +29,7 @@
       <number>4</number>
      </property>
      <item>
-      <widget class="QPushButton" name="editSeasonButton_">
+      <widget class="QPushButton" name="editSeasonButton">
        <property name="toolTip">
         <string>Edit selected season</string>
        </property>
@@ -39,7 +39,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="editEpisodeButton_">
+      <widget class="QPushButton" name="editEpisodeButton">
        <property name="toolTip">
         <string>Edit selected episode</string>
        </property>
@@ -49,7 +49,14 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="selectAllCheckBox_">
+      <widget class="QPushButton" name="editMovieButton">
+       <property name="text">
+        <string>Edit Movie</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="selectAllCheckBox">
        <property name="toolTip">
         <string>Select/deselect all files</string>
        </property>

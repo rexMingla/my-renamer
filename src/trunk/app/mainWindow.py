@@ -7,7 +7,9 @@
 # --------------------------------------------------------------------------------------------------------------------
 import os
 
-from PyQt4 import QtGui, QtCore, uic
+from PyQt4 import QtGui
+from PyQt4 import QtCore
+from PyQt4 import uic
 
 from common import utils
 
@@ -59,7 +61,7 @@ class MainWindow(QtGui.QMainWindow):
     self._addDockWidget(self._outputWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
     self._addDockWidget(self._logWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
-    #serializer
+    #config
     self._configItems = {"log" : self._logWidget,
                         "tv" : self._seriesModule,
                         "movie" : self._movieModule,

@@ -132,7 +132,7 @@ class TreeModel(QtCore.QAbstractItemModel):
   Represents 0 or more tv seasons. Each folder (season) contains a collection of moveItemCandiates. 
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
   """
-  workBenchChangedSignal_ = QtCore.pyqtSignal(bool)
+  workBenchChangedSignal = QtCore.pyqtSignal(bool)
   
   def __init__(self, parent=None):
     super(TreeModel, self).__init__(parent)
@@ -360,4 +360,4 @@ class TreeModel(QtCore.QAbstractItemModel):
 
   def _emitWorkBenchChanged(self):
     hasItems = self._hasMoveableItems()
-    self.workBenchChangedSignal_.emit(hasItems)
+    self.workBenchChangedSignal.emit(hasItems)
