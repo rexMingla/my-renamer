@@ -153,7 +153,7 @@ class SeasonHelper:
       tmpMaps.append(match)
     tmpMaps.append(SeasonHelper.episodeMapFromFilenames(files))
     for m in tmpMaps:
-      if not eps or len(m.matches_) > len(eps.matches_):
+      if not eps or len(m.matches) > len(eps.matches):
         eps = m    
     return eps 
   

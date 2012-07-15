@@ -38,7 +38,7 @@ class SeriesTest(unittest.TestCase):
 
   def test_episodeMapFromFilenamesGood(self):
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi"), \
                     "3":episode.SourceEpisode(3,"c03.avi")}
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
@@ -46,7 +46,7 @@ class SeriesTest(unittest.TestCase):
 
   def test_episodeMapFromFilenamesDuplicate(self):
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c01.avi")]
     act = seasonHelper.SeasonHelper.episodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
@@ -54,7 +54,7 @@ class SeriesTest(unittest.TestCase):
 
   def test_episodeMapFromValidIndex(self):
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi"), \
                     "3":episode.SourceEpisode(3,"c03.avi")}
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
@@ -90,7 +90,7 @@ class SeriesTest(unittest.TestCase):
   
   def test_getDestinationEpisodeMapFromTVDB(self):
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.DestinationEpisode(1,"Entourage (Pilot)"), \
+    exp.matches = {"1":episode.DestinationEpisode(1,"Entourage (Pilot)"), \
                     "2":episode.DestinationEpisode(2,"The Review"), \
                     "3":episode.DestinationEpisode(3,"Talk Show"), \
                     "4":episode.DestinationEpisode(4,"Date Night"), \
@@ -108,7 +108,7 @@ class SeriesTest(unittest.TestCase):
     
   def test_getSourceEpisodeMapFromFilenames(self):
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"a02.avi"), \
                     "3":episode.SourceEpisode(3,"a03.avi"), \
                     "4":episode.SourceEpisode(4,"a04x01.avi")}
@@ -117,7 +117,7 @@ class SeriesTest(unittest.TestCase):
 
   def test_getSourceEpisodeMapFromFilenames2(self):
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"xxx-a02.avi"), \
                     "3":episode.SourceEpisode(3,"xxx-a03.avi"), \
                     "4":episode.SourceEpisode(4,"xxx-a04.avi")}
@@ -129,7 +129,7 @@ class RealDataTest(unittest.TestCase):
   def test_1(self):
     exp = episode.EpisodeMap()
     folder = ""
-    exp.matches_ = {"1":episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
+    exp.matches = {"1":episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
                     "2":episode.SourceEpisode(2, folder + '02 - Flight 1.avi'),
                     "3":episode.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
                     "4":episode.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
@@ -143,7 +143,7 @@ class RealDataTest(unittest.TestCase):
   def test_2(self):
     exp = episode.EpisodeMap()
     folder = "Season 1/"
-    exp.matches_ = {"1":episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
+    exp.matches = {"1":episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
                     "2":episode.SourceEpisode(2, folder + '02 - Flight 1.avi'),
                     "3":episode.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
                     "4":episode.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
@@ -157,7 +157,7 @@ class RealDataTest(unittest.TestCase):
   def test_3(self):
     #test were first two files in dir are not that good a match
     exp = episode.EpisodeMap()
-    exp.matches_ = {"2":episode.SourceEpisode(2, 'Mad.Men.S04302.avi'),
+    exp.matches = {"2":episode.SourceEpisode(2, 'Mad.Men.S04302.avi'),
                 "3":episode.SourceEpisode(3, 'Mad.Men.S04E03.360p.HDTV.XviD.avi'),
                 "4":episode.SourceEpisode(4, 'Mad.Men.S04E04.360p.HDTV.XviD.avi'),
                 "5":episode.SourceEpisode(5, 'Mad.Men.S04E05.320p.HDTV.H264.mp4'),
@@ -187,7 +187,7 @@ class RealDataTest(unittest.TestCase):
   def test_4(self):
     #test were filename match is found but is not the best match. ie. starting from 1. 
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1, '01 - Chapter 7.avi'),
+    exp.matches = {"1":episode.SourceEpisode(1, '01 - Chapter 7.avi'),
                     "2":episode.SourceEpisode(2, '02 - Chapter 8.avi'),
                     "3":episode.SourceEpisode(3, '03 - Chapter 9.avi'),
                     "4":episode.SourceEpisode(4, '04 - Chapter 10.avi')}
@@ -201,33 +201,33 @@ class RealDataTest(unittest.TestCase):
 # --------------------------------------------------------------------------------------------------------------------
 class MoveTest(unittest.TestCase):
   def setUp(self):
-    self.readySrc_ = episode.SourceEpisode(1,"01 - Ready.avi")
-    self.missingNewSrc_ = episode.SourceEpisode(3,"Missing New.avi")
+    self.readySrc = episode.SourceEpisode(1,"01 - Ready.avi")
+    self.missingNewSrc = episode.SourceEpisode(3,"Missing New.avi")
 
-    self.readyDest_ = episode.DestinationEpisode(1,"Ready")
-    self.missingOldDest_ = episode.DestinationEpisode(2,"Missing Old.avi")
+    self.readyDest = episode.DestinationEpisode(1,"Ready")
+    self.missingOldDest = episode.DestinationEpisode(2,"Missing Old.avi")
     
     source = episode.EpisodeMap()
-    source.matches_ = { 1:self.readySrc_, 3:self.missingNewSrc_ }
+    source.matches = { 1:self.readySrc, 3:self.missingNewSrc }
 
     destination = episode.EpisodeMap()
-    destination.matches_ = {1:self.readyDest_, 2:self.missingOldDest_ }
+    destination.matches = {1:self.readyDest, 2:self.missingOldDest }
     
-    self.season_ = season.Season("Test", 1, source, destination, "")
+    self.season = season.Season("Test", 1, source, destination, "")
    
   def test_ready(self):
-    item = moveItemCandidate.MoveItemCandidate(self.readySrc_, self.readyDest_)
-    exists = item in self.season_.moveItemCandidates_
+    item = moveItemCandidate.MoveItemCandidate(self.readySrc, self.readyDest)
+    exists = item in self.season.moveItemCandidates
     self.assertTrue(exists)
   
   def test_missingNew(self):
-    item = moveItemCandidate.MoveItemCandidate(self.missingNewSrc_, episode.DestinationEpisode.createUnresolvedDestination())
-    exists = item in self.season_.moveItemCandidates_
+    item = moveItemCandidate.MoveItemCandidate(self.missingNewSrc, episode.DestinationEpisode.createUnresolvedDestination())
+    exists = item in self.season.moveItemCandidates
     self.assertTrue(exists)
   
   def test_missingOld(self):
-    item = moveItemCandidate.MoveItemCandidate(episode.SourceEpisode.createUnresolvedSource(), self.missingOldDest_)
-    exists = item in self.season_.moveItemCandidates_
+    item = moveItemCandidate.MoveItemCandidate(episode.SourceEpisode.createUnresolvedSource(), self.missingOldDest)
+    exists = item in self.season.moveItemCandidates
     self.assertTrue(exists)
       
 # --------------------------------------------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ class SwitchFilesTest(unittest.TestCase):
   def test_switchResolvedKeyForNewResolvedKey(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi"), \
                     "4":episode.SourceEpisode(4,"c03.avi")}
     act = copy.copy(before)
@@ -251,7 +251,7 @@ class SwitchFilesTest(unittest.TestCase):
   def test_switchResolvedKeyForExistingResolvedKey(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"c03.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi")]
     act = copy.copy(before)
@@ -267,7 +267,7 @@ class SwitchFilesTest(unittest.TestCase):
   def test_switchResolvedKeyForUnresolvedKey(self):
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c03.avi"])
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
     act.setKeyForFilename(episode.UNRESOLVED_KEY, "c03.avi")
@@ -276,7 +276,7 @@ class SwitchFilesTest(unittest.TestCase):
   def test_switchResolvedKeyForUnresolvedKey2(self):
     before = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "a01b.avi", "b02.avi"])
     exp = episode.EpisodeMap()
-    exp.matches_ = {"2":episode.SourceEpisode(2,"b02.avi")}
+    exp.matches = {"2":episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01b.avi"),
                        episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")] #maybe you would want this to get resolve now but for now not 
     act = copy.copy(before)
@@ -286,7 +286,7 @@ class SwitchFilesTest(unittest.TestCase):
   def test_switchUnresolvedKeyForNewResolvedKey(self):
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c01.avi"])
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"a01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi"), \
                     "3":episode.SourceEpisode(3,"c01.avi")}
     act.setKeyForFilename(3, "c01.avi")
@@ -295,7 +295,7 @@ class SwitchFilesTest(unittest.TestCase):
   def test_switchUnresolvedKeyForExistingResolvedKey(self):
     act = seasonHelper.SeasonHelper.episodeMapFromIndex(1, ["a01.avi", "b02.avi", "c01.avi"])
     exp = episode.EpisodeMap()
-    exp.matches_ = {"1":episode.SourceEpisode(1,"c01.avi"), \
+    exp.matches = {"1":episode.SourceEpisode(1,"c01.avi"), \
                     "2":episode.SourceEpisode(2,"b02.avi")}
     exp.unresolved_ = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")]
     act.setKeyForFilename(1, "c01.avi")

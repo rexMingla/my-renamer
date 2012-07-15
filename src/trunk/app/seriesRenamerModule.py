@@ -88,12 +88,17 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
                                               workbenchWidget, 
                                               logWidget, 
                                               parent)
+    self._setInactive()
   
   def _setActive(self):
-    self._workBenchWidget.movieButton.setVisible(True)
-  
+    self._workBenchWidget.movieButton.setVisible(True)  
+    self._workBenchWidget.editSeasonButton.setVisible(True)
+    self._workBenchWidget.editEpisodeButton.setVisible(True)
+      
   def _setInactive(self):
     self._workBenchWidget.movieButton.setVisible(False)
+    self._workBenchWidget.editSeasonButton.setVisible(False)
+    self._workBenchWidget.editEpisodeButton.setVisible(False)
   
   def _explore(self):
     self._enableControls(False)
@@ -123,16 +128,16 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
       if outputFolder == outputWidget.USE_SOURCE_DIRECTORY:
         outputFolder = season.inputFolder_
       oFormat = outputFormat.OutputFormat(formatSettings["format"])
-      for ep in season.moveItemCandidates_:
-        if ep.performMove_:
-          im = outputFormat.TvInputMap(season.seasonName_, 
-                                       season.seasonNum_, 
-                                       ep.destination_.epNum_, 
-                                       ep.destination_.epName_)
-          outputBaseName = oFormat.outputToString(im, ep.source_.extension_)
+      for ep in season.moveItemCandidates:
+        if ep.performMove:
+          im = outputFormat.TvInputMap(season.seasonName, 
+                                       season.seasonNum, 
+                                       ep.destination.epNum, 
+                                       ep.destination.epName)
+          outputBaseName = oFormat.outputToString(im, ep.source.extension_)
           newName = fileHelper.FileHelper.joinPath(outputFolder, outputBaseName)
           newName = fileHelper.FileHelper.sanitizeFilename(newName)
-          filenames.append((ep.source_.filename_, newName))
+          filenames.append((ep.source.filename, newName))
     utils.verify(filenames, "Must have files to have gotten this far")
     actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings["dontOverwrite"], \
                                                  keepSource=not formatSettings["move"])

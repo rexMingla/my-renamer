@@ -48,8 +48,6 @@ class MainWindow(QtGui.QMainWindow):
                                                                 self)
     self._workBenchWidget.movieButton.clicked.connect(self._setMovieMode)
     self._workBenchWidget.tvButton.clicked.connect(self._setTvMode)
-    self._workBenchWidget.movieButton.setVisible(False)
-    self._workBenchWidget.tvButton.setVisible(False)
 
     uiPath = os.path.join(os.path.dirname(__file__), "../ui/ui_MainWindow.ui")
     self._ui = uic.loadUi(uiPath, self)
