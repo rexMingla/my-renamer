@@ -5,7 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Allow the user to select an season for a given folder
 # --------------------------------------------------------------------------------------------------------------------
-from PyQt4 import QtCore, QtGui, uic
+from PyQt4 import QtGui
+from PyQt4 import uic
 
 from common import utils
 
@@ -18,7 +19,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
   """
   def __init__(self, parent=None):
     super(QtGui.QDialog, self).__init__(parent)
-    self._ui_ = uic.loadUi("ui/ui_ChangeSeason.ui", self)
+    self._ui = uic.loadUi("ui/ui_ChangeSeason.ui", self)
     self.setWindowModality(True)
     
   def showEvent(self, event):
@@ -31,16 +32,16 @@ class ChangeSeasonWidget(QtGui.QDialog):
     utils.verifyType(folder, str)
     utils.verifyType(seasonName, str)
     utils.verifyType(seasonNum, int)
-    self._ui_.folderLabel_.setText(folder)
-    self._ui_.seasonEdit_.setText(seasonName)
-    self._ui_.seasonSpin_.setValue(seasonNum)
+    self._ui.folderLabel.setText(folder)
+    self._ui.seasonEdit.setText(seasonName)
+    self._ui.seasonSpin.setValue(seasonNum)
     
   def showName(self):
     """ Returns the show name from the dialog. """
-    return self._ui_.seasonEdit_.text()
+    return self._ui.seasonEdit.text()
 
   def seasonNumber(self):
     """ Returns the currently selected season number from the dialog. """
-    return self._ui_.seasonSpin_.value()
+    return self._ui.seasonSpin.value()
 
   

@@ -7,9 +7,27 @@
 # Purpose of document: Log related classes
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore
+from PyQt4 import QtGui
 import logging
 
 import utils
+
+# --------------------------------------------------------------------------------------------------------------------
+class LogStyledDelegate(QtGui.QStyledItemDelegate):
+  """ Display error message in the log in a noticable fashion. """
+  def paint(self, painter, option, index):
+    level, isOk = index.model().data(index, LogModel.LOG_LEVEL_ROLE).toInt()
+    utils.verify(isOk, "Cast to int ok")
+    if level >= LogLevel.ERROR:
+      text = index.model().data(index, QtCore.Qt.DisplayRole).toString()
+      painter.save()
+      painter.setPen(QtCore.Qt.red)
+      painter.setBrush(QtCore.Qt.blue)
+      painter.setBackground(QtCore.Qt.green)
+      painter.drawText(option.rect, QtCore.Qt.AlignLeft, text)
+      painter.restore()    
+    else:
+      QtGui.QStyledItemDelegate.paint(self, painter, option, index)
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogLevel:
@@ -39,10 +57,10 @@ class LogItem:
     utils.verifyType(action, str)
     utils.verifyType(shortMessage, str)
     utils.verifyType(longMessage, str)
-    self.logLevel_ = logLevel
-    self.action_ = action
-    self.shortMessage_ = shortMessage
-    self.longMessage_ = longMessage or shortMessage
+    self.logLevel = logLevel
+    self.action = action
+    self.shortMessage = shortMessage
+    self.longMessage = longMessage or shortMessage
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogModel(QtCore.QAbstractTableModel):
@@ -68,16 +86,16 @@ class LogModel(QtCore.QAbstractTableModel):
     
     item = self.items_[index.row()]
     if role == LogModel.LOG_LEVEL_ROLE:
-      return QtCore.QVariant(item.logLevel_)
+      return QtCore.QVariant(item.logLevel)
     #if index.column() == LogColumns.COL_LEVEL: 
-    #  return logging.getLevelName(item.logLevel_)
+    #  return logging.getLevelName(item.logLevel)
     if index.column() == LogColumns.COL_ACTION:
-      return QtCore.QVariant(item.action_)
+      return QtCore.QVariant(item.action)
     elif index.column() == LogColumns.COL_MESSAGE: 
       if role == QtCore.Qt.DisplayRole:
-        return QtCore.QVariant(item.shortMessage_)
+        return QtCore.QVariant(item.shortMessage)
       else:
-        return QtCore.QVariant(item.longMessage_)
+        return QtCore.QVariant(item.longMessage)
     else: 
       return None  
   

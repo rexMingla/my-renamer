@@ -7,8 +7,15 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore
 
-from common import extension, fileHelper, moveItemActioner, logModel, utils
-from tv import outputFormat, season, seasonHelper
+from common import extension
+from common import fileHelper
+from common import moveItemActioner
+from common import logModel
+from common import utils
+
+from tv import outputFormat
+from tv import season
+from tv import seasonHelper
 
 import renamerModule
 import outputWidget
@@ -97,9 +104,9 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
     self._workerThread = ExploreThread(data["folder"], 
                                        data["recursive"], 
                                        extension.FileExtensions(data["extensions"].split()))
-    self._workerThread.progressSignal_.connect(self._updateSearchProgress)
-    self._workerThread.newDataSignal_.connect(self._onSeasonFound)
-    self._workerThread.logSignal_.connect(self._addMessage)
+    self._workerThread.progressSignal.connect(self._updateSearchProgress)
+    self._workerThread.newDataSignal.connect(self._onSeasonFound)
+    self._workerThread.logSignal.connect(self._addMessage)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()    
@@ -134,8 +141,8 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
     
     self._outputWidget.startActioning()
     self._workerThread = RenameThread(actioner, filenames)
-    self._workerThread.progressSignal_.connect(self._updateRenameProgress)
-    self._workerThread.logSignal_.connect(self._addMessage)
+    self._workerThread.progressSignal.connect(self._updateRenameProgress)
+    self._workerThread.logSignal.connect(self._addMessage)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()

@@ -19,9 +19,9 @@ import outputWidget
 import workBenchWidget
 
 class MyThread(QtCore.QThread):
-  progressSignal_ = QtCore.pyqtSignal(int)
-  logSignal_ = QtCore.pyqtSignal(object)
-  newDataSignal_ = QtCore.pyqtSignal(object)
+  progressSignal = QtCore.pyqtSignal(int)
+  logSignal = QtCore.pyqtSignal(object)
+  newDataSignal = QtCore.pyqtSignal(object)
 
   def __init__(self):
     super(MyThread, self).__init__()
@@ -34,13 +34,13 @@ class MyThread(QtCore.QThread):
     self.userStopped = True
     
   def _onLog(self, msg):
-    self.logSignal_.emit(msg)
+    self.logSignal.emit(msg)
   
   def _onProgress(self, percentage):
-    self.progressSignal_.emit(percentage)
+    self.progressSignal.emit(percentage)
     
   def _onNewData(self, data):
-    self.newDataSignal_.emit(data)
+    self.newDataSignal.emit(data)
 
 """class RenameThread(MyThread):  
   def __init__(self, actioner, items):
@@ -136,10 +136,10 @@ class RenamerModule(QtCore.QObject):
     conf = self.getConfig()
     
     self._isActive = True
-    self._outputWidget.renameSignal_.connect(self._rename)
-    self._inputWidget.exploreSignal_.connect(self._explore)
-    self._inputWidget.stopSignal_.connect(self._stopSearch)
-    self._workBenchWidget.workBenchChangedSignal_.connect(self._outputWidget.enableControls)    
+    self._outputWidget.renameSignal.connect(self._rename)
+    self._inputWidget.exploreSignal.connect(self._explore)
+    self._inputWidget.stopSignal.connect(self._stopSearch)
+    self._workBenchWidget.workBenchChangedSignal.connect(self._outputWidget.enableControls)    
     self.setConfig(conf)
     self._setActive()
     
@@ -150,10 +150,10 @@ class RenamerModule(QtCore.QObject):
     self.setConfig(self.getConfig()) #slightly hacky. we need to get the data out first before we are in active state
     
     self._isActive = False
-    self._outputWidget.renameSignal_.disconnect(self._rename)
-    self._inputWidget.exploreSignal_.disconnect(self._explore)
-    self._inputWidget.stopSignal_.disconnect(self._stopSearch)
-    self._workBenchWidget.workBenchChangedSignal_.disconnect(self._outputWidget.enableControls)
+    self._outputWidget.renameSignal.disconnect(self._rename)
+    self._inputWidget.exploreSignal.disconnect(self._explore)
+    self._inputWidget.stopSignal.disconnect(self._stopSearch)
+    self._workBenchWidget.workBenchChangedSignal.disconnect(self._outputWidget.enableControls)
     
     self._setInactive()
 
@@ -192,11 +192,11 @@ class RenamerModule(QtCore.QObject):
       self._enableControls(True)      
       
   def _stopRename(self):
-    self._outputWidget.stopButton_.setEnabled(False)
+    self._outputWidget.stopButton.setEnabled(False)
     self._stopThread()
    
   def _stopSearch(self):
-    self._inputWidget.stopButton_.setEnabled(False)
+    self._inputWidget.stopButton.setEnabled(False)
     self._stopThread()
     
   def _enableControls(self, isEnabled=True):
@@ -207,7 +207,7 @@ class RenamerModule(QtCore.QObject):
   def _updateSearchProgress(self, percentageComplete):
     """ Update progress. Assumed to be main thread """
     utils.verifyType(percentageComplete, int)
-    self._inputWidget.progressBar_.setValue(percentageComplete)
+    self._inputWidget.progressBar.setValue(percentageComplete)
 
   def _addMessage(self, msg):
     """ Add message to log. Assumed to be main thread """
@@ -216,5 +216,5 @@ class RenamerModule(QtCore.QObject):
   def _updateRenameProgress(self, percentageComplete):
     """ Update progress. Assumed to be main thread """
     utils.verifyType(percentageComplete, int)
-    self._outputWidget.progressBar_.setValue(percentageComplete)
+    self._outputWidget.progressBar.setValue(percentageComplete)
 

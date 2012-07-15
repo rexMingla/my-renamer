@@ -5,17 +5,20 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-from PyQt4 import QtCore, QtGui, uic
+from PyQt4 import QtCore
+from PyQt4 import QtGui
+from PyQt4 import uic
 
 from common import utils
-from tv import model, seasonHelper
+from tv import model
+from tv import seasonHelper
 
 import changeEpisodeWidget
 import changeSeasonWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 class WorkBenchWidget(QtGui.QWidget):
-  workBenchChangedSignal_ = QtCore.pyqtSignal(bool)
+  workBenchChangedSignal = QtCore.pyqtSignal(bool)
   
   def __init__(self, parent=None):
     super(QtGui.QWidget, self).__init__(parent)
@@ -28,32 +31,32 @@ class WorkBenchWidget(QtGui.QWidget):
     self._changeSeasonWidget_.accepted.connect(self._onChangeSeasonFinished)
     
     self._model = model.TreeModel(self)
-    self._ui.view_.setModel(self._model)
-    self._ui.view_.header().setResizeMode(model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Stretch)
-    self._ui.view_.header().setResizeMode(model.Columns.COL_OLD_NAME, QtGui.QHeaderView.Stretch)
-    self._ui.view_.header().setResizeMode(model.Columns.COL_STATUS, QtGui.QHeaderView.Stretch)
-    self._ui.view_.header().setStretchLastSection(True)
-    self._model.workBenchChangedSignal_.connect(self._onWorkBenchChanged)
+    self._ui.view.setModel(self._model)
+    self._ui.view.header().setResizeMode(model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Stretch)
+    self._ui.view.header().setResizeMode(model.Columns.COL_OLD_NAME, QtGui.QHeaderView.Stretch)
+    self._ui.view.header().setResizeMode(model.Columns.COL_STATUS, QtGui.QHeaderView.Stretch)
+    self._ui.view.header().setStretchLastSection(True)
+    self._model.workBenchChangedSignal.connect(self._onWorkBenchChanged)
     
-    self._ui.view_.clicked.connect(self._onClicked)
-    self._ui.view_.doubleClicked.connect(self._onDoubleClicked)
-    self._ui.editEpisodeButton_.clicked.connect(self._editEpisode)
-    self._ui.editSeasonButton_.clicked.connect(self._editSeason)
+    self._ui.view.clicked.connect(self._onClicked)
+    self._ui.view.doubleClicked.connect(self._onDoubleClicked)
+    self._ui.editEpisodeButton.clicked.connect(self._editEpisode)
+    self._ui.editSeasonButton.clicked.connect(self._editSeason)
     
-    self._ui.editEpisodeButton_.setEnabled(False)
-    self._ui.editSeasonButton_.setEnabled(False)
-    self._ui.selectAllCheckBox_.setEnabled(False)
-    self._ui.selectAllCheckBox_.clicked.connect(self._model.setOverallCheckedState)
+    self._ui.editEpisodeButton.setEnabled(False)
+    self._ui.editSeasonButton.setEnabled(False)
+    self._ui.selectAllCheckBox.setEnabled(False)
+    self._ui.selectAllCheckBox.clicked.connect(self._model.setOverallCheckedState)
         
   def addSeason(self, season):
     self._model.addSeason(season)
-    self._ui.view_.expandAll()
+    self._ui.view.expandAll()
     
   def setSeasons(self, seasons):
     self._model.setSeasons(seasons)
-    self._ui.view_.expandAll()
-    self._ui.editEpisodeButton_.setEnabled(False)
-    self._ui.editSeasonButton_.setEnabled(False)
+    self._ui.view.expandAll()
+    self._ui.editEpisodeButton.setEnabled(False)
+    self._ui.editSeasonButton.setEnabled(False)
     
   def seasons(self):
     seasons = self._model.seasons()
@@ -69,8 +72,8 @@ class WorkBenchWidget(QtGui.QWidget):
   def _onClicked(self, modelIndex):
     self._currentIndex_ = modelIndex
     moveItemCandidateData, isMoveItemCandidate = self._model.data(modelIndex, model.RAW_DATA_ROLE)
-    self._ui.editEpisodeButton_.setEnabled(isMoveItemCandidate and moveItemCandidateData.canEdit_)
-    self._ui.editSeasonButton_.setEnabled(not isMoveItemCandidate)
+    self._ui.editEpisodeButton.setEnabled(isMoveItemCandidate and moveItemCandidateData.canEdit_)
+    self._ui.editSeasonButton.setEnabled(not isMoveItemCandidate)
 
   def _onDoubleClicked(self, modelIndex):
     utils.verifyType(modelIndex, QtCore.QModelIndex)
@@ -107,9 +110,9 @@ class WorkBenchWidget(QtGui.QWidget):
   def _onWorkBenchChanged(self, hasChecked):
     utils.verifyType(hasChecked, bool)
     cs = self._model.overallCheckedState()
-    self._ui.selectAllCheckBox_.setEnabled(cs <> None)
+    self._ui.selectAllCheckBox.setEnabled(cs <> None)
     if cs == None:
       cs = QtCore.Qt.Unchecked
-    self._ui.selectAllCheckBox_.setCheckState(cs)
-    self.workBenchChangedSignal_.emit(hasChecked)
+    self._ui.selectAllCheckBox.setCheckState(cs)
+    self.workBenchChangedSignal.emit(hasChecked)
     
