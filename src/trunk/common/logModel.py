@@ -100,7 +100,7 @@ class LogModel(QtCore.QAbstractTableModel):
       return None  
   
   def headerData(self, section, orientation, role):
-    if role <> QtCore.Qt.DisplayRole or orientation == QtCore.Qt.Vertical:
+    if role != QtCore.Qt.DisplayRole or orientation == QtCore.Qt.Vertical:
       return None
     
     #if section == LogColumns.COL_LEVEL: 
@@ -120,8 +120,8 @@ class LogModel(QtCore.QAbstractTableModel):
   def clearItems(self):
     count = self.rowCount(QtCore.QModelIndex())
     if count:
-      self.beginRemoveRows(QtCore.QModelIndex(), 0, count-1)
+      self.beginResetModel()
       self.items = []
-      self.endRemoveRows()
+      self.endResetModel()
   
   

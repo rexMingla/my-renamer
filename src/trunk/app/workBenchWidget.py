@@ -38,7 +38,8 @@ class WorkBenchWidget(QtGui.QWidget):
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_YEAR, QtGui.QHeaderView.Stretch)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_DISC, QtGui.QHeaderView.Stretch)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_STATUS, QtGui.QHeaderView.Stretch)
-    self.movieView.horizontalHeader().setStretchLastSection(True)    
+    self.movieView.horizontalHeader().setStretchLastSection(True)
+    self.movieView.verticalHeader().setDefaultSectionSize(20)
     self.movieModel.workBenchChangedSignal.connect(self._onWorkBenchChanged)
     
     self.tvModel = model.TvModel(self)

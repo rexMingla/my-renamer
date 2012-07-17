@@ -61,8 +61,8 @@ class MovieModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return None
     
-    if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, RAW_DATA_ROLE) and \
-      (index.column() != Columns.COL_OLD_NAME and role == QtCore.Qt.CheckStateRole):
+    if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, QtCore.Qt.CheckStateRole, RAW_DATA_ROLE) or \
+      (role == QtCore.Qt.CheckStateRole and index.column() != Columns.COL_OLD_NAME):
       return None
 
     item = self._movies[index.row()]
@@ -116,18 +116,19 @@ class MovieModel(QtCore.QAbstractTableModel):
     return f
 
   def headerData(self, section, orientation, role):
-    if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-      if section == Columns.COL_DISC:
-        return "Disc"
-      if section == Columns.COL_NEW_NAME:
-        return "Title"
-      if section == Columns.COL_OLD_NAME:
-        return "Filename"
-      if section == Columns.COL_STATUS:
-        return "Status"
-      if section == Columns.COL_YEAR:
-        return "Year"
-    return None
+    if role != QtCore.Qt.DisplayRole or orientation == QtCore.Qt.Vertical:
+      return
+    
+    if section == Columns.COL_DISC:
+      return "Disc"
+    elif section == Columns.COL_NEW_NAME:
+      return "Title"
+    elif section == Columns.COL_OLD_NAME:
+      return "Filename"
+    elif section == Columns.COL_STATUS:
+      return "Status"
+    elif section == Columns.COL_YEAR:
+      return "Year"
 
   def rowCount(self, parent):
     return len(self._movies)
