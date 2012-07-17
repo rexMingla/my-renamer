@@ -10,9 +10,9 @@ from PyQt4 import QtGui
 from PyQt4 import uic
 
 from common import utils
+from common import outputFormat
 from tv import episode
 from tv import moveItemCandidate
-from tv import outputFormat
 from tv import season
 
 # --------------------------------------------------------------------------------------------------------------------

@@ -3,37 +3,26 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: interface to the imdb api
+# Purpose of document: Module responsible for the renaming of movies
 # --------------------------------------------------------------------------------------------------------------------
+from pymdb import pymdb
+
+from common import utils
+from common import fileHelper
+
 import os
 import re
-import string
 
-import jsonpickle
-jsonpickle.set_encoder_options("simplejson", indent=2)
-from pymdb import pymdb
-  
-VIDEO_EXTENSIONS = (".avi", ".divx", ".mkv", ".mpg", ".mp4", ".wmv")
-SUBTITLE_EXTENSIONS = (".sub", ".srt", ".rar", ".sfv")
-PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
-MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
-MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
-MIN_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 # 20 MB
-IS_TEST_ONLY = True # create dummy files
-MODE = None 
+_VIDEO_EXTENSIONS = (".avi", ".divx", ".mkv", ".mpg", ".mp4", ".wmv")
+_SUBTITLE_EXTENSIONS = (".sub", ".srt", ".rar", ".sfv")
+_PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
+_MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
+_MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
+_MIN_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 # 20 MB
 
-CACHE = {}
+_CACHE = {}
 
-# ------------------------------------------------------------------    
-class LookupMode:
-  LAZY = "lazy" #move all regardless of matching year
-  SEMI = "semi" #move year'ed, lookup non year'ed
-  ALL = "all"
-  
-VALID_MODES = (LookupMode.LAZY, LookupMode.SEMI, LookupMode.ALL)
-MODE = LookupMode.SEMI
-
-# ------------------------------------------------------------------    
+# --------------------------------------------------------------------------------------------------------------------
 class Result:
   IGNORED_NOT_VIDEO = 1
   IGNORED_SAMPLE_VIDEO = 2
@@ -57,71 +46,100 @@ VALID_RESULTS = (Result.IGNORED_NOT_VIDEO,
                  Result.FOUND_YEAR, 
                  Result.FOUND_NO_YEAR)
 
-# ------------------------------------------------------------------    
+# --------------------------------------------------------------------------------------------------------------------
 class Movie(object):
-  def __init__(self, filename, title, part, year=None, subs_files=None):
+  def __init__(self, filename, title, part, year=None, subsFiles=None):
     super(Movie, self).__init__()
-    self.filename = clean_string(filename)
-    self.in_path = os.path.dirname(self.filename)
+    self.filename = str(filename)
+    self.inPath = os.path.dirname(self.filename)
     self.ext = os.path.splitext(self.filename)[1].lower()
-    self.title = clean_string(title)
-    self.subs_files = subs_files # not used atm
+    self.title = str(title)
+    self.subsFiles = subsFiles # not used atm
     #dynamic properties
     self.year = year
     self.genres = ["unknown"]
-    self.is_moved = False
-    self.out_location = None
     self.collision_number = None #marked if multiple entries have the same name
     self.part = part #disc number
     
-  def get_movie_name(self, normal_dir, collision_dir, limbo_dir):
-    def get_name():
-      out = [self.title]
-      if self.year:
-        out.append(" (%s)" % self.year)
-      if self.part:
-        out.append(" CD %s" % self.part)
-      if not self.collision_number is None:
-        out.append("[%d]" %  self.collision_number)
-      out.append(self.ext)
-      return "".join(out)
-    
-    name = get_name()
-    folder = limbo_dir
-    if not self.collision_number is None:
-      folder = collision_dir
-    if self.year:
-      #sub_folder = ""
-      sub_folder = really_clean_string(self.genres[0])
-      """elif not sub_folder:
-        sub_folder = name[0].upper()
-        if sub_folder.isdigit():
-          sub_folder = "0-9"
-        elif not sub_folder.isalpha():
-          sub_folder = "Misc" """
-      folder = os.path.join(normal_dir, sub_folder)
-      
-    return os.path.join(folder, name)
-    
-  def move(self):
-    assert(self.out_location and not self.is_moved)
-    if os.path.exists(self.out_location):
-      print("wtf: file exists in output location: %s" % self.out_location)
-      return
-    make_dirs(os.path.dirname(self.out_location))
-    #todo: assert some stuff
-    try:
-      if IS_TEST_ONLY:
-        #create a dummy file in the directory
-        open(self.out_location, "w").close()
-        #todo: subtitles...
+# --------------------------------------------------------------------------------------------------------------------
+class MovieHelper:
+  @staticmethod
+  def getFiles(folder, isRecursive):
+    files = []
+    for dirName, _, filenames in os.walk(folder):
+      for baseName in sorted(filenames):
+        files.append(fileHelper.FileHelper.joinPath(dirName, baseName))
+      if not isRecursive:
+        break
+    return files
+  
+  @staticmethod
+  def processFile(filename):
+    basename = fileHelper.FileHelper.basename(filename)
+    name, ext = os.path.splitext(basename)
+    ext = ext.lower()
+    result, movie = None, None
+    if not os.path.exists(filename):
+      result = Result.IGNORED_FILE_NOT_FOUND
+    elif not ext in _VIDEO_EXTENSIONS:
+      result = Result.IGNORED_NOT_VIDEO
+    elif os.path.getsize(filename) < _MIN_VIDEO_SIZE_BYTES:
+      result = Result.IGNORED_SAMPLE_VIDEO
+    else:
+      m = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)
+      assert(m)
+      title = m.groupdict().get("title")
+      year = m.groupdict().get("year")
+      part = None
+      if year:
+        result = Result.FOUND_YEAR
       else:
-        open(self.out_location, "w").close()#os.rename(self.filename, self.out_location)    
-    except (IOError, WindowsError) as e:
-      print("**error: %s on file: %s" % (e, self.out_location))
-    self.is_moved = os.path.exists(self.out_location) and not (self.filename)
+        result = Result.FOUND_NO_YEAR
+      partStr = basename
+      #if len(filenames) < 3: #use the folder name if there aren't many files in the folder
+      #  partStr = filename
+      pm = _PART_MATCH.match(filename)
+      if pm:
+        part = pm.group(1)
+        if part.isalpha():
+          part = str(" abcdef".index(part))
+      if part:
+        print "**", part, basename
+      if title.find(" ") == -1:
+        title = title.replace(".", " ")
+      title = re.sub(r"[\(\[\{\s]+$", "", title)
+      title = re.sub(r"^\w+\-", "", title)
+      #todo: fix subs...
+      #subsFiles = [change_ext(filename, e) for e in _SUBTITLE_EXTENSIONS
+      #              if os.path.exists(change_ext(filename, e)) ]
+      movie = Movie(filename, title, part, year)
+    return result, movie
     
-# ------------------------------------------------------------------    
+  @staticmethod
+  def getInfoFromTvdb(mv):
+    utils.verifyType(mv, Movie)
+    info = None
+    key = "%s (%s)" % (mv.title, mv.year)
+    global _CACHE
+    if key in _CACHE:
+      info = _CACHE[key]
+    else:
+      info = MovieInfo(mv.title)
+      try:
+        m = pymdb.Movie(mv.title)
+        info.title = str(m.title or info.title)
+        info.year = str(m.year or info.year)
+        info.genres = m.genre or info.genres
+        if info:
+          newKey = "%s (%s)" % (info.title, info.year)
+          _CACHE[newKey] = info
+          if key !=newKey:
+            _CACHE[key] = info            
+      except (AttributeError, ValueError, pymdb.MovieError) as e:
+        print("**error: %s on %s" % (e, movie.title))
+    return info
+    
+x = """# ------------------------------------------------------------------    
 def trawl_folder(folder):
   results = dict( (v, []) for v in VALID_RESULTS)
   movies = []
@@ -133,12 +151,12 @@ def trawl_folder(folder):
       full_name = clean_string(os.path.join(dir_name, base_name))
       if not os.path.exists(full_name):
         ret = Result.IGNORED_FILE_NOT_FOUND
-      elif not ext in VIDEO_EXTENSIONS:
+      elif not ext in _VIDEO_EXTENSIONS:
         ret = Result.IGNORED_NOT_VIDEO
-      elif os.path.getsize(full_name) < MIN_VIDEO_SIZE_BYTES:
+      elif os.path.getsize(full_name) < _MIN_VIDEO_SIZE_BYTES:
         ret = Result.IGNORED_SAMPLE_VIDEO
       else:
-        m = MOVIE_YEAR_MATCH.match(name) or MOVIE_NO_YEAR_MATCH.match(name)
+        m = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)
         assert(m)
         title = m.groupdict().get("title")
         year = m.groupdict().get("year")
@@ -150,7 +168,7 @@ def trawl_folder(folder):
         part_str = base_name
         if len(filenames) < 3: #use the folder name if there aren't many files in the folder
           part_str = full_name
-        pm = PART_MATCH.match(full_name)
+        pm = _PART_MATCH.match(full_name)
         if pm:
           part = pm.group(1)
           if part.isalpha():
@@ -162,9 +180,9 @@ def trawl_folder(folder):
         title = re.sub(r"[\(\[\{\s]+$", "", title)
         title = re.sub(r"^\w+\-", "", title)
         #todo: fix subs...
-        subs_files = [change_ext(full_name, e) for e in SUBTITLE_EXTENSIONS
+        subsFiles = [change_ext(full_name, e) for e in _SUBTITLE_EXTENSIONS
                       if os.path.exists(change_ext(full_name, e)) ]
-        movie = Movie(full_name, title, part, year, subs_files)
+        movie = Movie(full_name, title, part, year, subsFiles)
         movies.append(movie)
       results[ret].append(full_name)
   return results, movies
@@ -282,7 +300,7 @@ def main():
   make_dirs(collision_dir)
 
   for m in movies:
-    m.out_location = m.get_movie_name(out_dir, collision_dir, limbo_dir)
+    m.out_location = m.getMovieName(out_dir, collision_dir, limbo_dir)
     m.move()
     
   if not os.listdir(limbo_dir):
@@ -297,3 +315,4 @@ def main():
 # ------------------------------------------------------------------    
 if __name__ == "__main__":
   main()
+"""

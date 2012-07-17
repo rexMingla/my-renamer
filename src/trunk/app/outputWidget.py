@@ -10,9 +10,8 @@ from PyQt4 import QtGui
 from PyQt4 import uic
 
 from common import fileHelper
+from common import outputFormat
 from common import utils
-
-from tv import outputFormat
 
 USE_SOURCE_DIRECTORY = ""
       
@@ -23,77 +22,88 @@ class OutputWidget(QtGui.QWidget):
   
   def __init__(self, parent=None):
     super(QtGui.QWidget, self).__init__(parent)
-    self._ui = uic.loadUi("ui/ui_OutputWidget.ui", self)
-    self._ui.renameButton.clicked.connect(self.renameSignal)
-    self._ui.renameButton.setEnabled(False)
-        
-    self._ui.specificDirectoryButton.clicked.connect(self._showFolderSelectionDialog)
+    self._fmt = None
     
-    self._ui.useSpecificDirectoryRadio.toggled.connect(self._ui.specificDirectoryEdit.setEnabled)
-    self._ui.useSpecificDirectoryRadio.toggled.connect(self._ui.specificDirectoryButton.setEnabled)
-    self._ui.formatEdit.textChanged.connect(self._updatePreviewText)
-    self._updatePreviewText()
+    self._ui = uic.loadUi("ui/ui_OutputWidget.ui", self)
+    self.renameButton.clicked.connect(self.renameSignal)
+    self.renameButton.setEnabled(False)
+        
+    self.specificDirectoryButton.clicked.connect(self._showFolderSelectionDialog)
+    
+    self.useSpecificDirectoryRadio.toggled.connect(self.specificDirectoryEdit.setEnabled)
+    self.useSpecificDirectoryRadio.toggled.connect(self.specificDirectoryButton.setEnabled)
+    self.formatEdit.textChanged.connect(self._updatePreviewText)
     
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)
     fsModel.setRootPath("")
     completer.setModel(fsModel)
-    self._ui.specificDirectoryEdit.setCompleter(completer)
+    self.specificDirectoryEdit.setCompleter(completer)
     
+    self.stopActioning()
+    
+  def setOutputFormat(self, fmt):
+    self._fmt = fmt
+    if not self._fmt:
+      self.formatEdit.setText("")
+      self.formatEdit.setToolTip("")
+      return
+    
+    if self.formatEdit.text().isEmpty():
+      self.formatEdit.setText(self._fmt.defaultFormatStr())
     #tooltip
     toolTipText = ["Available options:"]
-    for key, value in outputFormat.TvInputMap.exampleInputMap().data.items():
+    for key, value in self._fmt.exampleInputMap().data.items():
       toolTipText.append("%s -> %s" % (key, value))
-    self._ui.formatEdit.setToolTip("\n".join(toolTipText))
-
-    self.stopActioning()
-    self._mode = None
+    self.formatEdit.setToolTip("\n".join(toolTipText))
     
-  def setMode(self, mode):
-    self._mode = mode
+    self._updatePreviewText()
     
   def enableControls(self, isEnabled):
-    self._ui.renameButton.setEnabled(isEnabled)
+    self.renameButton.setEnabled(isEnabled)
     
   def _updatePreviewText(self):
-    text = utils.toString(self._ui.formatEdit.text())
-    oFormat = outputFormat.OutputFormat(text)
-    formattedText = oFormat.outputToString(outputFormat.TvInputMap.exampleInputMap())
-    formattedText = "Example: %s" % fileHelper.FileHelper.sanitizeFilename(formattedText)
-    self._ui.formatExampleLabel.setText(formattedText)
+    if self._fmt:
+      text = utils.toString(self.formatEdit.text())
+      oFormat = outputFormat.OutputFormat(text)
+      formattedText = oFormat.outputToString(self._fmt.exampleInputMap())
+      formattedText = "Example: %s" % fileHelper.FileHelper.sanitizeFilename(formattedText)
+      self.formatExampleLabel.setText(formattedText)      
     
   def startActioning(self):
-    self._ui.progressBar.setValue(0)    
-    self._ui.progressBar.setVisible(True)
-    self._ui.stopButton.setEnabled(True)
-    self._ui.stopButton.setVisible(True)
-    self._ui.renameButton.setVisible(False)
+    self.progressBar.setValue(0)    
+    self.progressBar.setVisible(True)
+    self.stopButton.setEnabled(True)
+    self.stopButton.setVisible(True)
+    self.renameButton.setVisible(False)
 
   def stopActioning(self):
-    self._ui.progressBar.setVisible(False)
-    self._ui.stopButton.setVisible(False)
-    self._ui.renameButton.setVisible(True)    
+    self.progressBar.setVisible(False)
+    self.stopButton.setVisible(False)
+    self.renameButton.setVisible(True)    
       
   def _showFolderSelectionDialog(self):
-    folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self._ui.specificDirectoryEdit.text())
+    folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.specificDirectoryEdit.text())
     if folder:
-      self._ui.specificDirectoryEdit.setText(folder)
+      self.specificDirectoryEdit.setText(folder)
 
   def getConfig(self):
-    outputDir = utils.toString(self._ui.specificDirectoryEdit.text())
-    if self._ui.useSourceDirectoryRadio.isChecked():
+    outputDir = utils.toString(self.specificDirectoryEdit.text())
+    if self.useSourceDirectoryRadio.isChecked():
       outputDir = USE_SOURCE_DIRECTORY    
-    data = {"format" : utils.toString(self._ui.formatEdit.text()),
+    data = {"format" : utils.toString(self.formatEdit.text()),
             "folder" : outputDir,
-            "move" : self._ui.moveRadio.isChecked(),
-            "dontOverwrite" : self._ui.doNotOverwriteCheckBox.isChecked()}
+            "move" : self.moveRadio.isChecked(),
+            "dontOverwrite" : self.doNotOverwriteCheckBox.isChecked()}
     return data
   
   def setConfig(self, data):
-    self._ui.formatEdit.setText(data.get("format", outputFormat.TvInputMap.defaultFormatStr()))
+    fmt = data.get("format", "")
+    if fmt:
+      self.formatEdit.setText(fmt)
     outputDir = data.get("folder", USE_SOURCE_DIRECTORY)
-    self._ui.useSourceDirectoryRadio.setChecked(outputDir == USE_SOURCE_DIRECTORY)
+    self.useSourceDirectoryRadio.setChecked(outputDir == USE_SOURCE_DIRECTORY)
     if outputDir != USE_SOURCE_DIRECTORY:
-      self._ui.specificDirectoryEdit.setText(outputDir)
-    self._ui.moveRadio.setChecked(data.get("move", True))
-    self._ui.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))
+      self.specificDirectoryEdit.setText(outputDir)
+    self.moveRadio.setChecked(data.get("move", True))
+    self.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))

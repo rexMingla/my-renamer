@@ -8,7 +8,8 @@
 import copy
 from PyQt4 import QtCore
 
-from common import fileHelper, utils
+from common import fileHelper
+from common import utils
 import episode
 import moveItemCandidate
 import season
@@ -127,7 +128,7 @@ class TreeItem(object):
       self.raw.performMove = isChecked
       
 # --------------------------------------------------------------------------------------------------------------------
-class TreeModel(QtCore.QAbstractItemModel):
+class TvModel(QtCore.QAbstractItemModel):
   """ 
   Represents 0 or more tv seasons. Each folder (season) contains a collection of moveItemCandiates. 
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
@@ -135,9 +136,10 @@ class TreeModel(QtCore.QAbstractItemModel):
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
   
   def __init__(self, parent=None):
-    super(TreeModel, self).__init__(parent)
+    super(TvModel, self).__init__(parent)
     self._seasons = []
-    self.rootItem = TreeItem(("",))  
+    self.rootItem = TreeItem(("",))
+    self._bulkProcessing = False
     
   def columnCount(self, parent):
     return Columns.NUM_COLS
@@ -282,7 +284,7 @@ class TreeModel(QtCore.QAbstractItemModel):
 
     return parent.childCount()
   
-  def addSeason(self, s):
+  def addItem(self, s):
     utils.verifyType(s, season.Season)
     #check if already in list
     self.beginInsertRows(QtCore.QModelIndex(), len(self._seasons), len(self._seasons))
@@ -293,27 +295,15 @@ class TreeModel(QtCore.QAbstractItemModel):
     self._seasons.append(s)
     self.endInsertRows()      
     self._emitWorkBenchChanged()
-  
-  def setSeasons(self, seasons):
-    utils.verifyType(seasons, list)
-    if self._seasons:
-      self.beginRemoveRows(QtCore.QModelIndex(), 0, len(self._seasons) - 1)
-      self.rootItem = TreeItem()
-      self._seasons = []
-      self.endRemoveRows()
     
-    self._seasons = seasons
-    if seasons:
-      self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._seasons) - 1)
-      for season in self._seasons:
-        ti = TreeItem(season, self.rootItem)
-        self.rootItem.appendChild(ti)
-        for mi in season.moveItemCandidates:
-          ti.appendChild(TreeItem(mi, ti))   
-      self.endInsertRows()      
+  def clear(self):
+    self.beginResetModel()
+    self._seasons = []
+    self.rootItem = TreeItem(("",))  
+    self.endResetModel()
     self._emitWorkBenchChanged()
     
-  def seasons(self):
+  def items(self):
     seasons = []
     for i in range(self.rootItem.childCount()):
       seasonItem = self.rootItem.child(i)
@@ -324,30 +314,28 @@ class TreeModel(QtCore.QAbstractItemModel):
     return seasons
   
   def overallCheckedState(self):
-    counter = { QtCore.Qt.Unchecked : 0,
-                QtCore.Qt.PartiallyChecked : 0,
-                QtCore.Qt.Checked : 0 }
-    if not self.rootItem.childCount():
+    filteredItems = [i for i in self.rootItem.childItems if i.canCheck()]
+    if not filteredItems:
       return None
-    for i in range(self.rootItem.childCount()):
-      item = self.rootItem.child(i)
-      if item.canCheck():
-        counter[item.checkState()] += 1
+    
     ret = QtCore.Qt.PartiallyChecked
-    if not counter[QtCore.Qt.PartiallyChecked] and not counter[QtCore.Qt.Checked]:
-      ret = QtCore.Qt.Unchecked
-    elif not counter[QtCore.Qt.Unchecked] and not counter[QtCore.Qt.PartiallyChecked]:
-      ret = QtCore.Qt.Checked
+    if all(i.checkState() == QtCore.Qt.Checked for i in filteredItems):
+      ret = QtCore.Qt.Checked 
+    elif all(i.checkState() == QtCore.Qt.Unchecked for i in filteredItems):
+      ret = QtCore.Qt.Unchecked 
     return ret
   
   def setOverallCheckedState(self, isChecked):
     utils.verifyType(isChecked, bool)
+    self._bulkProcessing = True
     cs = QtCore.Qt.Checked
     if not isChecked:
       cs = QtCore.Qt.Unchecked
     for i in range(self.rootItem.childCount()):
       idx = self.index(i, Columns.COL_OLD_NAME, QtCore.QModelIndex())
-      self.setData(idx, cs, QtCore.Qt.CheckStateRole)   
+      self.setData(idx, cs, QtCore.Qt.CheckStateRole)
+    self._bulkProcessing = False
+    self._emitWorkBenchChanged()
   
   def _hasMoveableItems(self):
     ret = False

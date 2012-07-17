@@ -69,10 +69,10 @@ class LogModel(QtCore.QAbstractTableModel):
   
   def __init__(self, parent):
     super(QtCore.QAbstractTableModel, self).__init__(parent)
-    self.items_ = []
+    self.items = []
       
   def rowCount(self, parent):
-    return len(self.items_)
+    return len(self.items)
 
   def columnCount(self, parent):
     return LogColumns.NUM_COLS
@@ -84,7 +84,7 @@ class LogModel(QtCore.QAbstractTableModel):
     if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, LogModel.LOG_LEVEL_ROLE):
       return None
     
-    item = self.items_[index.row()]
+    item = self.items[index.row()]
     if role == LogModel.LOG_LEVEL_ROLE:
       return QtCore.QVariant(item.logLevel)
     #if index.column() == LogColumns.COL_LEVEL: 
@@ -114,14 +114,14 @@ class LogModel(QtCore.QAbstractTableModel):
     utils.verifyType(item, LogItem)
     count = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
-    self.items_.append(item)
+    self.items.append(item)
     self.endInsertRows()
     
   def clearItems(self):
     count = self.rowCount(QtCore.QModelIndex())
     if count:
       self.beginRemoveRows(QtCore.QModelIndex(), 0, count-1)
-      self.items_ = []
+      self.items = []
       self.endRemoveRows()
   
   

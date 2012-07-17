@@ -11,8 +11,13 @@ sys.path.insert(0, os.path.abspath(__file__+"/../../"))
 import copy
 import unittest
 
-from common import extension, utils
-from tv import episode, moveItemCandidate, outputFormat, season, seasonHelper
+from common import utils
+from common import extension
+from common import outputFormat
+from tv import episode
+from tv import moveItemCandidate
+from tv import season
+from tv import seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):

@@ -140,8 +140,8 @@ class EpisodeMap(object):
   
   def __copy__(self):
     ret = EpisodeMap()
-    for key in self.matches:
-      ret.matches[key] = copy.copy(self.matches[key])
+    for key, value in self.matches.items():
+      ret.matches[key] = copy.copy(value)
     for item in self.unresolved:
       ret.unresolved.append(copy.copy(item))
     return ret
