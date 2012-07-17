@@ -10,54 +10,18 @@ from PyQt4 import QtCore
 from common import extension
 from common import fileHelper
 from common import moveItemActioner
+from common import outputFormat
 from common import logModel
 from common import utils
 
-from tv import outputFormat
 from tv import season
 from tv import seasonHelper
 
 import renamerModule
-import outputWidget
-
-# --------------------------------------------------------------------------------------------------------------------
-class RenameThread(renamerModule.MyThread):  
-  def __init__(self, actioner, items):
-    super(RenameThread, self).__init__()
-    utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
-    utils.verifyType(items, list)
-    self._actioner = actioner
-    self._items = items
-    
-  def run(self):
-    results = {} #hist
-    for i, item in enumerate(self._items):
-      source, dest = item
-      res = self._actioner.performAction(source, dest)
-      self._onLog(moveItemActioner.MoveItemActioner.resultToLogItem(res, source, dest))
-      if not results.has_key(res):
-        results[res] = 0  
-      results[res] += 1  
-      self._onProgress(int(100 * (i + 1) / len(self._items)))
-      if self.userStopped:
-        self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                     "Rename / move",
-                                     "User cancelled. %d of %d files actioned." % (i, len(self._items))))              
-        break
-    self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                 "Rename / move",
-                                 moveItemActioner.MoveItemActioner.summaryText(results)))      
+import outputWidget     
     
 # --------------------------------------------------------------------------------------------------------------------
-class ExploreThread(renamerModule.MyThread):
-  def __init__(self, folder, isRecursive, ext):
-    super(ExploreThread, self).__init__()
-    utils.verifyType(folder, str)
-    utils.verifyType(isRecursive, bool)
-    utils.verifyType(ext, extension.FileExtensions)
-    self._folder = folder
-    self._isRecursive = isRecursive
-    self._ext = ext
+class SeriesExploreThread(renamerModule.ExploreThread):
     
   def run(self):
     dirs = seasonHelper.SeasonHelper.getFolders(self._folder, self._isRecursive)
@@ -83,46 +47,34 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
   """  
   def __init__(self, inputWidget, outputWidget, workbenchWidget, logWidget, parent=None):
     super(SeriesRenamerModule, self).__init__(renamerModule.Mode.TV_MODE, 
+                                              outputFormat.TvInputMap,
+                                              workbenchWidget.tvModel,
+                                              SeriesExploreThread,
                                               inputWidget, 
                                               outputWidget, 
                                               workbenchWidget, 
                                               logWidget, 
                                               parent)
     self._setInactive()
+    #set model
   
   def _setActive(self):
     self._workBenchWidget.movieButton.setVisible(True)  
     self._workBenchWidget.editSeasonButton.setVisible(True)
     self._workBenchWidget.editEpisodeButton.setVisible(True)
+    self._workBenchWidget.tvView.setVisible(True)
       
   def _setInactive(self):
     self._workBenchWidget.movieButton.setVisible(False)
     self._workBenchWidget.editSeasonButton.setVisible(False)
-    self._workBenchWidget.editEpisodeButton.setVisible(False)
-  
-  def _explore(self):
-    self._enableControls(False)
-    self._workBenchWidget.setSeasons([])
-    self._inputWidget.startSearching()
-    data = self._inputWidget.getConfig()
-    assert(not self._workerThread or not self._workerThread.isRunning())
-    self._workerThread = ExploreThread(data["folder"], 
-                                       data["recursive"], 
-                                       extension.FileExtensions(data["extensions"].split()))
-    self._workerThread.progressSignal.connect(self._updateSearchProgress)
-    self._workerThread.newDataSignal.connect(self._onSeasonFound)
-    self._workerThread.logSignal.connect(self._addMessage)
-    self._workerThread.finished.connect(self._onThreadFinished)
-    self._workerThread.terminated.connect(self._onThreadFinished)    
-    self._workerThread.start()    
+    self._workBenchWidget.editEpisodeButton.setVisible(False) 
+    self._workBenchWidget.tvView.setVisible(False)
 
-  def _rename(self):
-    self._enableControls(False)
-    self._logWidget.onRename()
-    formatSettings = self._outputWidget.getConfig()
+  def _getRenameItems(self):
     filenames = []
-    seasons = self._workBenchWidget.seasons()
+    seasons = self._model.items()
     utils.verify(seasons, "Must have seasons to have gotten this far")
+    formatSettings = self._outputWidget.getConfig()
     for season in seasons:
       outputFolder = formatSettings["folder"]
       if outputFolder == outputWidget.USE_SOURCE_DIRECTORY:
@@ -139,20 +91,5 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
           newName = fileHelper.FileHelper.sanitizeFilename(newName)
           filenames.append((ep.source.filename, newName))
     utils.verify(filenames, "Must have files to have gotten this far")
-    actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings["dontOverwrite"], \
-                                                 keepSource=not formatSettings["move"])
-    assert(not self._workerThread or not self._workerThread.isRunning())
-    self._addMessage(logModel.LogItem(logModel.LogLevel.INFO, "Starting...", ""))
-    
-    self._outputWidget.startActioning()
-    self._workerThread = RenameThread(actioner, filenames)
-    self._workerThread.progressSignal.connect(self._updateRenameProgress)
-    self._workerThread.logSignal.connect(self._addMessage)
-    self._workerThread.finished.connect(self._onThreadFinished)
-    self._workerThread.terminated.connect(self._onThreadFinished)    
-    self._workerThread.start()
-    
-  def _onSeasonFound(self, season):
-    if season:
-      self._workBenchWidget.addSeason(season)    
+    return filenames      
     

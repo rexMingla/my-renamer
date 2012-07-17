@@ -7,8 +7,8 @@
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
 
-def leftPad(val):
-  ret = utils.toString(val).zfill(2)
+def leftPad(val, places=2):
+  ret = utils.toString(val).zfill(places)
   return ret
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -59,6 +59,35 @@ class TvInputMap(InputMap):
   @staticmethod
   def defaultFormatStr():
     return "[show_name] - S[season_num]E[ep_num] - [ep_name]"
+  
+# --------------------------------------------------------------------------------------------------------------------
+class MovieInputMap(InputMap):
+  """ Configurable attributes for output. """
+  KEY_TITLE  = "[title]"
+  KEY_YEAR   = "[year]"
+  KEY_GENRE  = "[genre]"  
+  #KEY_DISC   = "[disc]"   
+
+  def __init__(self, title, year, genre):
+    super(MovieInputMap, self).__init__()
+    utils.verifyType(title, str)
+    utils.verifyType(year, int)
+    utils.verifyType(genre, str)
+    self.data = {MovieInputMap.KEY_TITLE: title,
+                 MovieInputMap.KEY_YEAR:  leftPad(year, 4),
+                 MovieInputMap.KEY_GENRE: genre}
+
+  @staticmethod
+  def helpInputMap():
+    return MovieInputMap("Title", "Year", "Genre")
+
+  @staticmethod
+  def exampleInputMap():
+    return MovieInputMap("Todo", 2001, "comedy")
+  
+  @staticmethod
+  def defaultFormatStr():
+    return "[genre]/[title] ([year])"
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:

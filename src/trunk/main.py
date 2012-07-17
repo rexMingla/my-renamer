@@ -23,6 +23,7 @@ from app import commandLine
 from common import extension, utils
 from test import test_renamer, test_move
 from tv import seasonHelper, outputFormat
+from movie import movieHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runGUI(cl):  

@@ -10,6 +10,7 @@
 class RenamerError(Exception):
   """ Base class for all exceptions within the app. """
   def __init__(self, what, info=""):
+    super(RenamerError, self).__init__()
     self.what_ = what
     self.info_ = info
 
@@ -17,16 +18,16 @@ class RenamerError(Exception):
 class InterfaceNotImplementedError(RenamerError):
   """ Calling a 'pure virtual' that has not been overloaded in a derived class. """
   def __init__(self, info=""):
-    RenamerError.__init__(self, "InterfaceNotImplementedError", info)
+    super(InterfaceNotImplementedError, self).__init__("InterfaceNotImplementedError", info)
     
 # --------------------------------------------------------------------------------------------------------------------
 class SerializationError(RenamerError):
   """ Unable to read from/write error. """
   def __init__(self, info=""):
-    RenamerError.__init__(self, "SerializationError", info)
+    super(SerializationError, self).__init__("SerializationError", info)
     
 # --------------------------------------------------------------------------------------------------------------------
 class AssertionError(RenamerError):
   """ Actual and expected resuls differ. """
   def __init__(self, info=""):
-    AssertionError.__init__(self, "AssertionError", info)
+    super(AssertionError, self).__init__("AssertionError", info)

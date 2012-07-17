@@ -18,6 +18,7 @@ import logWidget
 import outputWidget
 import workBenchWidget
 
+# --------------------------------------------------------------------------------------------------------------------
 class MyThread(QtCore.QThread):
   progressSignal = QtCore.pyqtSignal(int)
   logSignal = QtCore.pyqtSignal(object)
@@ -42,11 +43,13 @@ class MyThread(QtCore.QThread):
   def _onNewData(self, data):
     self.newDataSignal.emit(data)
 
-"""class RenameThread(MyThread):  
-  def __init__(self, actioner, items):
+# --------------------------------------------------------------------------------------------------------------------
+class RenameThread(MyThread):  
+  def __init__(self, mode, actioner, items):
     super(RenameThread, self).__init__()
     utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
     utils.verifyType(items, list)
+    self._mode = mode
     self._actioner = actioner
     self._items = items
     
@@ -56,19 +59,20 @@ class MyThread(QtCore.QThread):
       source, dest = item
       res = self._actioner.performAction(source, dest)
       self._onLog(moveItemActioner.MoveItemActioner.resultToLogItem(res, source, dest))
-      if not results.has_key(res):
+      if not res in results:
         results[res] = 0  
       results[res] += 1  
       self._onProgress(int(100 * (i + 1) / len(self._items)))
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                     "Rename / move",
+                                     self._mode,
                                      "User cancelled. %d of %d files actioned." % (i, len(self._items))))              
         break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                 "Rename / move",
+                                 self._mode,
                                  moveItemActioner.MoveItemActioner.summaryText(results)))      
     
+# --------------------------------------------------------------------------------------------------------------------
 class ExploreThread(MyThread):
   def __init__(self, folder, isRecursive, ext):
     super(ExploreThread, self).__init__()
@@ -80,21 +84,8 @@ class ExploreThread(MyThread):
     self._ext = ext
     
   def run(self):
-    dirs = seasonHelper.SeasonHelper.getFolders(self._folder, self._isRecursive)
-    for i, d in enumerate(dirs):
-      s = seasonHelper.SeasonHelper.getSeasonForFolder(d, self._ext)
-      if s:
-        self._onNewData(s)
-        if self.userStopped:
-          self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                       "Search", 
-                                       "User cancelled. %d of %d folders processed." % (i, len(dirs))))              
-          break
-      self._onProgress(int(100 * (i + 1) / len(dirs)))
-    self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                 "Search", 
-                                 "Search complete. %d folders processed." % (len(dirs))))"""
-
+    self._callback(self)
+    
 # --------------------------------------------------------------------------------------------------------------------
 class Mode:
   MOVIE_MODE = "movie"
@@ -108,7 +99,7 @@ class RenamerModule(QtCore.QObject):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, mode, inputWidget_, outputWidget_, workBenchWidget_, logWidget_, parent=None):
+  def __init__(self, mode, outFormat, model, exploreFunctor, inputWidget_, outputWidget_, workBenchWidget_, logWidget_, parent=None):
     super(RenamerModule, self).__init__(parent)
     
     assert(mode in VALID_MODES)
@@ -118,6 +109,7 @@ class RenamerModule(QtCore.QObject):
     utils.verifyType(logWidget_, logWidget.LogWidget)
 
     self.mode = mode
+    self._outFormat = outFormat
     self._inputWidget = inputWidget_
     self._outputWidget = outputWidget_
     self._workBenchWidget = workBenchWidget_
@@ -127,20 +119,61 @@ class RenamerModule(QtCore.QObject):
     self._isShuttingDown = False
     self._config = {}
     self._isActive = False
+    self._exploreFunctor = exploreFunctor
+    self._model = model
     
   def __del__(self):
     self._isShuttingDown = True
     self._stopThread()
     
+  def _explore(self):
+    self._enableControls(False)
+    self._model.clear()
+    self._inputWidget.startSearching()
+    assert(not self._workerThread or not self._workerThread.isRunning())
+    data = self._inputWidget.getConfig()
+    self._workerThread = self._exploreFunctor(data["folder"], 
+                                              data["recursive"], 
+                                              extension.FileExtensions(data["extensions"].split()))
+    self._workerThread.progressSignal.connect(self._updateSearchProgress)
+    self._workerThread.newDataSignal.connect(self._onDataFound)
+    self._workerThread.logSignal.connect(self._addMessage)
+    self._workerThread.finished.connect(self._onThreadFinished)
+    self._workerThread.terminated.connect(self._onThreadFinished)    
+    self._workerThread.start()   
+    
+  def _rename(self):
+    self._enableControls(False)
+    self._logWidget.onRename()
+    formatSettings = self._outputWidget.getConfig()
+    filenames = self._getRenameItems()
+    actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings["dontOverwrite"], \
+                                                 keepSource=not formatSettings["move"])
+    assert(not self._workerThread or not self._workerThread.isRunning())
+    self._addMessage(logModel.LogItem(logModel.LogLevel.INFO, "Starting...", ""))
+    
+    self._outputWidget.startActioning()
+    self._workerThread = RenameThread(self.mode, actioner, filenames)
+    self._workerThread.progressSignal.connect(self._updateRenameProgress)
+    self._workerThread.logSignal.connect(self._addMessage)
+    self._workerThread.finished.connect(self._onThreadFinished)
+    self._workerThread.terminated.connect(self._onThreadFinished)    
+    self._workerThread.start()
+    
+  def _getRenameItems(self):  
+    raise NotImplementedError("RenamerModule._getRenameItems()")
+    
   def setActive(self):
+    self._outputWidget.setOutputFormat(self._outFormat) #dodgy... again.
     conf = self.getConfig()
     
     self._isActive = True
     self._outputWidget.renameSignal.connect(self._rename)
     self._inputWidget.exploreSignal.connect(self._explore)
     self._inputWidget.stopSignal.connect(self._stopSearch)
-    self._workBenchWidget.workBenchChangedSignal.connect(self._outputWidget.enableControls)    
+    self._workBenchWidget.setCurrentModel(self._model)
     self.setConfig(conf)
+
     self._setActive()
     
   def _setActive(self):
@@ -153,7 +186,9 @@ class RenamerModule(QtCore.QObject):
     self._outputWidget.renameSignal.disconnect(self._rename)
     self._inputWidget.exploreSignal.disconnect(self._explore)
     self._inputWidget.stopSignal.disconnect(self._stopSearch)
-    self._workBenchWidget.workBenchChangedSignal.disconnect(self._outputWidget.enableControls)
+    self._workBenchWidget.setCurrentModel(None)    
+    self._stopThread() #TODO: maybe prompt? In future, run in background.
+    self._outputWidget.setOutputFormat(None)
     
     self._setInactive()
 
@@ -174,12 +209,6 @@ class RenamerModule(QtCore.QObject):
              "output" : self._outputWidget.getConfig(),
              "workBench" : self._workBenchWidget.getConfig()}
     return ret
-    
-  def _explore(self):
-    raise NotImplementedError("RenamerModule._explore not implmemented")
-
-  def _rename(self):
-    raise NotImplementedError("RenamerModule._rename not implmemented")
     
   def _stopThread(self):
     if self._workerThread:
@@ -217,4 +246,9 @@ class RenamerModule(QtCore.QObject):
     """ Update progress. Assumed to be main thread """
     utils.verifyType(percentageComplete, int)
     self._outputWidget.progressBar.setValue(percentageComplete)
+    
+  def _onDataFound(self, data):
+    utils.verify(data, "Must have data!")
+    if data:
+      self._model.addItem(data)    
 
