@@ -13,23 +13,6 @@ import logging
 import utils
 
 # --------------------------------------------------------------------------------------------------------------------
-class LogStyledDelegate(QtGui.QStyledItemDelegate):
-  """ Display error message in the log in a noticable fashion. """
-  def paint(self, painter, option, index):
-    level, isOk = index.model().data(index, LogModel.LOG_LEVEL_ROLE).toInt()
-    utils.verify(isOk, "Cast to int ok")
-    if level >= LogLevel.ERROR:
-      text = index.model().data(index, QtCore.Qt.DisplayRole).toString()
-      painter.save()
-      painter.setPen(QtCore.Qt.red)
-      painter.setBrush(QtCore.Qt.blue)
-      painter.setBackground(QtCore.Qt.green)
-      painter.drawText(option.rect, QtCore.Qt.AlignLeft, text)
-      painter.restore()    
-    else:
-      QtGui.QStyledItemDelegate.paint(self, painter, option, index)
-
-# --------------------------------------------------------------------------------------------------------------------
 class LogLevel:
   """ Log levels copied from logging. """
   CRITICAL = 50
@@ -81,11 +64,13 @@ class LogModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return None
     
-    if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, LogModel.LOG_LEVEL_ROLE):
+    if role not in (QtCore.Qt.ForegroundRole, QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole):
       return None
     
     item = self.items[index.row()]
-    if role == LogModel.LOG_LEVEL_ROLE:
+    if role == QtCore.Qt.ForegroundRole and item.logLevel >= LogLevel.ERROR:
+      return QtGui.QBrush(QtCore.Qt.red)      
+    elif role == LogModel.LOG_LEVEL_ROLE:
       return QtCore.QVariant(item.logLevel)
     #if index.column() == LogColumns.COL_LEVEL: 
     #  return logging.getLevelName(item.logLevel)

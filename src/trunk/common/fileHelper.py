@@ -13,12 +13,16 @@ import unicodedata
 
 import utils
 
+_VALID_BASENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
+                                         string.digits, \
+                                         " !#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
+_RE_PATH = re.compile(r"(\\|/+)")
+_RE_INALID_FILENAME = re.compile("[^%s]" % re.escape(_VALID_BASENAME_CHARACTERS))
+_RE_VALID_FILENAME = re.compile("^([%s])*$" % re.escape(_VALID_BASENAME_CHARACTERS))
+ 
 # --------------------------------------------------------------------------------------------------------------------
 class FileHelper:
   """ Collection of static functions abstracting the python libraries. """
-  _VALID_BASENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
-                                           string.digits, \
-                                           " !#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
   
   @staticmethod
   def isFile(f):
@@ -87,21 +91,20 @@ class FileHelper:
   @staticmethod
   def isValidFilename(f):
     utils.verifyType(f, str)
-    drive, tail = FileHelper.splitDrive(f)    
-    validFilenameCharsRegex = "^([%s])+$" % re.escape(FileHelper._VALID_BASENAME_CHARACTERS)
-    return not not re.match(validFilenameCharsRegex, tail)
+    drive, tail = FileHelper.splitDrive(f)
+    parts = _RE_PATH.split(tail) #probably a built in function for this    
+    isOk = all(bool(_RE_VALID_FILENAME.match(parts[i])) for i in range(0, len(parts), 2))
+    return isOk
     
   @staticmethod
   def sanitizeFilename(f, replaceChar="_"):
     utils.verifyType(f, str)
     utils.verifyType(replaceChar, str)
-    ret = f
-    if not FileHelper.isValidFilename(f):
-      drive, tail = FileHelper.splitDrive(f)
-      invalidFilenameCharsRegex = "[^%s]" % re.escape(FileHelper._VALID_BASENAME_CHARACTERS)
-      tail = re.sub(invalidFilenameCharsRegex, replaceChar, tail)
-      ret = FileHelper.joinPath(drive, tail)
-    return ret
+    drive, tail = FileHelper.splitDrive(f)
+    parts = _RE_PATH.split(tail) #probably a built in function for this    
+    for i in range(0, len(parts), 2):
+      parts[i] = _RE_INALID_FILENAME.sub(replaceChar, parts[i])
+    return "%s%s" % (drive, "".join(parts))
   
   @staticmethod
   def removeFile(f):

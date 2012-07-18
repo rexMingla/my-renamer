@@ -7,6 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 import copy
 from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
@@ -47,10 +48,12 @@ class TreeItem(object):
     return len(self.rowData_)
 
   def data(self, column, role=QtCore.Qt.DisplayRole):
-    if role <> QtCore.Qt.DisplayRole and role <> QtCore.Qt.ToolTipRole:
+    if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, QtCore.Qt.ForegroundRole):
       return None
     
     if self.isMoveItemCandidate():
+      if role == QtCore.Qt.ForegroundRole and self.raw.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_NEW:
+        return QtGui.QBrush(QtCore.Qt.red)       
       if column == Columns.COL_OLD_NAME:
         if role == QtCore.Qt.ToolTipRole:
           return self.raw.source.filename
@@ -65,14 +68,18 @@ class TreeItem(object):
         return self.raw.destination.epName
       elif column == Columns.COL_STATUS:
         return moveItemCandidate.MoveItemCandidate.typeStr(self.raw.matchType())
-    elif self.isSeason() and column == Columns.COL_OLD_NAME:
-      if role == QtCore.Qt.ToolTipRole:
-        return "Folder: %s" % self.raw.inputFolder_
-      else:        
-        if self.raw.seasonNum == episode.UNRESOLVED_KEY:
-          return "Season: %s #: <Unknown>" % (self.raw.seasonName)
-        else:
-          return "Season: %s #: %d" % (self.raw.seasonName, self.raw.seasonNum)
+    elif self.isSeason():
+      isResolved = self.raw.seasonNum == episode.UNRESOLVED_KEY
+      if role == QtCore.Qt.ForegroundRole and isResolved:
+        return QtGui.QBrush(QtCore.Qt.red)      
+      elif column == Columns.COL_OLD_NAME:
+        if role == QtCore.Qt.ToolTipRole:
+          return "Folder: %s" % self.raw.inputFolder_
+        else:        
+          if isResolved:
+            return "Season: %s #: <Unknown>" % (self.raw.seasonName)
+          else:
+            return "Season: %s #: %d" % (self.raw.seasonName, self.raw.seasonNum)
     return None
     
   def parent(self):
@@ -167,7 +174,7 @@ class TvModel(QtCore.QAbstractItemModel):
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
       if item.isMoveItemCandidate():
-        parentItem = item.parent()
+        parentItem = item.parent
         parentIndex = index.parent()
         utils.verify(parentItem.isSeason(), "Not a Season")
         
@@ -309,7 +316,7 @@ class TvModel(QtCore.QAbstractItemModel):
       seasonItem = self.rootItem.child(i)
       utils.verify(seasonItem.isSeason(), "Not a Season")
       raw = seasonItem.raw
-      if seasonItem.checkState() <> QtCore.Qt.Unchecked:
+      if seasonItem.checkState() != QtCore.Qt.Unchecked:
         seasons.append(raw)
     return seasons
   

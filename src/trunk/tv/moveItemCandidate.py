@@ -18,10 +18,10 @@ class MoveItemCandidate:
   
   @staticmethod
   def typeStr(t):
-    if t == MoveItemCandidate.READY:            return "READY"
-    elif t == MoveItemCandidate.MISSING_NEW:    return "MISSING NEW"
-    elif t == MoveItemCandidate.MISSING_OLD:    return "MISSING OLD"
-    else:                              assert(False); return "UNKNOWN"      
+    if t == MoveItemCandidate.READY:            return "Ready"
+    elif t == MoveItemCandidate.MISSING_NEW:    return "No Matching Episode"
+    elif t == MoveItemCandidate.MISSING_OLD:    return "No Matching File"
+    else:                              assert(False); return "Unknown"      
   
   def __init__(self, source, destination):
     utils.verifyType(source, episode.SourceEpisode)

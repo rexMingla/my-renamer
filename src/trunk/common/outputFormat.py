@@ -6,6 +6,7 @@
 # Purpose of document: Generates an output filename based on TvInputMap attributes
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
+from fileHelper import FileHelper
 
 def leftPad(val, places=2):
   ret = utils.toString(val).zfill(places)
@@ -106,11 +107,13 @@ class OutputFormat:
     utils.verifyType(formatStr, str)
     self.formatStr = formatStr
     
-  def outputToString(self, inputs, ext=""):
+  def outputToString(self, inputs, ext="", path=""):
     utils.verifyType(inputs, InputMap)
     utils.verifyType(ext, str)
     ret = self.formatStr
-    for key, value in inputs.data.items(): #todo: fix this.
+    if path:
+      ret = FileHelper.joinPath(path, ret)
+    for key, value in inputs.data.items(): #todo: fix this. i'm sure there is a built in function for this.
       ret = ret.replace(key, value)
     return ret + ext
 
