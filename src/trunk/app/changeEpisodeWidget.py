@@ -5,7 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Widget allowing the user to associate an episode with a given file 
 # --------------------------------------------------------------------------------------------------------------------
-from PyQt4 import QtGui
+import copy
+
 from PyQt4 import QtGui
 from PyQt4 import uic
 

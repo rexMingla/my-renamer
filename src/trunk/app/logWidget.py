@@ -22,10 +22,9 @@ class LogWidget(QtGui.QWidget):
 
     self._model = logModel.LogModel(self)
     self._ui.logView.setModel(self._model)
-    self._ui.logView.setItemDelegate(logModel.LogStyledDelegate())
-    self._ui.logView.horizontalHeader().setResizeMode(logModel.LogColumns.COL_ACTION, QtGui.QHeaderView.Fixed)
-    self._ui.logView.horizontalHeader().resizeSection(logModel.LogColumns.COL_ACTION, 75);
-    self._ui.logView.horizontalHeader().setResizeMode(logModel.LogColumns.COL_MESSAGE, QtGui.QHeaderView.Stretch)
+    self._ui.logView.horizontalHeader().setResizeMode(logModel.LogColumns.COL_ACTION, QtGui.QHeaderView.Interactive)
+    self._ui.logView.horizontalHeader().resizeSection(logModel.LogColumns.COL_ACTION, 75)
+    self._ui.logView.horizontalHeader().setResizeMode(logModel.LogColumns.COL_MESSAGE, QtGui.QHeaderView.Interactive)
     self._ui.logView.horizontalHeader().setStretchLastSection(True)
     
     self._isUpdating = False

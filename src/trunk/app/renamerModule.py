@@ -218,7 +218,8 @@ class RenamerModule(QtCore.QObject):
     if not self._isShuttingDown:
       self._inputWidget.stopSearching()
       self._outputWidget.stopActioning()
-      self._enableControls(True)      
+      self._workBenchWidget.tvView.expandAll()
+      self._enableControls(True)     
       
   def _stopRename(self):
     self._outputWidget.stopButton.setEnabled(False)

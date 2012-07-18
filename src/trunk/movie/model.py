@@ -5,8 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Model and other classes pertaining to the set of tv seasons to be modified in the workbench
 # --------------------------------------------------------------------------------------------------------------------
-import copy
 from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
@@ -22,9 +22,10 @@ class Columns:
   COL_OLD_NAME = 0
   COL_NEW_NAME = 1
   COL_YEAR     = 2
-  COL_STATUS   = 3
-  COL_DISC     = 4
-  NUM_COLS     = 5
+  COL_GENRE    = 3
+  COL_STATUS   = 4
+  COL_DISC     = 5
+  NUM_COLS     = 6
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
 
@@ -38,6 +39,9 @@ class MovieItem(object):
     self.performMove = True
     self.canEdit = True
     self.update()
+    
+  def hasData(self):
+    return self.movie.title and self.movie.genres and self.movie.year
     
   def update(self):
     self.canEdit = self.movie.title and self.movie.year
@@ -61,13 +65,19 @@ class MovieModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return None
     
-    if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, QtCore.Qt.CheckStateRole, RAW_DATA_ROLE) or \
+    if role not in (QtCore.Qt.ForegroundRole, 
+                    QtCore.Qt.DisplayRole, 
+                    QtCore.Qt.ToolTipRole, 
+                    QtCore.Qt.CheckStateRole, 
+                    RAW_DATA_ROLE) or \
       (role == QtCore.Qt.CheckStateRole and index.column() != Columns.COL_OLD_NAME):
       return None
 
     item = self._movies[index.row()]
     movie = item.movie
     col = index.column()
+    if role == QtCore.Qt.ForegroundRole and not item.hasData():
+      return QtGui.QBrush(QtCore.Qt.red)      
     if col == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.CheckStateRole:
         if item.performMove and item.canEdit: 
@@ -83,9 +93,14 @@ class MovieModel(QtCore.QAbstractTableModel):
     elif col == Columns.COL_DISC:
       return movie.part
     elif col == Columns.COL_STATUS:
-      return ""
+      ret = "Missing Info"
+      if item.hasData():
+        ret = "OK"
+      return ret
     elif col == Columns.COL_YEAR:
       return movie.year
+    elif col == Columns.COL_GENRE:
+      return movie.genres[0] # take first for now
        
   def setData(self, index, value, role):
     if not index.isValid():
@@ -129,6 +144,8 @@ class MovieModel(QtCore.QAbstractTableModel):
       return "Status"
     elif section == Columns.COL_YEAR:
       return "Year"
+    elif section == Columns.COL_GENRE:
+      return "Genre"
 
   def rowCount(self, parent):
     return len(self._movies)

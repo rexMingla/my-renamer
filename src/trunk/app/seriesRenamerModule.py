@@ -86,8 +86,7 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
                                        season.seasonNum, 
                                        ep.destination.epNum, 
                                        ep.destination.epName)
-          outputBaseName = oFormat.outputToString(im, ep.source.extension_)
-          newName = fileHelper.FileHelper.joinPath(outputFolder, outputBaseName)
+          newName = oFormat.outputToString(im, ep.source.extension_, outputFolder)
           newName = fileHelper.FileHelper.sanitizeFilename(newName)
           filenames.append((ep.source.filename, newName))
     utils.verify(filenames, "Must have files to have gotten this far")

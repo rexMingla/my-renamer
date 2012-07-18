@@ -102,8 +102,11 @@ class OutputWidget(QtGui.QWidget):
     if fmt:
       self.formatEdit.setText(fmt)
     outputDir = data.get("folder", USE_SOURCE_DIRECTORY)
-    self.useSourceDirectoryRadio.setChecked(outputDir == USE_SOURCE_DIRECTORY)
-    if outputDir != USE_SOURCE_DIRECTORY:
+    if outputDir == USE_SOURCE_DIRECTORY:
+      self.specificDirectoryEdit.setText("")
+      self.useSourceDirectoryRadio.setChecked(True)
+    else:
       self.specificDirectoryEdit.setText(outputDir)
+      self.useSpecificDirectoryRadio.setChecked(True)      
     self.moveRadio.setChecked(data.get("move", True))
     self.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))
