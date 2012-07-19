@@ -5,16 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module responsible for the renaming of movies
 # --------------------------------------------------------------------------------------------------------------------
-from PyQt4 import QtCore
-
-from common import extension
-from common import fileHelper
-from common import moveItemActioner
 from common import logModel
-from common import utils
 from common import outputFormat
-#from tv import season
-#from tv import seasonHelper
 from movie import movieHelper
 
 import renamerModule
@@ -47,7 +39,6 @@ class MovieRenamerModule(renamerModule.RenamerModule):
   """  
   def __init__(self, inputWidget, outputWidget, workbenchWidget, logWidget, parent=None):
     super(MovieRenamerModule, self).__init__(renamerModule.Mode.MOVIE_MODE, 
-                                             outputFormat.MovieInputMap,
                                              workbenchWidget.movieModel,
                                              MovieExploreThread,
                                              inputWidget, 
@@ -55,17 +46,7 @@ class MovieRenamerModule(renamerModule.RenamerModule):
                                              workbenchWidget, 
                                              logWidget, 
                                              parent)
-    self._setInactive()
-    
-  def _setActive(self):
-    self._workBenchWidget.tvButton.setVisible(True)
-    self._workBenchWidget.editMovieButton.setVisible(True)
-    self._workBenchWidget.movieView.setVisible(True)
-  
-  def _setInactive(self):
-    self._workBenchWidget.tvButton.setVisible(False)
-    self._workBenchWidget.editMovieButton.setVisible(False)
-    self._workBenchWidget.movieView.setVisible(False)
+    self.setInactive()    
     
   def _getRenameItems(self):
     return []  

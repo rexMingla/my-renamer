@@ -11,18 +11,20 @@ from PyQt4 import uic
 
 from common import utils
 from movie import model as movieModel
+from movie import movieHelper
 from tv import model
 from tv import seasonHelper
 
 import changeEpisodeWidget
 import changeSeasonWidget
+import interfaces
 
 # --------------------------------------------------------------------------------------------------------------------
-class WorkBenchWidget(QtGui.QWidget):
+class WorkBenchWidget(interfaces.LoadWidgetInterface):
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
   
   def __init__(self, parent=None):
-    super(QtGui.QWidget, self).__init__(parent)
+    super(WorkBenchWidget, self).__init__("workBench", parent)
     uic.loadUi("ui/ui_WorkBench.ui", self)
     
     self._changeEpisodeWidget = changeEpisodeWidget.ChangeEpisodeWidget(self)
@@ -70,19 +72,69 @@ class WorkBenchWidget(QtGui.QWidget):
     
     self._currentModel = None
     
-  def setCurrentModel(self, model):
-    self._currentModel = model
-    if self._currentModel:
-      self._setOverallCheckedState(self._currentModel.overallCheckedState() != None)
-    else:
-      self._setOverallCheckedState(False)
+    self.stopActioning()
+    self.stopExploring()
         
-  def getConfig(self):
-    return {"cache": seasonHelper.SeasonHelper.cache()}
+  def startExploring(self):
+    self._currentModel.clear()
+    self.setEnabled(False)
   
-  def setConfig(self, data):
+  def stopExploring(self):
+    self.setEnabled(True)
+
+  def startActioning(self):
+    self.setEnabled(False)
+
+  def stopActioning(self):
+    self.tvView.expandAll()    
+    self.setEnabled(True)
+    
+  def _setMovieMode(self):
+    self._currentModel = self.movieModel
+    self._setOverallCheckedState(self._currentModel.overallCheckedState() != None)
+
+    self.movieButton.setVisible(False)  
+    self.editSeasonButton.setVisible(False)
+    self.editEpisodeButton.setVisible(False)
+    self.tvView.setVisible(False)
+    
+    self.tvButton.setVisible(True)
+    self.editMovieButton.setVisible(True)
+    self.movieView.setVisible(True)
+    self.movieGroupBox.setVisible(True)
+    
+  def _setTvMode(self):
+    self._currentModel = self.tvModel
+    self._setOverallCheckedState(self._currentModel.overallCheckedState() != None)
+
+    self.tvButton.setVisible(False)
+    self.editMovieButton.setVisible(False)
+    self.movieView.setVisible(False)
+    self.movieGroupBox.setVisible(False)
+
+    self.movieButton.setVisible(True)  
+    self.editSeasonButton.setVisible(True)
+    self.editEpisodeButton.setVisible(True)
+    self.tvView.setVisible(True)
+            
+  def getConfig(self, mode=None):
+    mode = mode or self.mode
+    if mode == interfaces.Mode.MOVIE_MODE:
+      return {"cache" : movieHelper.MovieHelper.cache(),
+              "no_year_as_error" : self.yearCheckBox.isChecked(),
+              "no_genre_as_error" : self.genreCheckBox.isChecked() }
+    else:
+      return {"cache" : seasonHelper.SeasonHelper.cache()}
+  
+  def setConfig(self, data, mode=None):
     utils.verifyType(data, dict)
-    seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
+    mode = mode or self.mode
+    if mode == interfaces.Mode.MOVIE_MODE:
+      movieHelper.MovieHelper.setCache(data.get("cache", {}))
+      self.yearCheckBox.setChecked(data.get("no_year_as_error", True))
+      self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
+    else:
+      seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
     
   def _onTvClicked(self, modelIndex):
     self._currentIndex_ = modelIndex

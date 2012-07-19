@@ -15,7 +15,7 @@ import utils
 
 _VALID_BASENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
                                          string.digits, \
-                                         " !#$%&'()*+,-./;=@[\]^_`{}~") # string.punctuation without \/:?"<>| 
+                                         " !#$%&'()*+,-.\\/;=@[\]^_`{}~") # string.punctuation without :?"<>| 
 _RE_PATH = re.compile(r"(\\|/+)")
 _RE_INALID_FILENAME = re.compile("[^%s]" % re.escape(_VALID_BASENAME_CHARACTERS))
 _RE_VALID_FILENAME = re.compile("^([%s])*$" % re.escape(_VALID_BASENAME_CHARACTERS))
@@ -92,8 +92,8 @@ class FileHelper:
   def isValidFilename(f):
     utils.verifyType(f, str)
     drive, tail = FileHelper.splitDrive(f)
-    parts = _RE_PATH.split(tail) #probably a built in function for this    
-    isOk = all(bool(_RE_VALID_FILENAME.match(parts[i])) for i in range(0, len(parts), 2))
+    parts = _RE_PATH.split(tail)   
+    isOk = bool(_RE_VALID_FILENAME.match(tail))
     return isOk
     
   @staticmethod
@@ -101,10 +101,9 @@ class FileHelper:
     utils.verifyType(f, str)
     utils.verifyType(replaceChar, str)
     drive, tail = FileHelper.splitDrive(f)
-    parts = _RE_PATH.split(tail) #probably a built in function for this    
-    for i in range(0, len(parts), 2):
-      parts[i] = _RE_INALID_FILENAME.sub(replaceChar, parts[i])
-    return "%s%s" % (drive, "".join(parts))
+    tail = _RE_INALID_FILENAME.sub(replaceChar, tail)
+    ret = ("%s%s" % (drive, tail)).replace("\\", os.sep).replace("/", os.sep)
+    return ret
   
   @staticmethod
   def removeFile(f):

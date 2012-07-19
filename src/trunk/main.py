@@ -8,6 +8,9 @@
 import sys
 hasQt = False
 
+from app import interfaces
+x = interfaces.LoadWidgetInterface
+
 try:
   from PyQt4 import QtGui, QtCore
   hasQt = True
@@ -20,9 +23,13 @@ if hasQt:
 import unittest
 
 from app import commandLine
-from common import extension, utils
-from test import test_renamer, test_move
-from tv import seasonHelper, outputFormat
+from app import interfaces
+from common import extension
+from common import utils
+from test import test_renamer
+from test import test_move
+from tv import seasonHelper
+from tv import outputFormat
 from movie import movieHelper
 
 # --------------------------------------------------------------------------------------------------------------------
