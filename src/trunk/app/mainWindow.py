@@ -13,16 +13,15 @@ from PyQt4 import uic
 
 from common import utils
 
+import config
+
+import seriesRenamerModule
+import movieRenamerModule
 import inputWidget
 import logWidget
 import outputWidget
-import renamerModule
-import seriesRenamerModule
-import movieRenamerModule
 import workBenchWidget
-
-import jsonpickle
-jsonpickle.set_encoder_options("simplejson", indent=2)
+import interfaces
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
@@ -50,8 +49,8 @@ class MainWindow(QtGui.QMainWindow):
     self._workBenchWidget.tvButton.clicked.connect(self._setTvMode)
 
     uiPath = os.path.join(os.path.dirname(__file__), "../ui/ui_MainWindow.ui")
-    self._ui = uic.loadUi(uiPath, self)
-    self._ui.setCentralWidget(self._workBenchWidget)
+    uic.loadUi(uiPath, self)
+    self.setCentralWidget(self._workBenchWidget)
             
     #widgets
     dockAreas = QtCore.Qt.AllDockWidgetAreas
@@ -59,18 +58,17 @@ class MainWindow(QtGui.QMainWindow):
     self._addDockWidget(self._outputWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
     self._addDockWidget(self._logWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
-    #config
-    self._configItems = {"log" : self._logWidget,
-                        "tv" : self._seriesModule,
-                        "movie" : self._movieModule,
-                        "mainWindow" : self}
     self._mode = None
     self._modeToModule = {self._seriesModule.mode : self._seriesModule, 
                           self._movieModule.mode : self._movieModule}
-    self.loadConfig()
+    config.ConfigManager.loadConfig(self._configFile)
+    self.setConfig()
     
   def closeEvent(self, event):
-    self.saveConfig()
+    self.getConfig()
+    if self._mode:
+      self._modeToModule[self._mode].setInactive() #force save of data 
+    config.ConfigManager.saveConfig(self._configFile)
     event.accept()
     
   def _addDockWidget(self, widget, areas, defaultArea, name):
@@ -82,17 +80,18 @@ class MainWindow(QtGui.QMainWindow):
     dock.setObjectName(name)
     dock.setWidget(widget)
     dock.setAllowedAreas(areas)
-    self._ui.addDockWidget(defaultArea, dock)
+    self.addDockWidget(defaultArea, dock)
     return dock
   
   def _setMovieMode(self):
-    self._setMode(renamerModule.Mode.MOVIE_MODE)
+    self._setMode(interfaces.Mode.MOVIE_MODE)
   
   def _setTvMode(self):
-    self._setMode(renamerModule.Mode.TV_MODE)
+    self._setMode(interfaces.Mode.TV_MODE)
 
   def _setMode(self, mode):
-    assert(mode in renamerModule.VALID_MODES)
+    assert(mode in interfaces.VALID_MODES)
+    
     if self._mode:
       self._modeToModule[self._mode].setInactive()
     self._mode = mode
@@ -100,41 +99,21 @@ class MainWindow(QtGui.QMainWindow):
     self.setWindowTitle("Tv and Movie ReNamer [%s mode]" % self._mode)
   
   def getConfig(self):
-    data = {"geometry" : utils.toString(self._ui.saveGeometry().toBase64()), 
-            "windowState" : utils.toString(self._ui.saveState().toBase64()),
-            "mode" : self._mode}  
-    return data
+    config.ConfigManager.setData("mw/geometry", utils.toString(self.saveGeometry().toBase64()))
+    config.ConfigManager.setData("mw/windowState", utils.toString(self.saveState().toBase64()))
+    config.ConfigManager.setData("mw/mode", self._mode)
     
-  def setConfig(self, data):
-    x = data.get("geometry", "")
-    geo = QtCore.QByteArray.fromBase64(data.get("geometry", "AdnQywABAAAAAACWAAAAlgAAA6sAAAKmAAAAngAAALQAAAOjAAACngAAAAAAAA=="))
-    state = QtCore.QByteArray.fromBase64(data.get("windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAMGAAAAafwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAADBgAAAOQA////AAAAAwAAAwYAAADa/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAdwAAAFIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAHcAAABKgAAAMkA////AAADBgAAAKAAAAAEAAAABAAAAAgAAAAI/AAAAAA="))
-    self._ui.restoreGeometry(geo)
-    self._ui.restoreState(state)
-    mode = data.get("mode")
-    if not mode in renamerModule.VALID_MODES:
-      mode = renamerModule.Mode.TV_MODE
+  def setConfig(self):
+    geo = config.ConfigManager.getData("mw/geometry", "AdnQywABAAAAAACWAAAAlgAAA6sAAAKmAAAAngAAALQAAAOjAAACngAAAAAAAA==")
+    state = config.ConfigManager.getData("mw/windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAMGAAAAafwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAADBgAAAOQA////AAAAAwAAAwYAAADa/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAdwAAAFIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAHcAAABKgAAAMkA////AAADBgAAAKAAAAAEAAAABAAAAAgAAAAI/AAAAAA=")
+    self.restoreGeometry(geo)
+    self.restoreState(state)
+    mode = config.ConfigManager.getData("mw/mode")
+    if not mode in interfaces.VALID_MODES:
+      mode = interfaces.Mode.TV_MODE
     self._setMode(mode)
   
-  def loadConfig(self):
-    obj = None
-    if os.path.exists(self._configFile):
-      f = open(self._configFile, "r")
-      obj = jsonpickle.decode(f.read())
-    if not isinstance(obj, dict):
-      obj = {}
-    for key, item in self._configItems.items():
-      item.setConfig(obj.get(key, {}))
-    #set the mode at the end
-    self._setMode(self._mode)
-  
-  def saveConfig(self):
-    data = {}
-    for key, item in self._configItems.items():
-      data[key] = item.getConfig()
-    f = open(self._configFile, "w")
-    f.write(jsonpickle.encode(data))
-    f.close()
+
     
   
     

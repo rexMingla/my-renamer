@@ -62,6 +62,14 @@ class Movie(object):
     self.part = part #disc number
     
 # --------------------------------------------------------------------------------------------------------------------
+class MovieInfo(object):
+  def __init__(self, title="", year=None, genres=None):
+    super(MovieInfo, self).__init__()
+    self.title = title
+    self.year = year
+    self.genres = genres or []    
+    
+# --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
   @staticmethod
   def getFiles(folder, isRecursive):
@@ -116,28 +124,55 @@ class MovieHelper:
     return result, movie
     
   @staticmethod
-  def getInfoFromTvdb(mv):
+  def getInfoFromTvdb(title, year=""):
     utils.verifyType(mv, Movie)
     info = None
-    key = "%s (%s)" % (mv.title, mv.year)
+    key = title
+    if year:
+      key += "(%s)" % (year)
     global _CACHE
     if key in _CACHE:
       info = _CACHE[key]
     else:
-      info = MovieInfo(mv.title)
+      info = MovieInfo(title)
       try:
-        m = pymdb.Movie(mv.title)
-        info.title = str(m.title or info.title)
-        info.year = str(m.year or info.year)
-        info.genres = m.genre or info.genres
+        m = pymdb.Movie(title)
+        info.title = str(m.title or title)
+        info.year = str(m.year or year)
+        info.genres = m.genre or []
         if info:
           newKey = "%s (%s)" % (info.title, info.year)
           _CACHE[newKey] = info
-          if key !=newKey:
+          if key != newKey:
             _CACHE[key] = info            
       except (AttributeError, ValueError, pymdb.MovieError) as e:
         print("**error: %s on %s" % (e, movie.title))
     return info
+  
+  @staticmethod
+  def setCache(data):
+    utils.verifyType(data, dict)
+    global _CACHE
+    _CACHE = data
+
+  @staticmethod
+  def cache():
+    global _CACHE
+    return _CACHE
+  
+  @staticmethod
+  def getItem(title, year):
+    """ retrieves season from cache or tvdb if not present """
+    cacheKey = "%s (%s)" % (title, year)
+    global _CACHE
+    ret = None
+    if cacheKey in _CACHE:
+      ret = _CACHE[cacheKey]
+    else:
+      ret = MovieHelper.getInfoFromTvdb(title, year)
+      if ret:
+        _CACHE[cacheKey] = copy.copy(ret)
+    return ret 
     
 x = """# ------------------------------------------------------------------    
 def trawl_folder(folder):
@@ -186,14 +221,6 @@ def trawl_folder(folder):
         movies.append(movie)
       results[ret].append(full_name)
   return results, movies
-
-# ------------------------------------------------------------------    
-class MovieInfo(object):
-  def __init__(self, title="", year=None, genres=None):
-    super(MovieInfo, self).__init__()
-    self.title = title
-    self.year = year
-    self.genres = genres or []
   
 # ------------------------------------------------------------------    
 def change_ext(filename, ext):

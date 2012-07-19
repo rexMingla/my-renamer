@@ -13,11 +13,6 @@ from common import logModel
 from common import moveItemActioner
 from common import utils
 
-import inputWidget
-import logWidget
-import outputWidget
-import workBenchWidget
-
 # --------------------------------------------------------------------------------------------------------------------
 class MyThread(QtCore.QThread):
   progressSignal = QtCore.pyqtSignal(int)
@@ -99,63 +94,58 @@ class RenamerModule(QtCore.QObject):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, mode, outFormat, model, exploreFunctor, inputWidget_, outputWidget_, workBenchWidget_, logWidget_, parent=None):
+  def __init__(self, mode, model, exploreFunctor, 
+               inputWidget_, outputWidget_, workBenchWidget_, logWidget_, parent=None):
     super(RenamerModule, self).__init__(parent)
     
-    assert(mode in VALID_MODES)
-    utils.verifyType(inputWidget_, inputWidget.InputWidget)
-    utils.verifyType(outputWidget_, outputWidget.OutputWidget)
-    utils.verifyType(workBenchWidget_, workBenchWidget.WorkBenchWidget)
-    utils.verifyType(logWidget_, logWidget.LogWidget)
-
     self.mode = mode
-    self._outFormat = outFormat
     self._inputWidget = inputWidget_
     self._outputWidget = outputWidget_
     self._workBenchWidget = workBenchWidget_
     self._logWidget = logWidget_
+    self._widgets = (self._inputWidget, self._outputWidget, self._workBenchWidget)
     
     self._workerThread = None
     self._isShuttingDown = False
-    self._config = {}
-    self._isActive = False
     self._exploreFunctor = exploreFunctor
-    self._model = model
+    self._model = model    
     
   def __del__(self):
     self._isShuttingDown = True
     self._stopThread()
     
   def _explore(self):
-    self._enableControls(False)
-    self._model.clear()
-    self._inputWidget.startSearching()
+    for w in self._widgets:
+      w.startExploring()
+      
     assert(not self._workerThread or not self._workerThread.isRunning())
+    self._logWidget.onRename()      
     data = self._inputWidget.getConfig()
     self._workerThread = self._exploreFunctor(data["folder"], 
                                               data["recursive"], 
                                               extension.FileExtensions(data["extensions"].split()))
-    self._workerThread.progressSignal.connect(self._updateSearchProgress)
+    self._workerThread.progressSignal.connect(self._inputWidget.progressBar.setValue)
     self._workerThread.newDataSignal.connect(self._onDataFound)
-    self._workerThread.logSignal.connect(self._addMessage)
+    self._workerThread.logSignal.connect(self._logWidget.appendMessage)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()   
     
   def _rename(self):
-    self._enableControls(False)
+    for w in self._widgets:
+      w.startActioning()
+
+    assert(not self._workerThread or not self._workerThread.isRunning())
     self._logWidget.onRename()
+    
     formatSettings = self._outputWidget.getConfig()
     filenames = self._getRenameItems()
     actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings["dontOverwrite"], \
-                                                 keepSource=not formatSettings["move"])
-    assert(not self._workerThread or not self._workerThread.isRunning())
-    self._addMessage(logModel.LogItem(logModel.LogLevel.INFO, "Starting...", ""))
-    
+                                                 keepSource=not formatSettings["move"])    
     self._outputWidget.startActioning()
     self._workerThread = RenameThread(self.mode, actioner, filenames)
-    self._workerThread.progressSignal.connect(self._updateRenameProgress)
-    self._workerThread.logSignal.connect(self._addMessage)
+    self._workerThread.progressSignal.connect(self._outputWidget.progressBar.setValue)
+    self._workerThread.logSignal.connect(self._logWidget.appendMessage)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()
@@ -164,51 +154,26 @@ class RenamerModule(QtCore.QObject):
     raise NotImplementedError("RenamerModule._getRenameItems()")
     
   def setActive(self):
-    self._outputWidget.setOutputFormat(self._outFormat) #dodgy... again.
-    conf = self.getConfig()
-    
-    self._isActive = True
+    for w in self._widgets:
+      w.setMode(self.mode)    
+        
     self._outputWidget.renameSignal.connect(self._rename)
+    self._outputWidget.stopSignal.connect(self._stopRename)
     self._inputWidget.exploreSignal.connect(self._explore)
-    self._inputWidget.stopSignal.connect(self._stopSearch)
-    self._workBenchWidget.setCurrentModel(self._model)
-    self.setConfig(conf)
-
-    self._setActive()
-    
-  def _setActive(self):
-    raise NotImplementedError("RenamerModule._setActive not implemented")
-    
+    self._inputWidget.stopSignal.connect(self._stopSearch)        
+        
   def setInactive(self):
-    self.setConfig(self.getConfig()) #slightly hacky. we need to get the data out first before we are in active state
-    
-    self._isActive = False
-    self._outputWidget.renameSignal.disconnect(self._rename)
-    self._inputWidget.exploreSignal.disconnect(self._explore)
-    self._inputWidget.stopSignal.disconnect(self._stopSearch)
-    self._workBenchWidget.setCurrentModel(None)    
+    for w in self._widgets:
+      w.setMode(self.mode)    
     self._stopThread() #TODO: maybe prompt? In future, run in background.
-    self._outputWidget.setOutputFormat(None)
     
-    self._setInactive()
-
-  def _setInactive(self):
-    raise NotImplementedError("RenamerModule._setActive not implemented")
-    
-  def setConfig(self, data):
-    self._config = data
-    if self._isActive:
-      self._inputWidget.setConfig(self._config.get("input", {}))
-      self._outputWidget.setConfig(self._config.get("output", {}))
-      self._workBenchWidget.setConfig(self._config.get("workBench", {}))
-    
-  def getConfig(self):
-    ret = self._config
-    if self._isActive:
-      ret = {"input" : self._inputWidget.getConfig(),
-             "output" : self._outputWidget.getConfig(),
-             "workBench" : self._workBenchWidget.getConfig()}
-    return ret
+    try:
+      self._outputWidget.renameSignal.disconnect(self._rename)
+      self._outputWidget.stopSignal.disconnect(self._stopRename)
+      self._inputWidget.exploreSignal.disconnect(self._explore)
+      self._inputWidget.stopSignal.disconnect(self._stopSearch)       
+    except TypeError:
+      pass #lazy. should be able to check for conns
     
   def _stopThread(self):
     if self._workerThread:
@@ -216,10 +181,9 @@ class RenamerModule(QtCore.QObject):
     
   def _onThreadFinished(self):    
     if not self._isShuttingDown:
-      self._inputWidget.stopSearching()
-      self._outputWidget.stopActioning()
-      self._workBenchWidget.tvView.expandAll()
-      self._enableControls(True)     
+      for w in self._widgets:
+        w.stopExploring()
+        w.stopActioning()
       
   def _stopRename(self):
     self._outputWidget.stopButton.setEnabled(False)
@@ -227,26 +191,7 @@ class RenamerModule(QtCore.QObject):
    
   def _stopSearch(self):
     self._inputWidget.stopButton.setEnabled(False)
-    self._stopThread()
-    
-  def _enableControls(self, isEnabled=True):
-    self._inputWidget.enableControls(isEnabled)
-    self._workBenchWidget.setEnabled(isEnabled)
-    self._outputWidget.enableControls(isEnabled)    
-    
-  def _updateSearchProgress(self, percentageComplete):
-    """ Update progress. Assumed to be main thread """
-    utils.verifyType(percentageComplete, int)
-    self._inputWidget.progressBar.setValue(percentageComplete)
-
-  def _addMessage(self, msg):
-    """ Add message to log. Assumed to be main thread """
-    self._logWidget.appendMessage(msg)
-
-  def _updateRenameProgress(self, percentageComplete):
-    """ Update progress. Assumed to be main thread """
-    utils.verifyType(percentageComplete, int)
-    self._outputWidget.progressBar.setValue(percentageComplete)
+    self._stopThread()  
     
   def _onDataFound(self, data):
     utils.verify(data, "Must have data!")

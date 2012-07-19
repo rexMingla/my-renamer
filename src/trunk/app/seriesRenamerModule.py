@@ -5,21 +5,16 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module responsible for the renaming of tv series
 # --------------------------------------------------------------------------------------------------------------------
-from PyQt4 import QtCore
-
-from common import extension
 from common import fileHelper
-from common import moveItemActioner
 from common import outputFormat
 from common import logModel
 from common import utils
 
-from tv import season
 from tv import seasonHelper
 
+import config
 import renamerModule
-import outputWidget     
-    
+
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesExploreThread(renamerModule.ExploreThread):
     
@@ -47,7 +42,6 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
   """  
   def __init__(self, inputWidget, outputWidget, workbenchWidget, logWidget, parent=None):
     super(SeriesRenamerModule, self).__init__(renamerModule.Mode.TV_MODE, 
-                                              outputFormat.TvInputMap,
                                               workbenchWidget.tvModel,
                                               SeriesExploreThread,
                                               inputWidget, 
@@ -55,21 +49,8 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
                                               workbenchWidget, 
                                               logWidget, 
                                               parent)
-    self._setInactive()
-    #set model
-  
-  def _setActive(self):
-    self._workBenchWidget.movieButton.setVisible(True)  
-    self._workBenchWidget.editSeasonButton.setVisible(True)
-    self._workBenchWidget.editEpisodeButton.setVisible(True)
-    self._workBenchWidget.tvView.setVisible(True)
-      
-  def _setInactive(self):
-    self._workBenchWidget.movieButton.setVisible(False)
-    self._workBenchWidget.editSeasonButton.setVisible(False)
-    self._workBenchWidget.editEpisodeButton.setVisible(False) 
-    self._workBenchWidget.tvView.setVisible(False)
-
+    self.setInactive()    
+    
   def _getRenameItems(self):
     filenames = []
     seasons = self._model.items()
@@ -77,7 +58,7 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
     formatSettings = self._outputWidget.getConfig()
     for season in seasons:
       outputFolder = formatSettings["folder"]
-      if outputFolder == outputWidget.USE_SOURCE_DIRECTORY:
+      if outputFolder == config.USE_SOURCE_DIRECTORY:
         outputFolder = season.inputFolder_
       oFormat = outputFormat.OutputFormat(formatSettings["format"])
       for ep in season.moveItemCandidates:

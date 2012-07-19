@@ -13,20 +13,22 @@ from common import fileHelper
 from common import outputFormat
 from common import utils
 
-USE_SOURCE_DIRECTORY = ""
+import interfaces
+import config
       
 # --------------------------------------------------------------------------------------------------------------------
-class OutputWidget(QtGui.QWidget):
+class OutputWidget(interfaces.LoadWidgetInterface):
   """ Widget allowing for the configuration of output """
   renameSignal = QtCore.pyqtSignal()
+  stopSignal = QtCore.pyqtSignal()
   
   def __init__(self, parent=None):
-    super(QtGui.QWidget, self).__init__(parent)
+    super(OutputWidget, self).__init__("output", parent)
     self._fmt = None
     
-    self._ui = uic.loadUi("ui/ui_OutputWidget.ui", self)
+    uic.loadUi("ui/ui_OutputWidget.ui", self)
     self.renameButton.clicked.connect(self.renameSignal)
-    self.renameButton.setEnabled(False)
+    self.stopButton.clicked.connect(self.stopSignal)
         
     self.specificDirectoryButton.clicked.connect(self._showFolderSelectionDialog)
     
@@ -41,8 +43,34 @@ class OutputWidget(QtGui.QWidget):
     self.specificDirectoryEdit.setCompleter(completer)
     
     self.stopActioning()
+    self.stopExploring()
     
-  def setOutputFormat(self, fmt):
+  def _setMovieMode(self):
+    self._setOutputFormat(outputFormat.MovieInputMap)
+
+  def _setTvMode(self):
+    self._setOutputFormat(outputFormat.TvInputMap)
+  
+  def startExploring(self):
+    self.renameButton.setEnabled(False)
+  
+  def stopExploring(self):
+    self.renameButton.setEnabled(True)
+
+  def startActioning(self):
+    self.progressBar.setValue(0)    
+    self.progressBar.setVisible(True)
+    self.stopButton.setEnabled(True)
+    self.stopButton.setVisible(True)
+    self.renameButton.setVisible(False)
+
+  def stopActioning(self):
+    self.progressBar.setVisible(False)
+    self.stopButton.setVisible(False)
+    self.renameButton.setVisible(True)
+    self.renameButton.setEnabled(True)
+    
+  def _setOutputFormat(self, fmt):
     self._fmt = fmt
     if not self._fmt:
       self.formatEdit.setText("")
@@ -59,9 +87,6 @@ class OutputWidget(QtGui.QWidget):
     
     self._updatePreviewText()
     
-  def enableControls(self, isEnabled):
-    self.renameButton.setEnabled(isEnabled)
-    
   def _updatePreviewText(self):
     if self._fmt:
       text = utils.toString(self.formatEdit.text())
@@ -69,18 +94,6 @@ class OutputWidget(QtGui.QWidget):
       formattedText = oFormat.outputToString(self._fmt.exampleInputMap())
       formattedText = "Example: %s" % fileHelper.FileHelper.sanitizeFilename(formattedText)
       self.formatExampleLabel.setText(formattedText)      
-    
-  def startActioning(self):
-    self.progressBar.setValue(0)    
-    self.progressBar.setVisible(True)
-    self.stopButton.setEnabled(True)
-    self.stopButton.setVisible(True)
-    self.renameButton.setVisible(False)
-
-  def stopActioning(self):
-    self.progressBar.setVisible(False)
-    self.stopButton.setVisible(False)
-    self.renameButton.setVisible(True)    
       
   def _showFolderSelectionDialog(self):
     folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.specificDirectoryEdit.text())
@@ -90,7 +103,7 @@ class OutputWidget(QtGui.QWidget):
   def getConfig(self):
     outputDir = utils.toString(self.specificDirectoryEdit.text())
     if self.useSourceDirectoryRadio.isChecked():
-      outputDir = USE_SOURCE_DIRECTORY    
+      outputDir = config.USE_SOURCE_DIRECTORY    
     data = {"format" : utils.toString(self.formatEdit.text()),
             "folder" : outputDir,
             "move" : self.moveRadio.isChecked(),
@@ -99,10 +112,12 @@ class OutputWidget(QtGui.QWidget):
   
   def setConfig(self, data):
     fmt = data.get("format", "")
+    if not fmt and self._fmt:
+      fmt = self._fmt.defaultFormatStr()
     if fmt:
       self.formatEdit.setText(fmt)
-    outputDir = data.get("folder", USE_SOURCE_DIRECTORY)
-    if outputDir == USE_SOURCE_DIRECTORY:
+    outputDir = data.get("folder", config.USE_SOURCE_DIRECTORY)
+    if outputDir == config.USE_SOURCE_DIRECTORY:
       self.specificDirectoryEdit.setText("")
       self.useSourceDirectoryRadio.setChecked(True)
     else:

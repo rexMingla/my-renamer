@@ -12,61 +12,71 @@ from PyQt4 import QtGui
 from PyQt4 import uic
 
 from common import utils
+
+import config
+import interfaces
       
 # --------------------------------------------------------------------------------------------------------------------
-class InputWidget(QtGui.QWidget):
+class InputWidget(interfaces.LoadWidgetInterface):
   """ Widget allowing for the configuration of source folders """
   exploreSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
   
   def __init__(self, parent=None):
-    super(QtGui.QWidget, self).__init__(parent)
-    self._ui = uic.loadUi("ui/ui_InputWidget.ui", self)
-    self._ui.folderButton_.clicked.connect(self._showFolderSelectionDialog)
-    self._ui.findButton.clicked.connect(self.exploreSignal)
-    self._ui.stopButton.clicked.connect(self.stopSignal)
+    super(InputWidget, self).__init__("input", parent)
+    uic.loadUi("ui/ui_InputWidget.ui", self)
+    self.folderButton_.clicked.connect(self._showFolderSelectionDialog)
+    self.findButton.clicked.connect(self.exploreSignal)
+    self.stopButton.clicked.connect(self.stopSignal)
     
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)
     fsModel.setRootPath("")
     completer.setModel(fsModel)
-    self._ui.folderEdit.setCompleter(completer)
+    self.folderEdit.setCompleter(completer)
     
-    self.stopSearching()
+    self.stopActioning()
+    self.stopExploring()
     
-  def startSearching(self):
-    self._ui.progressBar.setValue(0)
-    self._ui.progressBar.setVisible(True)
-    self._ui.stopButton.setVisible(True)
-    self._ui.stopButton.setEnabled(True)
-    self._ui.findButton.setVisible(False)
-    
-  def stopSearching(self):
-    self._ui.progressBar.setVisible(False)
-    self._ui.stopButton.setVisible(False)
-    self._ui.findButton.setVisible(True)
-    
-  def enableControls(self, isEnabled):
-    self._ui.findButton.setEnabled(isEnabled)
+  def _setMovieMode(self):
+    pass #load cfg
+
+  def _setTvMode(self):
+    pass #load cfg
+  
+  def startExploring(self):
+    self.progressBar.setValue(0)
+    self.progressBar.setVisible(True)
+    self.stopButton.setVisible(True)
+    self.stopButton.setEnabled(True)
+    self.findButton.setVisible(False)
+  
+  def stopExploring(self):
+    self.progressBar.setVisible(False)
+    self.stopButton.setVisible(False)
+    self.findButton.setVisible(True)
+
+  def startActioning(self):
+    self.findButton.setEnabled(False)
+
+  def stopActioning(self):
+    self.findButton.setEnabled(True)
 
   def _showFolderSelectionDialog(self):
-    folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self._ui.folderEdit.text())
+    folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.folderEdit.text())
     if folder:
-      self._ui.folderEdit.setText(folder)
+      self.folderEdit.setText(folder)
       
   def getConfig(self):
-    data = {"folder" : utils.toString(self._ui.folderEdit.text()),
-            "recursive" : self._ui.isRecursiveCheckBox.isChecked(),
-            "extensions" : utils.toString(self._ui.fileExtensionEdit.text()) }
+    data = {"folder" : utils.toString(self.folderEdit.text()),
+            "recursive" : self.isRecursiveCheckBox.isChecked(),
+            "extensions" : utils.toString(self.fileExtensionEdit.text()) }
     return data
   
   def setConfig(self, data):
-    self._ui.folderEdit.setText(data.get("folder", os.getcwd()))
-    self._ui.isRecursiveCheckBox.setChecked(data.get("recursive", True))
-    self._ui.fileExtensionEdit.setText(data.get("extensions", ""))    
-    
-  def setProgress(self, progressComplete): 
-    self._ui.progressBar.setProgress(progressComplete)
+    self.folderEdit.setText(data.get("folder", os.getcwd()))
+    self.isRecursiveCheckBox.setChecked(data.get("recursive", True))
+    self.fileExtensionEdit.setText(data.get("extensions", ""))
     
   
   

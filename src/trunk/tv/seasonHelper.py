@@ -225,4 +225,7 @@ class SeasonHelper:
       ret = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
       if ret != episode.EpisodeMap():
         _CACHE[cacheKey] = copy.copy(ret)
+        newKey = "%s (%s)" % (seasonName, seriesNum)
+        if newKey != cacheKey:
+          _CACHE[newKey] = copy.copy(ret)
     return ret    
