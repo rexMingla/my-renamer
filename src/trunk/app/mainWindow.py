@@ -106,8 +106,8 @@ class MainWindow(QtGui.QMainWindow):
   def setConfig(self):
     geo = config.ConfigManager.getData("mw/geometry", "AdnQywABAAAAAACWAAAAlgAAA6sAAAKmAAAAngAAALQAAAOjAAACngAAAAAAAA==")
     state = config.ConfigManager.getData("mw/windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAMGAAAAafwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAADBgAAAOQA////AAAAAwAAAwYAAADa/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAdwAAAFIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAHcAAABKgAAAMkA////AAADBgAAAKAAAAAEAAAABAAAAAgAAAAI/AAAAAA=")
-    self.restoreGeometry(geo)
-    self.restoreState(state)
+    self.restoreGeometry(QtCore.QByteArray.fromBase64(geo))
+    self.restoreState(QtCore.QByteArray.fromBase64(state))
     mode = config.ConfigManager.getData("mw/mode")
     if not mode in interfaces.VALID_MODES:
       mode = interfaces.Mode.TV_MODE
