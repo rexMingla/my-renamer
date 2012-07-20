@@ -84,7 +84,7 @@ class MovieInputMap(InputMap):
 
   @staticmethod
   def exampleInputMap():
-    return MovieInputMap("Todo", 2001, "comedy")
+    return MovieInputMap("Anchorman", 2004, "comedy")
   
   @staticmethod
   def defaultFormatStr():

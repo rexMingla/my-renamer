@@ -6,34 +6,21 @@
 # Purpose of document: main entry point of the program
 # --------------------------------------------------------------------------------------------------------------------
 import sys
-hasQt = False
-
-from app import interfaces
-x = interfaces.LoadWidgetInterface
-
-try:
-  from PyQt4 import QtGui, QtCore
-  hasQt = True
-except ImportError:  
-  pass
-
-if hasQt:
-  from app import mainWindow
-
-import unittest
 
 from app import commandLine
-from app import interfaces
-from common import extension
-from common import utils
-from test import test_renamer
-from test import test_move
-from tv import seasonHelper
-from tv import outputFormat
-from movie import movieHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runGUI(cl):  
+  from PyQt4 import QtGui
+  from app import mainWindow
+  
+  try:
+    import os
+    dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(dir)
+  except NameError:
+    pass
+  
   app = QtGui.QApplication(sys.argv)
   
   mw = mainWindow.MainWindow()
@@ -43,6 +30,11 @@ def _runGUI(cl):
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runTests():
+  import unittest
+
+  from test import test_renamer
+  from test import test_move
+
   suite = unittest.TestSuite([
     unittest.TestLoader().loadTestsFromModule(test_renamer),
     #unittest.TestLoader().loadTestsFromModule(test_move)
@@ -60,11 +52,8 @@ def main(argv):
   
   if cl.runUnitTests_:
     _runTests()
-  elif hasQt:
-    _runGUI(cl)
   else:
-    utils.out(cl.usageMessage())
-    utils.out("PyQt4 could not be found")
+    _runGUI(cl)
 
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":

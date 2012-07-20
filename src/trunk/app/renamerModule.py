@@ -180,7 +180,7 @@ class RenamerModule(QtCore.QObject):
         
   def setInactive(self):
     for w in self._widgets:
-      w.setMode(self.mode)    
+      w.setMode(None)    
     self._stopThread() #TODO: maybe prompt? In future, run in background.
     
     try:
