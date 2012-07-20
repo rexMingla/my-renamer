@@ -16,23 +16,25 @@ import config
 import renamerModule
 
 # --------------------------------------------------------------------------------------------------------------------
-class SeriesExploreThread(renamerModule.ExploreThread):
-    
+class SeriesExploreThread(renamerModule.ExploreThread): 
   def run(self):
     dirs = seasonHelper.SeasonHelper.getFolders(self._folder, self._isRecursive)
+    folderCount = 0
     for i, d in enumerate(dirs):
       s = seasonHelper.SeasonHelper.getSeasonForFolder(d, self._ext)
-      if s:
-        self._onNewData(s)
-        if self.userStopped:
-          self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                       "Search", 
-                                       "User cancelled. %d of %d folders processed." % (i, len(dirs))))              
-          break
+      self._onNewData(s)
+      if self.userStopped:
+        self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+                                     "Search", 
+                                     "User cancelled. %d of %d folders processed." % (i, len(dirs))))              
+        break
       self._onProgress(int(100 * (i + 1) / len(dirs)))
+      folderCount += 1
+    
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  "Search", 
-                                 "Search complete. %d folders processed." % (len(dirs))))
+                                 "Search complete. %d folders processed in %s" % (folderCount, 
+                                                                                  renamerModule.prettyTime(self.startTime))))
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesRenamerModule(renamerModule.RenamerModule):
@@ -49,7 +51,6 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
                                               workbenchWidget, 
                                               logWidget, 
                                               parent)
-    self.setInactive()    
     
   def _getRenameItems(self):
     filenames = []

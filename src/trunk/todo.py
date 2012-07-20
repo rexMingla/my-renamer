@@ -23,7 +23,7 @@
 #    2011-05-05  2011-05-11      Bug           Transition from READY to MISSING_NEW is incorrect in work bench
 #    2011-05-05  2011-05-08      Impr          Add filename completer to file/folder dialogs
 #    2011-05-08                  Impr          Clean up EpisodeMap.setKeyForFilename
-#    2011-05-16                  Impr          Colour unresolved folders in list
+#    2011-05-16  2012-07-20      Impr          Colour unresolved folders in list
 #    2011-05-16  2011-05-16      Impr          Select/deselect all option
 #    2011-05-16  2011-05-16      Impr          Tooltips
 #    2011-05-16  2011-05-16      Impr          file extension filtering. *.avi will break it at the moment
@@ -38,7 +38,7 @@
 #    2012-07-13                  Impr          Better gui for tv series lookup (and episode rename)
 #    2012-07-13  2012-07-15      Impr          Cache tv series lookups
 #    2012-07-13  2012-07-15      Impr          Show progress for folder search
-#    2012-07-13                  Impr          Integrate with movie code
+#    2012-07-13  2012-07-20      Impr          Integrate with movie code
 #    2012-07-15                  Impr          Fix setup.py
 
 

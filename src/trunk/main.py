@@ -60,8 +60,6 @@ def main(argv):
   
   if cl.runUnitTests_:
     _runTests()
-  elif not cl.showGui_:
-    _runNonGUI(cl)
   elif hasQt:
     _runGUI(cl)
   else:
