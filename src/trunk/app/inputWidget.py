@@ -11,6 +11,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import extension
 from common import utils
 
 import config
@@ -74,9 +75,9 @@ class InputWidget(interfaces.LoadWidgetInterface):
     return data
   
   def setConfig(self, data):
-    self.folderEdit.setText(data.get("folder", os.getcwd()))
+    self.folderEdit.setText(data.get("folder", ""))
     self.isRecursiveCheckBox.setChecked(data.get("recursive", True))
-    self.fileExtensionEdit.setText(data.get("extensions", ""))
+    self.fileExtensionEdit.setText(data.get("extensions", extension.DEFAULT_VIDEO_EXTENSIONS.extensionString()))
     
   
   

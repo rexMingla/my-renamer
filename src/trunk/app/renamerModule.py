@@ -5,6 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Base module responsible for the renaming of movies and tv series
 # --------------------------------------------------------------------------------------------------------------------
+import time
+
 from PyQt4 import QtCore
 
 from common import extension
@@ -12,6 +14,18 @@ from common import fileHelper
 from common import logModel
 from common import moveItemActioner
 from common import utils
+
+# --------------------------------------------------------------------------------------------------------------------
+def prettyTime(startTime):
+  secs = time.clock() - startTime
+  utils.verify(secs >= 0, "Can't be negative")
+  if secs < 60:
+    return "%.1f secs" % secs
+  mins = secs / 60
+  if mins < 60:
+    return "%.1f mins" % mins
+  hours = seconds / (60 * 60)
+  return "%.1f hours" % hours
 
 # --------------------------------------------------------------------------------------------------------------------
 class MyThread(QtCore.QThread):
@@ -22,6 +36,7 @@ class MyThread(QtCore.QThread):
   def __init__(self):
     super(MyThread, self).__init__()
     self.userStopped = False
+    self.startTime = time.clock()
   
   def __del__(self):
     self.join()
@@ -56,16 +71,17 @@ class RenameThread(MyThread):
       self._onLog(moveItemActioner.MoveItemActioner.resultToLogItem(res, source, dest))
       if not res in results:
         results[res] = 0  
-      results[res] += 1  
+      results[res] += 1
       self._onProgress(int(100 * (i + 1) / len(self._items)))
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      self._mode,
-                                     "User cancelled. %d of %d files actioned." % (i, len(self._items))))              
+                                     "User cancelled. %d of %d files actioned." % (i + 1, len(self._items))))              
         break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  self._mode,
-                                 moveItemActioner.MoveItemActioner.summaryText(results)))      
+                                 "Duration: %s. %s " % (prettyTime(self.startTime),
+                                                        moveItemActioner.MoveItemActioner.summaryText(results))))   
     
 # --------------------------------------------------------------------------------------------------------------------
 class ExploreThread(MyThread):
@@ -160,7 +176,7 @@ class RenamerModule(QtCore.QObject):
     self._outputWidget.renameSignal.connect(self._rename)
     self._outputWidget.stopSignal.connect(self._stopRename)
     self._inputWidget.exploreSignal.connect(self._explore)
-    self._inputWidget.stopSignal.connect(self._stopSearch)        
+    self._inputWidget.stopSignal.connect(self._stopSearch)
         
   def setInactive(self):
     for w in self._widgets:

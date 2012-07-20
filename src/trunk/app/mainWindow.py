@@ -34,6 +34,7 @@ class MainWindow(QtGui.QMainWindow):
     self._workBenchWidget = workBenchWidget.WorkBenchWidget(parent)
     self._outputWidget = outputWidget.OutputWidget(parent)
     self._logWidget = logWidget.LogWidget(parent)
+    self._workBenchWidget.workBenchChangedSignal.connect(self._outputWidget.renameButton.setEnabled)     
     
     self._seriesModule = seriesRenamerModule.SeriesRenamerModule(self._inputWidget, 
                                                                 self._outputWidget,

@@ -74,4 +74,4 @@ class FileExtensions:
     return utils.listCompare(self._extensions_, other._extensions_)
 
 ALL_FILE_EXTENSIONS      = FileExtensions([FileExtensions.ALL_FILES])
-DEFAULT_VIDEO_EXTENSIONS = FileExtensions([".avi", ".mov"])
+DEFAULT_VIDEO_EXTENSIONS = FileExtensions([".avi", ".divx", ".mkv", ".mpg", ".mp4", ".wmv"])

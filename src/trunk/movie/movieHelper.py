@@ -5,16 +5,16 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module responsible for the renaming of movies
 # --------------------------------------------------------------------------------------------------------------------
-from pymdb import pymdb
-
-from common import utils
-from common import fileHelper
-
+import copy
 import os
 import re
+from pymdb import pymdb
 
-_VIDEO_EXTENSIONS = (".avi", ".divx", ".mkv", ".mpg", ".mp4", ".wmv")
-_SUBTITLE_EXTENSIONS = (".sub", ".srt", ".rar", ".sfv")
+from common import extension
+from common import fileHelper
+from common import utils
+
+#_SUBTITLE_EXTENSIONS = (".sub", ".srt", ".rar", ".sfv")
 _PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
 _MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
 _MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
@@ -24,42 +24,48 @@ _CACHE = {}
 
 # --------------------------------------------------------------------------------------------------------------------
 class Result:
-  IGNORED_NOT_VIDEO = 1
-  IGNORED_SAMPLE_VIDEO = 2
-  IGNORED_FILE_NOT_FOUND = 3
-  FOUND_YEAR = 4
-  FOUND_NO_YEAR = 5
+  SAMPLE_VIDEO = 1
+  FILE_NOT_FOUND = 2
+  FOUND = 3
   
   @staticmethod 
   def as_string(result):
-    if result == Result.IGNORED_NOT_VIDEO:        return "Ignored: Not video"
-    elif result == Result.IGNORED_SAMPLE_VIDEO:   return "Ignored: Video too small"
-    elif result == Result.IGNORED_FILE_NOT_FOUND: return "Ignored: File not found"
-    elif result == Result.FOUND_YEAR:             return "Found: With year"
+    if result == Result.SAMPLE_VIDEO:     return "Too small"
+    elif result == Result.FILE_NOT_FOUND: return "File not found"
+    elif result == Result.FOUND:          return "OK"
     else: 
       assert(result == Result.FOUND_NO_YEAR)
       return "Found: Without year"
   
-VALID_RESULTS = (Result.IGNORED_NOT_VIDEO, 
-                 Result.IGNORED_SAMPLE_VIDEO, 
-                 Result.IGNORED_FILE_NOT_FOUND,
-                 Result.FOUND_YEAR, 
-                 Result.FOUND_NO_YEAR)
+VALID_RESULTS = (Result.SAMPLE_VIDEO, 
+                 Result.FILE_NOT_FOUND, 
+                 Result.FOUND)
 
 # --------------------------------------------------------------------------------------------------------------------
 class Movie(object):
-  def __init__(self, filename, title, part, year=None, subsFiles=None):
+  def __init__(self, filename, title, part=None, year="", subsFiles=None):
     super(Movie, self).__init__()
     self.filename = str(filename)
     self.inPath = os.path.dirname(self.filename)
     self.ext = os.path.splitext(self.filename)[1].lower()
     self.title = str(title)
-    self.subsFiles = subsFiles # not used atm
+    #self.subsFiles = subsFiles # not used atm
     #dynamic properties
     self.year = year
-    self.genres = ["unknown"]
+    self.genres = []
     self.collision_number = None #marked if multiple entries have the same name
     self.part = part #disc number
+    self.result = None #Filthy, just temporary   
+   
+  def __copy__(self):
+    ret = Movie(self.filename, self.title, self.part, self.year)
+    ret.collision_number = self.collision_number
+    ret.result = self.result
+    ret.genres = list(self.genres)
+    return ret
+    
+  def itemToInfo(self):
+    return MovieInfo(self.title, self.year, list(self.genres))
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInfo(object):
@@ -67,15 +73,18 @@ class MovieInfo(object):
     super(MovieInfo, self).__init__()
     self.title = title
     self.year = year
-    self.genres = genres or []    
+    self.genres = genres or [] 
+    
+  def __copy__(self):
+    return MovieInfo(self.title, self.year, list(self.genres))
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
   @staticmethod
-  def getFiles(folder, isRecursive):
+  def getFiles(folder, extensionFilter, isRecursive):
     files = []
     for dirName, _, filenames in os.walk(folder):
-      for baseName in sorted(filenames):
+      for baseName in extensionFilter.filterFiles(sorted(filenames)):
         files.append(fileHelper.FileHelper.joinPath(dirName, baseName))
       if not isRecursive:
         break
@@ -83,28 +92,33 @@ class MovieHelper:
   
   @staticmethod
   def processFile(filename):
+    movie = MovieHelper.extractMovieFromFile(filename)
+    if movie.result == Result.FOUND:
+      info = MovieHelper.getItem(movie.title, movie.year)
+      movie.year = info.year or m.year
+      movie.genres = info.genres or m.genres
+      movie.title = info.title or m.title      
+    return movie
+  
+  @staticmethod
+  def extractMovieFromFile(filename):
     basename = fileHelper.FileHelper.basename(filename)
     name, ext = os.path.splitext(basename)
     ext = ext.lower()
     result, movie = None, None
     if not os.path.exists(filename):
-      result = Result.IGNORED_FILE_NOT_FOUND
-    elif not ext in _VIDEO_EXTENSIONS:
-      result = Result.IGNORED_NOT_VIDEO
+      result = Result.FILE_NOT_FOUND #somehow this happens
     elif os.path.getsize(filename) < _MIN_VIDEO_SIZE_BYTES:
-      result = Result.IGNORED_SAMPLE_VIDEO
+      result = Result.SAMPLE_VIDEO
     else:
+      result = Result.FOUND
       m = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)
       assert(m)
       title = m.groupdict().get("title")
       year = m.groupdict().get("year")
       part = None
-      if year:
-        result = Result.FOUND_YEAR
-      else:
-        result = Result.FOUND_NO_YEAR
       partStr = basename
-      #if len(filenames) < 3: #use the folder name if there aren't many files in the folder
+      #if len(filenames) < 3: #todo: use the folder name if there aren't many files in the folder
       #  partStr = filename
       pm = _PART_MATCH.match(filename)
       if pm:
@@ -121,32 +135,19 @@ class MovieHelper:
       #subsFiles = [change_ext(filename, e) for e in _SUBTITLE_EXTENSIONS
       #              if os.path.exists(change_ext(filename, e)) ]
       movie = Movie(filename, title, part, year)
-    return result, movie
+      movie.result = result
+    return movie
     
   @staticmethod
   def getInfoFromTvdb(title, year=""):
-    utils.verifyType(mv, Movie)
-    info = None
-    key = title
-    if year:
-      key += "(%s)" % (year)
-    global _CACHE
-    if key in _CACHE:
-      info = _CACHE[key]
-    else:
-      info = MovieInfo(title)
-      try:
-        m = pymdb.Movie(title)
-        info.title = str(m.title or title)
-        info.year = str(m.year or year)
-        info.genres = m.genre or []
-        if info:
-          newKey = "%s (%s)" % (info.title, info.year)
-          _CACHE[newKey] = info
-          if key != newKey:
-            _CACHE[key] = info            
-      except (AttributeError, ValueError, pymdb.MovieError) as e:
-        print("**error: %s on %s" % (e, movie.title))
+    info = MovieInfo(title, year)
+    try:
+      m = pymdb.Movie(title)
+      info.title = str(m.title or title)
+      info.year = str(m.year or year)
+      info.genres = m.genre or []
+    except (AttributeError, ValueError, pymdb.MovieError) as e:
+      print("**error: %s on %s" % (e, movie.title))
     return info
   
   @staticmethod
@@ -159,7 +160,7 @@ class MovieHelper:
   def cache():
     global _CACHE
     return _CACHE
-  
+
   @staticmethod
   def getItem(title, year):
     """ retrieves season from cache or tvdb if not present """
