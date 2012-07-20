@@ -127,11 +127,9 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
       return {"cache" : movieHelper.MovieHelper.cache(),
               "no_year_as_error" : self.yearCheckBox.isChecked(),
               "no_genre_as_error" : self.genreCheckBox.isChecked(),
-              "geometry" : utils.toString(self.movieView.horizontalHeader().saveGeometry().toBase64()),
               "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()) }
     else:
       return {"cache" : seasonHelper.SeasonHelper.cache(),
-              "geometry" : utils.toString(self.tvView.header().saveGeometry().toBase64()),
               "state" : utils.toString(self.tvView.header().saveState().toBase64()) }
   
   def setConfig(self, data, mode=None):
@@ -141,11 +139,9 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
       movieHelper.MovieHelper.setCache(data.get("cache", {}))
       self.yearCheckBox.setChecked(data.get("no_year_as_error", True))
       self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
-      self.movieView.horizontalHeader().restoreGeometry(QtCore.QByteArray.fromBase64(data.get("geometry", "")))
       self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
     else:
       seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
-      self.tvView.header().restoreGeometry(QtCore.QByteArray.fromBase64(data.get("geometry", "")))
       self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
 
   def _onMovieClicked(self, modelIndex):

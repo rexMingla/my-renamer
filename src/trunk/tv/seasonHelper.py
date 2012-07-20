@@ -9,10 +9,7 @@ import copy
 import os
 import re
 
-try:
-  import tvdb_api
-except ImportError:
-  assert(False)
+import tvdb_api
 
 from common import extension, fileHelper, utils
 import episode
