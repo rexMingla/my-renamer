@@ -88,6 +88,9 @@
        <property name="title">
         <string>Mark as incomplete if:</string>
        </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">
          <number>4</number>

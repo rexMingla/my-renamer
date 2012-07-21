@@ -72,10 +72,10 @@ class MovieInputMap(InputMap):
   def __init__(self, title, year, genre):
     super(MovieInputMap, self).__init__()
     utils.verifyType(title, str)
-    utils.verifyType(year, int)
+    utils.verify(isinstance(year, str) or isinstance(year, int), "str or int")
     utils.verifyType(genre, str)
     self.data = {MovieInputMap.KEY_TITLE: title,
-                 MovieInputMap.KEY_YEAR:  leftPad(year, 4),
+                 MovieInputMap.KEY_YEAR:  str(year),
                  MovieInputMap.KEY_GENRE: genre}
 
   @staticmethod

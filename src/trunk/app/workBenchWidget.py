@@ -85,6 +85,8 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
   
   def stopExploring(self):
     self.setEnabled(True)
+    if self.mode == interfaces.Mode.MOVIE_MODE:
+      self.movieModel.buildUpdateFinished()
 
   def startActioning(self):
     self.setEnabled(False)
