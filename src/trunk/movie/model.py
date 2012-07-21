@@ -33,20 +33,31 @@ _GENRE_REQUIRED = "Genre required"
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieItem(object):
-  def __init__(self, movie):
+  def __init__(self, movie, index):
     super(MovieItem, self).__init__()
     utils.verifyType(movie, movieHelper.Movie)
     self.movie = movie
+    self.index = index
     self.wantToMove = True
-    self.cachedStatusText = "set me"
+    self.cachedStatusText = "Unknown"
+    self.isDuplicate = False
     
+  def isMatch(self, other):
+    utils.verifyType(other, MovieItem)
+    return (self.movie.result == movieHelper.Result.FOUND and self.movie.result == other.movie.result and
+            self.movie.title == other.movie.title and self.movie.year == other.movie.year and 
+            self.movie.part == other.movie.part and self.movie.ext == other.movie.ext and 
+            self.movie.genre() == other.movie.genre())
+  
   def isValid(self):
     return self.cachedStatusText == movieHelper.Result.as_string(movieHelper.Result.FOUND)
     
-  def statusText(self, requireYear, requireGenre):
+  def _updateStatusText(self, requireYear, requireGenre):
     ret = ""
     if self.movie.result != movieHelper.Result.FOUND:
       ret = movieHelper.Result.as_string(self.movie.result)
+    elif self.isDuplicate:
+      ret = "Duplicate"
     elif requireYear and not self.movie.year:
       ret = _YEAR_REQUIRED
     elif requireGenre and not self.movie.genres:
@@ -115,7 +126,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     elif col == Columns.COL_YEAR:
       return movie.year
     elif col == Columns.COL_GENRE:
-      return movie.genres[0] if movie.genres else ""
+      return movie.genre()
        
   def setData(self, index, value, role):
     if not index.isValid() or role not in (QtCore.Qt.CheckStateRole, RAW_DATA_ROLE):
@@ -125,15 +136,16 @@ class MovieModel(QtCore.QAbstractTableModel):
       utils.verifyType(value, movieHelper.Movie)
       item = self._movies[index.row()]
       item.movie = copy.copy(value)
-      item.statusText(self._requireYear, self._requireGenre)
-      self.dataChanged.emit(self.index(index.row(), 0), self.index(index.row(), Columns.NUM_COLS))
+      #item._updateStatusText(self._requireYear, self._requireGenre)
+      #self.dataChanged.emit(self.index(index.row(), 0), self.index(index.row(), Columns.NUM_COLS))
+      if not self._bulkProcessing:
+        self._updateStatusText()
     elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       item = self._movies[index.row()]
       item.wantToMove = value == QtCore.Qt.Checked
       self.dataChanged.emit(index, index)
-      
-    if not self._bulkProcessing:   
-      self._emitWorkBenchChanged()    
+      if not self._bulkProcessing:
+        self._emitWorkBenchChanged()    
     return True
     
   def flags(self, index):
@@ -181,8 +193,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     #check if already in list
     count = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
-    item = MovieItem(m)
-    item.statusText(self._requireYear, self._requireGenre)
+    item = MovieItem(m, count)
     self._movies.append(item)
     self.endInsertRows()     
     self._emitWorkBenchChanged()
@@ -221,22 +232,30 @@ class MovieModel(QtCore.QAbstractTableModel):
     hasItems = self._hasMoveableItems()
     self.workBenchChangedSignal.emit(hasItems)
     
-  def _updateData(self):
-    for i, movie in enumerate(self._movies):
+  def _updateStatusText(self):
+    self._bulkProcessing = True
+    for movie in self._movies:
       oldStatusText = movie.cachedStatusText
-      newStatusText = movie.statusText(self._requireYear, self._requireGenre)
+      #check for dup
+      movie.isDuplicate = (movie.movie.result == movieHelper.Result.FOUND and 
+                           any(m.isMatch(movie) for m in self._movies if m.index != movie.index))
+      newStatusText = movie._updateStatusText(self._requireYear, self._requireGenre) #update the status
       if oldStatusText != newStatusText:
-        self.dataChanged.emit(self.index(i, 0), self.index(i, Columns.NUM_COLS))  
+        self.dataChanged.emit(self.index(movie.index, 0), self.index(movie.index, Columns.NUM_COLS))
+    self._bulkProcessing = False
     self._emitWorkBenchChanged()
+    
+  def buildUpdateFinished(self):
+    self._updateStatusText()
     
   def requireYearChanged(self, require):
     if self._requireYear != require:
       self._requireYear = require
-      self._updateData()
+      self._updateStatusText()
     
   def requireGenreChanged(self, require):
     if self._requireGenre != require:
       self._requireGenre = require
-      self._updateData()    
+      self._updateStatusText()    
     
     

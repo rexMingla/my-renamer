@@ -28,6 +28,8 @@ class InputWidget(interfaces.LoadWidgetInterface):
     uic.loadUi("ui/ui_InputWidget.ui", self)
     self.folderButton_.clicked.connect(self._showFolderSelectionDialog)
     self.findButton.clicked.connect(self.exploreSignal)
+    self.folderEdit.returnPressed.connect(self.exploreSignal)
+    self.fileExtensionEdit.returnPressed.connect(self.exploreSignal)
     self.stopButton.clicked.connect(self.stopSignal)
     
     completer = QtGui.QCompleter(self)

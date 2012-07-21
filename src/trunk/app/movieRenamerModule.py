@@ -20,6 +20,7 @@ class MovieExploreThread(renamerModule.ExploreThread):
   def run(self):
     files = movieHelper.MovieHelper.getFiles(self._folder, self._ext, self._isRecursive)
     hist = {} #result histogram
+    i = 0
     for i, file in enumerate(files):
       movie = movieHelper.MovieHelper.processFile(file)
       self._onNewData(movie)
@@ -60,7 +61,7 @@ class MovieRenamerModule(renamerModule.RenamerModule):
       outputFolder = formatSettings["folder"]
       if outputFolder == config.USE_SOURCE_DIRECTORY:
         outputFolder = movie.inPath
-      genre = movie.genres[0] if movie.genres else "unknown"
+      genre = movie.genre("unknown")
       im = outputFormat.MovieInputMap(movie.title, movie.year, genre)
       newName = oFormat.outputToString(im, movie.ext, outputFolder)
       newName = fileHelper.FileHelper.sanitizeFilename(newName)

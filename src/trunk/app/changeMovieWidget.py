@@ -33,7 +33,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.filenameLabel.setText(item.filename)
     self.titleEdit.setText(item.title)
     self.yearEdit.setText(item.year or "")
-    self.genreEdit.setText(item.genres[0] if item.genres else "")
+    self.genreEdit.setText(item.genre())
     
   def data(self):
     self.item.title = self.titleEdit.text()

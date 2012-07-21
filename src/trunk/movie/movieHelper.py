@@ -56,6 +56,9 @@ class Movie(object):
     self.collision_number = None #marked if multiple entries have the same name
     self.part = part #disc number
     self.result = None #Filthy, just temporary   
+    
+  def genre(self, valueIfNull=""):
+    return self.genres[0] if self.genres else valueIfNull
    
   def __copy__(self):
     ret = Movie(self.filename, self.title, self.part, self.year)
@@ -95,9 +98,9 @@ class MovieHelper:
     movie = MovieHelper.extractMovieFromFile(filename)
     if movie.result == Result.FOUND:
       info = MovieHelper.getItem(movie.title, movie.year)
-      movie.year = info.year or m.year
-      movie.genres = info.genres or m.genres
-      movie.title = info.title or m.title      
+      movie.year = info.year or movie.year
+      movie.genres = info.genres or movie.genres
+      movie.title = info.title or movie.title      
     return movie
   
   @staticmethod
@@ -147,7 +150,7 @@ class MovieHelper:
       info.year = str(m.year or year)
       info.genres = m.genre or []
     except (AttributeError, ValueError, pymdb.MovieError) as e:
-      print("**error: %s on %s" % (e, movie.title))
+      print("**error: %s on %s" % (e, title))
     return info
   
   @staticmethod
