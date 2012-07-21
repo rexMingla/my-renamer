@@ -33,10 +33,10 @@ class InputMap(object):
 # --------------------------------------------------------------------------------------------------------------------
 class TvInputMap(InputMap):
   """ Configurable attributes for output. """
-  KEY_SHOW_NAME  = "[show_name]"
-  KEY_SERIES_NUM = "[season_num]"
-  KEY_EP_NUM     = "[ep_num]"   
-  KEY_EP_NAME    = "[ep_name]"  
+  KEY_SHOW_NAME  = "<show_name>"
+  KEY_SERIES_NUM = "<season_num>"
+  KEY_EP_NUM     = "<ep_num>"   
+  KEY_EP_NAME    = "<ep_name>"  
 
   def __init__(self, showName, seriesNum, epNum, epName):
     super(TvInputMap, self).__init__()
@@ -59,47 +59,48 @@ class TvInputMap(InputMap):
   
   @staticmethod
   def defaultFormatStr():
-    return "[show_name] - S[season_num]E[ep_num] - [ep_name]"
+    return "<show_name> - S<season_num>E<ep_num> - <ep_name>"
   
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInputMap(InputMap):
   """ Configurable attributes for output. """
-  KEY_TITLE  = "[title]"
-  KEY_YEAR   = "[year]"
-  KEY_GENRE  = "[genre]"  
-  #KEY_DISC   = "[disc]"   
+  KEY_TITLE  = "<title>"
+  KEY_YEAR   = "<year>"
+  KEY_GENRE  = "<genre>"  
+  KEY_DISC   = "<part>"   
 
-  def __init__(self, title, year, genre):
+  def __init__(self, title, year, genre, disc):
     super(MovieInputMap, self).__init__()
     utils.verifyType(title, str)
     utils.verify(isinstance(year, str) or isinstance(year, int), "str or int")
     utils.verifyType(genre, str)
     self.data = {MovieInputMap.KEY_TITLE: title,
                  MovieInputMap.KEY_YEAR:  str(year),
-                 MovieInputMap.KEY_GENRE: genre}
+                 MovieInputMap.KEY_GENRE: genre,
+                 MovieInputMap.KEY_DISC: str(disc or "")}
 
   @staticmethod
   def helpInputMap():
-    return MovieInputMap("Title", "Year", "Genre")
+    return MovieInputMap("Title", "Year", "Genre", "Part")
 
   @staticmethod
   def exampleInputMap():
-    return MovieInputMap("Anchorman", 2004, "comedy")
+    return MovieInputMap("Anchorman", 2004, "comedy", 1)
   
   @staticmethod
   def defaultFormatStr():
-    return "[genre]/[title] ([year])"
+    return "<genre>/<title> (<year>) - Disc <part>"
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:
   """ 
   Resolution of input map to create output filename. 
   Eg. 
-  input_map.data_ = {"[show_name]":  "Entourage", 
-                     "[season_num]": 1, 
-                     "[ep_num]":     7, 
-                     "[ep_name]":    "The Scene"}
-  output_format = OutputFormat("[show_name] S[season_num]E[ep_num] [ep_name])
+  input_map.data_ = {"<show_name>":  "Entourage", 
+                     "<season_num>": 1, 
+                     "<ep_num>":     7, 
+                     "<ep_name>":    "The Scene"}
+  output_format = OutputFormat("<show_name> S<season_num>E<ep_num> <ep_name>)
   output_format.outputToString(input_map, ".mpg")
   Resolves to "Entourage S01E07 The Scene.mpg"
   """

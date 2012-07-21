@@ -18,8 +18,9 @@ class ChangeMovieWidget(QtGui.QDialog):
   """
   def __init__(self, parent=None):
     super(ChangeMovieWidget, self).__init__(parent)
-    self._ui = uic.loadUi("ui/ui_ChangeMovie.ui", self)
+    uic.loadUi("ui/ui_ChangeMovie.ui", self)
     self.setWindowModality(True)
+    self.partCheckBox.toggled.connect(self.partSpinBox.setEnabled)
     
   def showEvent(self, event):
     """ protected Qt function """
@@ -29,11 +30,14 @@ class ChangeMovieWidget(QtGui.QDialog):
   def setData(self, item):
     """ Fill the dialog with the data prior to being shown """
     utils.verifyType(item, movieHelper.Movie)
-    self.item = item
+    self.item = item  
     self.filenameLabel.setText(item.filename)
     self.titleEdit.setText(item.title)
     self.yearEdit.setText(item.year or "")
     self.genreEdit.setText(item.genre())
+    if item.part:
+      self.partSpinBox.setValue(item.part)
+    self.partCheckBox.setChecked(bool(item.part))
     
   def data(self):
     self.item.title = self.titleEdit.text()
@@ -44,6 +48,9 @@ class ChangeMovieWidget(QtGui.QDialog):
     else:
       genre = []
     self.item.genres = genre
+    self.item.part = None
+    if self.partCheckBox:
+      self.item.part = self.partSpinBox.value()
     return self.item
     
 
