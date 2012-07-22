@@ -8,9 +8,18 @@
 from common import utils
 from fileHelper import FileHelper
 
-def leftPad(val, places=2):
+import re
+
+_CONDITIONAL_START = "%("
+_CONDITIONAL_END = ")%"
+_RE_CONDITIONAL = re.compile("({}.*?{})".format(re.escape(_CONDITIONAL_START), re.escape(_CONDITIONAL_END)))
+
+def _leftPad(val, places=2):
   ret = utils.toString(val).zfill(places)
   return ret
+
+def _wrapReplaceStr(val):
+  return "<%s>" % val
 
 # --------------------------------------------------------------------------------------------------------------------
 class InputMap(object):
@@ -33,10 +42,10 @@ class InputMap(object):
 # --------------------------------------------------------------------------------------------------------------------
 class TvInputMap(InputMap):
   """ Configurable attributes for output. """
-  KEY_SHOW_NAME  = "<show_name>"
-  KEY_SERIES_NUM = "<season_num>"
-  KEY_EP_NUM     = "<ep_num>"   
-  KEY_EP_NAME    = "<ep_name>"  
+  KEY_SHOW_NAME  = _wrapReplaceStr("show_name")
+  KEY_SERIES_NUM = _wrapReplaceStr("season_num")
+  KEY_EP_NUM     = _wrapReplaceStr("ep_num") 
+  KEY_EP_NAME    = _wrapReplaceStr("ep_name")  
 
   def __init__(self, showName, seriesNum, epNum, epName):
     super(TvInputMap, self).__init__()
@@ -45,8 +54,8 @@ class TvInputMap(InputMap):
     utils.verify(isinstance(epNum, str) or isinstance(epNum, int), "str or int")
     utils.verifyType(epName, basestring)
     self.data = {TvInputMap.KEY_SHOW_NAME:  showName,
-                 TvInputMap.KEY_SERIES_NUM: leftPad(seriesNum),
-                 TvInputMap.KEY_EP_NUM:     leftPad(epNum),
+                 TvInputMap.KEY_SERIES_NUM: _leftPad(seriesNum),
+                 TvInputMap.KEY_EP_NUM:     _leftPad(epNum),
                  TvInputMap.KEY_EP_NAME:    epName}
 
   @staticmethod
@@ -64,10 +73,10 @@ class TvInputMap(InputMap):
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInputMap(InputMap):
   """ Configurable attributes for output. """
-  KEY_TITLE  = "<title>"
-  KEY_YEAR   = "<year>"
-  KEY_GENRE  = "<genre>"  
-  KEY_DISC   = "<part>"   
+  KEY_TITLE  = _wrapReplaceStr("title")
+  KEY_YEAR   = _wrapReplaceStr("year")
+  KEY_GENRE  = _wrapReplaceStr("genre")  
+  KEY_DISC   = _wrapReplaceStr("part")  
 
   def __init__(self, title, year, genre, disc):
     super(MovieInputMap, self).__init__()
@@ -89,7 +98,7 @@ class MovieInputMap(InputMap):
   
   @staticmethod
   def defaultFormatStr():
-    return "<genre>/<title> (<year>) - Disc <part>"
+    return "<genre>/<title> (<year>)%( - Disc <part>)%"
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:
@@ -112,6 +121,13 @@ class OutputFormat:
     utils.verifyType(inputs, InputMap)
     utils.verifyType(ext, str)
     ret = self.formatStr
+    for match in _RE_CONDITIONAL.finditer(ret):
+      text = match.group(1)
+      newText = ""
+      if any(key in text and value for key, value in inputs.data.items()):
+        childFormat = OutputFormat(text[len(_CONDITIONAL_START):-len(_CONDITIONAL_END)]) #strip delimiters
+        newText = childFormat.outputToString(inputs)
+      ret = ret.replace(text, newText, 1)
     if path:
       ret = FileHelper.joinPath(path, ret)
     for key, value in inputs.data.items(): #todo: fix this. i'm sure there is a built in function for this.

@@ -83,6 +83,9 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     toolTipText = ["Available options:"]
     for key, value in self._fmt.exampleInputMap().data.items():
       toolTipText.append("%s -> %s" % (key, value))
+    if self.mode == interfaces.Mode.MOVIE_MODE:
+      toolTipText.append("Enclose text withihn %( )% to optionally include text is a value is present.")
+      toolTipText.append("Eg. %( Disc <part> )%")
     self.formatEdit.setToolTip("\n".join(toolTipText))
     
     self._updatePreviewText()
@@ -92,8 +95,12 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       text = utils.toString(self.formatEdit.text())
       oFormat = outputFormat.OutputFormat(text)
       formattedText = oFormat.outputToString(self._fmt.exampleInputMap())
+      color = "red"
+      if fileHelper.FileHelper.isValidFilename(formattedText):
+        color = "black"
       formattedText = "Example: %s" % fileHelper.FileHelper.sanitizeFilename(formattedText)
-      self.formatExampleLabel.setText(formattedText)      
+      self.formatExampleLabel.setText(formattedText)
+      self.formatExampleLabel.setStyleSheet("QLabel { color: %s; }" % color)
       
   def _showFolderSelectionDialog(self):
     folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.specificDirectoryEdit.text())

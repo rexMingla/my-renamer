@@ -6,8 +6,10 @@
 # Purpose of document: Module responsible for the renaming of movies
 # --------------------------------------------------------------------------------------------------------------------
 import copy
+import glob
 import os
 import re
+
 from pymdb import pymdb
 
 from common import extension
@@ -108,7 +110,7 @@ class MovieHelper:
     basename = fileHelper.FileHelper.basename(filename)
     name, ext = os.path.splitext(basename)
     ext = ext.lower()
-    result, movie = None, None
+    title, part, year, result = None, None, None, None
     if not os.path.exists(filename):
       result = Result.FILE_NOT_FOUND #somehow this happens
     elif os.path.getsize(filename) < _MIN_VIDEO_SIZE_BYTES:
@@ -121,8 +123,9 @@ class MovieHelper:
       year = m.groupdict().get("year")
       part = None
       partStr = basename
-      #if len(filenames) < 3: #todo: use the folder name if there aren't many files in the folder
-      #  partStr = filename
+      moviesInFolder = len(glob.glob("{}/*{}".format(fileHelper.FileHelper.dirname(filename), ext)))
+      if moviesInFolder < 3: #use the folder name if there aren't many files in the folder
+        partStr = filename
       pm = _PART_MATCH.match(filename)
       if pm:
         part = pm.group(1)
@@ -137,8 +140,8 @@ class MovieHelper:
       #todo: fix subs...
       #subsFiles = [change_ext(filename, e) for e in _SUBTITLE_EXTENSIONS
       #              if os.path.exists(change_ext(filename, e)) ]
-      movie = Movie(filename, title, part, year)
-      movie.result = result
+    movie = Movie(filename, title, part, year)
+    movie.result = result
     return movie
     
   @staticmethod

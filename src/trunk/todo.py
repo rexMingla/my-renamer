@@ -35,7 +35,7 @@
 #    2012-07-13                  Impr          Save log to file
 #    2012-07-13                  Impr          Increase logging. timing, etc.
 #    2012-07-13  2012-07-15      Impr          Allow stopping of search / rename
-#    2012-07-13                  Impr          Better gui for tv series lookup (and episode rename)
+#    2012-07-13  2012-07-22      Impr          Better gui for tv series lookup (and episode rename)
 #    2012-07-13  2012-07-15      Impr          Cache tv series lookups
 #    2012-07-13  2012-07-15      Impr          Show progress for folder search
 #    2012-07-13  2012-07-20      Impr          Integrate with movie code
