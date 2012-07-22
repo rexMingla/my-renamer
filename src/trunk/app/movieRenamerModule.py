@@ -28,11 +28,11 @@ class MovieExploreThread(renamerModule.ExploreThread):
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      "Search", 
-                                     "User cancelled. %d of %d files processed." % (i + 1, len(files))))              
+                                     "User cancelled. {} of {} files processed.".format(i + 1, len(files))))              
         break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  "Search", 
-                                 "Search complete. %d files processed in %s." % (i + 1,
+                                 "Search complete. {} files processed in {}.".format(i + 1,
                                                                                  renamerModule.prettyTime(self.startTime))))
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ class MovieRenamerModule(renamerModule.RenamerModule):
       if outputFolder == config.USE_SOURCE_DIRECTORY:
         outputFolder = movie.inPath
       genre = movie.genre("unknown")
-      im = outputFormat.MovieInputMap(movie.title, movie.year, genre)
+      im = outputFormat.MovieInputMap(movie.title, movie.year, genre, movie.part)
       newName = oFormat.outputToString(im, movie.ext, outputFolder)
       newName = fileHelper.FileHelper.sanitizeFilename(newName)
       filenames.append((movie.filename, newName))

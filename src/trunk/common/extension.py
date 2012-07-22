@@ -45,7 +45,7 @@ class FileExtensions:
         if item.startswith("*"):
           sanitized.append(item[1:])
         elif not item.startswith("."):
-          sanitized.append(".%s" % item)
+          sanitized.append(".{}".format(item))
         else:
           sanitized.append(item)
     if isAll:

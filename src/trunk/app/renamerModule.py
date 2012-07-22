@@ -20,12 +20,12 @@ def prettyTime(startTime):
   secs = time.clock() - startTime
   utils.verify(secs >= 0, "Can't be negative")
   if secs < 60:
-    return "%.1f secs" % secs
+    return "{:.1f} secs".format(secs)
   mins = secs / 60
   if mins < 60:
-    return "%.1f mins" % mins
+    return "{:.1f} mins".format(mins)
   hours = seconds / (60 * 60)
-  return "%.1f hours" % hours
+  return "{:.1f} hours".format(hours)
 
 # --------------------------------------------------------------------------------------------------------------------
 class MyThread(QtCore.QThread):
@@ -76,12 +76,12 @@ class RenameThread(MyThread):
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      self._mode,
-                                     "User cancelled. %d of %d files actioned." % (i + 1, len(self._items))))              
+                                     "User cancelled. {} of {} files actioned.".format(i + 1, len(self._items))))              
         break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  self._mode,
-                                 "Duration: %s. %s " % (prettyTime(self.startTime),
-                                                        moveItemActioner.MoveItemActioner.summaryText(results))))   
+                                 "Duration: {}. {}".format(prettyTime(self.startTime),
+                                                           moveItemActioner.MoveItemActioner.summaryText(results))))   
     
 # --------------------------------------------------------------------------------------------------------------------
 class ExploreThread(MyThread):
@@ -131,10 +131,12 @@ class RenamerModule(QtCore.QObject):
     self._stopThread()
     
   def _explore(self):
+    if self._workerThread and self._workerThread.isRunning():
+      return
+
     for w in self._widgets:
       w.startExploring()
       
-    assert(not self._workerThread or not self._workerThread.isRunning())
     self._logWidget.onRename()      
     data = self._inputWidget.getConfig()
     self._workerThread = self._exploreFunctor(data["folder"], 
@@ -148,10 +150,12 @@ class RenamerModule(QtCore.QObject):
     self._workerThread.start()   
     
   def _rename(self):
+    if self._workerThread and self._workerThread.isRunning():
+      return
+    
     for w in self._widgets:
       w.startActioning()
 
-    assert(not self._workerThread or not self._workerThread.isRunning())
     self._logWidget.onRename()
     
     formatSettings = self._outputWidget.getConfig()

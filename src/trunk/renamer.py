@@ -47,7 +47,7 @@ def _runTests():
 def main(argv):
   cl = commandLine.CommandLineParser(argv, "config.p")
   if cl.showHelp_:
-    utils.out(cl.usageMessage())
+    utils.logError(cl.usageMessage())
     return
   
   if cl.runUnitTests_:

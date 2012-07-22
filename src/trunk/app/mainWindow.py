@@ -26,9 +26,12 @@ import interfaces
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
   """ Window widget for the application. """
-  def __init__(self, _configFile="config.txt", parent = None):
+  def __init__(self, _configFile="config.txt", logFile="log.txt", parent = None):
     super(QtGui.QMainWindow, self).__init__(parent)
     self._configFile = _configFile
+    
+    utils.initLogging(logFile)
+    utils.logInfo("Starting app")    
     
     self._inputWidget = inputWidget.InputWidget(parent)
     self._workBenchWidget = workBenchWidget.WorkBenchWidget(parent)
@@ -96,7 +99,7 @@ class MainWindow(QtGui.QMainWindow):
       self._modeToModule[self._mode].setInactive()
     self._mode = mode
     self._modeToModule[self._mode].setActive()
-    self.setWindowTitle("Tv and Movie ReNamer [%s mode]" % self._mode)
+    self.setWindowTitle("Tv and Movie ReNamer [{} mode]".format(self._mode))
   
   def getConfig(self):
     config.ConfigManager.setData("mw/geometry", utils.toString(self.saveGeometry().toBase64()))

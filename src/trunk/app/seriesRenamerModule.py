@@ -26,15 +26,15 @@ class SeriesExploreThread(renamerModule.ExploreThread):
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      "Search", 
-                                     "User cancelled. %d of %d folders processed." % (i, len(dirs))))              
+                                     "User cancelled. {} of {} folders processed.".format(i, len(dirs))))              
         break
       self._onProgress(int(100 * (i + 1) / len(dirs)))
       folderCount += 1
     
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  "Search", 
-                                 "Search complete. %d folders processed in %s" % (folderCount, 
-                                                                                  renamerModule.prettyTime(self.startTime))))
+                                 "Search complete. {} folders processed in {}".format(folderCount, 
+                                                                                      renamerModule.prettyTime(self.startTime))))
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesRenamerModule(renamerModule.RenamerModule):

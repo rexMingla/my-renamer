@@ -29,7 +29,7 @@ class Season:
     else:                                    assert(false); return "UNKNOWN"
   
   def __str__(self):
-    return "season: %s season #: %d status: %s" % (self.seasonName, self.seasonNum, Season.resultStr(self.status))
+    return "season: {} season #: {} status: {}".format(self.seasonName, self.seasonNum, Season.resultStr(self.status))
   
   def __init__(self, seasonName, seasonNum, source, destination, inputFolder):
     utils.verifyType(seasonName, str)

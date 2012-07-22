@@ -19,7 +19,7 @@ def _leftPad(val, places=2):
   return ret
 
 def _wrapReplaceStr(val):
-  return "<%s>" % val
+  return "<{}>".format(val)
 
 # --------------------------------------------------------------------------------------------------------------------
 class InputMap(object):
@@ -81,7 +81,6 @@ class MovieInputMap(InputMap):
   def __init__(self, title, year, genre, disc):
     super(MovieInputMap, self).__init__()
     utils.verifyType(title, str)
-    utils.verify(isinstance(year, str) or isinstance(year, int), "str or int")
     utils.verifyType(genre, str)
     self.data = {MovieInputMap.KEY_TITLE: title,
                  MovieInputMap.KEY_YEAR:  str(year),

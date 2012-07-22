@@ -98,7 +98,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       color = "red"
       if fileHelper.FileHelper.isValidFilename(formattedText):
         color = "black"
-      formattedText = "Example: %s" % fileHelper.FileHelper.sanitizeFilename(formattedText)
+      formattedText = "Example: {}".format(fileHelper.FileHelper.sanitizeFilename(formattedText))
       self.formatExampleLabel.setText(formattedText)
       self.formatExampleLabel.setStyleSheet("QLabel { color: %s; }" % color)
       

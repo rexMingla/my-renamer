@@ -40,7 +40,7 @@ class ChangeEpisodeWidget(QtGui.QDialog):
     moveItemCandidates = sorted(moveItemCandidates, key=lambda item: item.destination.epNum)
     for mi in moveItemCandidates:
       if mi.destination.epName <> episode.UNRESOLVED_NAME:
-        displayName = "%d: %s" % (mi.destination.epNum, mi.destination.epName)
+        displayName = "{}: {}".format(mi.destination.epNum, mi.destination.epName)
         self._ui.episodeComboBox_.addItem(displayName, mi.destination.epNum)
     index = self._ui.episodeComboBox_.findData(ep.source.epNum)
     if index <> -1:
