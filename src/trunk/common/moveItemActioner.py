@@ -51,9 +51,9 @@ class MoveItemActioner:
     ret = ""
     count = 0
     for key in results.keys():
-      ret += "%s (%d) " % (MoveItemActioner.resultStr(key), results[key])
+      ret += "{} ({}) ".format(MoveItemActioner.resultStr(key), results[key])
       count += results[key]
-    ret += "Total (%d)" % count
+    ret += "Total ({})".format(count)
     return ret
 
   def performActions(self, items):    
@@ -70,8 +70,8 @@ class MoveItemActioner:
   
   @staticmethod
   def resultToLogItem(res, source, dest):
-    longText = "%s -> %s" % (source, dest) 
-    shortText = "%s -> %s" % (fileHelper.FileHelper.basename(source), fileHelper.FileHelper.basename(dest))
+    longText = "{} -> {}".format(source, dest) 
+    shortText = "{} -> {}".format(fileHelper.FileHelper.basename(source), fileHelper.FileHelper.basename(dest))
     level = logModel.LogLevel.INFO
     if res <> MoveItemActioner.SUCCESS:
       level = logModel.LogLevel.ERROR

@@ -52,8 +52,8 @@ class MoveItemCandidate:
     return self.source == other.source and self.destination == other.destination
     
   def __str__(self):
-    return "[%d:%d] %s: %s -> %s" % (self.source.epNum, \
-                                     self.destination.epNum, \
-                                     MoveItemCandidate.typeStr(self.matchType()), \
-                                     self.source.filename, \
-                                     self.destination.epName)
+    return "[{}:{}] {}: {} -> {}".format( self.source.epNum, 
+                                          self.destination.epNum, 
+                                          MoveItemCandidate.typeStr(self.matchType()), 
+                                          self.source.filename, 
+                                          self.destination.epName)

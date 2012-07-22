@@ -29,7 +29,7 @@ class SourceEpisode(object):
     return SourceEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
 
   def __str__(self):
-    return "<SourceEpisode: #:%d name:%s>" % (self.epNum, self.filename)   
+    return "<SourceEpisode: #:{} name:{}>".format(self.epNum, self.filename)   
     
   def __eq__(self, other):
     return self.epNum == other.epNum and self.filename == other.filename
@@ -54,7 +54,7 @@ class DestinationEpisode(object):
     return DestinationEpisode(episode.UNRESOLVED_KEY, episode.UNRESOLVED_NAME)
 
   def __str__(self):
-    return "<DestinationEpisode: #:%d name:%s>" % (self.epNum, self.epName)   
+    return "<DestinationEpisode: #:{} name:{}>".format(self.epNum, self.epName)   
 
   def __eq__(self, other):
     return self.epNum == other.epNum and self.epName == other.epName
@@ -81,7 +81,7 @@ class EpisodeMap(object):
     if item.epNum == UNRESOLVED_KEY:
       self.unresolved.append(item)
     elif epNumStr in self.matches:
-      utils.out("key already exists: %d" % item.epNum, 1)
+      utils.logDebug("key already exists: {}".format(item.epNum), 1)
       tempItem = copy.copy(item)
       tempItem.epNum = UNRESOLVED_KEY
       self.unresolved.append(tempItem)
@@ -136,7 +136,7 @@ class EpisodeMap(object):
     return utils.listCompare(self.unresolved, other.unresolved) and utils.dictCompare(self.matches, other.matches)
   
   def __str__(self):
-    return "<EpisodeMap: #matches:%d #unresolved:%d>" % (len(self.matches), len(self.unresolved))
+    return "<EpisodeMap: #matches:{} #unresolved:{}>".format(len(self.matches), len(self.unresolved))
   
   def __copy__(self):
     ret = EpisodeMap()

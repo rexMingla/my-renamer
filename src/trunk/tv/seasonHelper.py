@@ -34,7 +34,7 @@ class SeasonHelper:
       m = re.match(sameFolderRegex, folder, flags=re.IGNORECASE)
     if m:
       show = m.group(1)
-      seriesNum = utils.toInt(m.group(2))
+      seriesNum = int(m.group(2))
     return show, seriesNum
 
   @staticmethod
@@ -45,22 +45,22 @@ class SeasonHelper:
     epNum = episode.UNRESOLVED_KEY
     if m:
       epNum = int(m.group(1))
-      utils.out("episode: %s #:%d" % (ep, epNum), 1)
+      utils.logDebug("episode: {} #:{}".format(ep, epNum), 1)
     else:
-      utils.out("** unresolved: %s" % ep, 1)
+      utils.logDebug("unresolved: {}".format(ep), 1)
     return epNum
 
   @staticmethod
   def episodeMapFromIndex(index, files):
     utils.verifyType(files, list)
     epMap = episode.EpisodeMap()
-    epRegex = "^.{%d}(\\d\\d?).*\\.[^\\.]*$" % index
+    epRegex = "^.{%d}(\\d\\d?).*\\.[^\\.]*$" % (index)
     for f in files:
       epNum = episode.UNRESOLVED_KEY
       if index >= 0:
         m = re.match(epRegex, fileHelper.FileHelper.basename(f))
         if m:
-          epNum = utils.toInt(m.group(1))
+          epNum = int(m.group(1))
       epMap.addItem(episode.SourceEpisode(epNum, f))
     return epMap
 
@@ -135,7 +135,7 @@ class SeasonHelper:
         show = episode.DestinationEpisode(int(ep["episodenumber"]), str(ep["episodename"]))
         eps.addItem(show)
     except:
-      utils.out("Could not find season. Show: %s seasonNum: %d" % (show, seasonNum), 1)
+      utils.logDebug("Could not find season. Show: {} seasonNum: {}".format(show, seasonNum), 1)
     return eps
     
   @staticmethod
@@ -159,7 +159,7 @@ class SeasonHelper:
     utils.verifyType(rootFolder, str)
     utils.verifyType(isRecursive, bool)
     folders = []
-    rootFolder = rootFolder.replace("\\", "/")
+    rootFolder = fileHelper.FileHelper.sanitizeFilename(rootFolder)
     if not isRecursive:
       if fileHelper.FileHelper.dirExists(rootFolder):
         folders.append(rootFolder)
@@ -213,7 +213,7 @@ class SeasonHelper:
   @staticmethod
   def getSeason(seasonName, seriesNum):
     """ retrieves season from cache or tvdb if not present """
-    cacheKey = "%s (%s)" % (seasonName, seriesNum)
+    cacheKey = "{} ({})".format(seasonName, seriesNum)
     global _CACHE
     ret = None
     if cacheKey in _CACHE:
@@ -222,7 +222,7 @@ class SeasonHelper:
       ret = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
       if ret != episode.EpisodeMap():
         _CACHE[cacheKey] = copy.copy(ret)
-        newKey = "%s (%s)" % (seasonName, seriesNum)
+        newKey = "{} ({})".format(seasonName, seriesNum)
         if newKey != cacheKey:
           _CACHE[newKey] = copy.copy(ret)
     return ret    

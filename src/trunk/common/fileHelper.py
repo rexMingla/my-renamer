@@ -13,12 +13,12 @@ import unicodedata
 
 import utils
 
-_VALID_BASENAME_CHARACTERS = "%s%s%s" % (string.ascii_letters, \
-                                         string.digits, \
-                                         " !#$%&'()*+,-.\\/;=@[\]^_`{}~") # string.punctuation without :?"<>| 
+_VALID_BASENAME_CHARACTERS = "".join([string.ascii_letters,
+                                      string.digits,
+                                      " !#$%&'()*+,-.\\/;=@[\]^_`{}~"]) # string.punctuation without :?"<>| 
 _RE_PATH = re.compile(r"(\\|/+)")
-_RE_INALID_FILENAME = re.compile("[^%s]" % re.escape(_VALID_BASENAME_CHARACTERS))
-_RE_VALID_FILENAME = re.compile("^([%s])*$" % re.escape(_VALID_BASENAME_CHARACTERS))
+_RE_INALID_FILENAME = re.compile("[^{}]".format(re.escape(_VALID_BASENAME_CHARACTERS)))
+_RE_VALID_FILENAME = re.compile("^([{}])*$".format(re.escape(_VALID_BASENAME_CHARACTERS)))
  
 # --------------------------------------------------------------------------------------------------------------------
 class FileHelper:
@@ -97,12 +97,12 @@ class FileHelper:
     return isOk
     
   @staticmethod
-  def sanitizeFilename(f, replaceChar="_"):
+  def sanitizeFilename(f, replaceChar="-"):
     utils.verifyType(f, str)
     utils.verifyType(replaceChar, str)
     drive, tail = FileHelper.splitDrive(f)
     tail = _RE_INALID_FILENAME.sub(replaceChar, tail)
-    ret = ("%s%s" % (drive, tail)).replace("\\", os.sep).replace("/", os.sep)
+    ret = "".join([drive, tail]).replace("\\", os.sep).replace("/", os.sep)
     return ret
   
   @staticmethod

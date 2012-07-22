@@ -9,6 +9,7 @@ import jsonpickle
 jsonpickle.set_encoder_options("simplejson", indent=2)
 
 from common import fileHelper
+from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 #globals
@@ -34,7 +35,10 @@ class ConfigManager(object):
     _CONFIG = {}
     if fileHelper.FileHelper.fileExists(filename):
       f = open(filename, "r")
-      _CONFIG = jsonpickle.decode(f.read())
+      try:
+        _CONFIG = jsonpickle.decode(f.read())
+      except (ValueError, TypeError, KeyError) as e:
+        utils.logWarning("loadConfig error: {}".format(e))
     if not isinstance(_CONFIG, dict):
       _CONFIG = {}
   

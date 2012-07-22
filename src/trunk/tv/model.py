@@ -74,12 +74,12 @@ class TreeItem(object):
         return QtGui.QBrush(QtCore.Qt.red)      
       elif column == Columns.COL_OLD_NAME:
         if role == QtCore.Qt.ToolTipRole:
-          return "Folder: %s" % self.raw.inputFolder_
+          return "Folder: {}".format(self.raw.inputFolder_)
         else:        
           if isResolved:
-            return "Season: %s #: <Unknown>" % (self.raw.seasonName)
+            return "Season: {} #: <Unknown>".format(self.raw.seasonName)
           else:
-            return "Season: %s #: %d" % (self.raw.seasonName, self.raw.seasonNum)
+            return "Season: {} #: {}".format(self.raw.seasonName, self.raw.seasonNum)
     return None
     
   def parent(self):

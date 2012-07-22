@@ -31,9 +31,8 @@ class LoadWidgetInterface(QtGui.QWidget):
     self.mode = None
   
   def setMode(self, mode):
-    #print("%s -> %s" % (self.mode or "none", mode or "none"))
     if self.mode in VALID_MODES:
-      key = "%s/%s" % (self.configName, self.mode)
+      key = "{}/{}".format(self.configName, self.mode)
       config.ConfigManager.setData(key, self.getConfig()) 
       
     self.mode = mode
@@ -43,7 +42,7 @@ class LoadWidgetInterface(QtGui.QWidget):
       self._setTvMode()
 
     if self.mode in VALID_MODES:
-      key = "%s/%s" % (self.configName, self.mode)
+      key = "{}/{}".format(self.configName, self.mode)
       self.setConfig(config.ConfigManager.getData(key, {}))
       
   def _setMovieMode(self):
