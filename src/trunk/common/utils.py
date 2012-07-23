@@ -25,18 +25,21 @@ def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
 # --------------------------------------------------------------------------------------------------------------------
 def initLogging(logfile):
   logging.basicConfig(level=logging.DEBUG,
-                      format="%(asctime)s %(title)s %(name)-12s %(levelname)-8s %(message)s",
+                      format="%(asctime)s %(title)-12s %(name)-12s %(levelname)-8s %(message)s",
                       datefmt="%Y-%m-%d %H:%M",
                       filename=logfile,
                       filemode="a")
 
-  for log in ("PyQt4", "requests"):
+  for log in ("PyQt4", "requests", "tvdb_api"):
     logging.getLogger(log).setLevel(logging.CRITICAL)
 
   console = logging.StreamHandler()
   console.setFormatter(logging.Formatter("%(name)-12s %(levelname)-8s %(message)s"))
   console.setLevel(logging.INFO)
-  logging.getLogger("app").addHandler(console)
+  logging.getLogger("renamer").addHandler(console)
+
+def logNotSet(msg, longMsg="", title=""):
+  log(logging.NOTSET, msg, longMsg, title)
   
 def logDebug(msg, longMsg="", title=""):
   log(logging.DEBUG, msg, longMsg, title)
@@ -51,14 +54,14 @@ def logError(msg, longMsg="", title=""):
   log(logging.ERROR, msg, longMsg, title)
   
 def log(level, msg, longMsg="", title=""):
-  logging.getLogger("app").log(level, msg or longMsg, extra={"title":title})  
+  logging.getLogger("renamer").log(level, msg or longMsg, extra={"title":title})  
 
 # --------------------------------------------------------------------------------------------------------------------
 def verify(test, message):
   """ If test is not true print and throw. """
   if not test:
     text = "assertion failed: {} stack: {}".format(message, stackFunctionName(2))
-    logDebug("utils.verify", text)
+    logNotSet(text, title="utils.verify")
     raise errors.AssertionError(text)      
       
 # --------------------------------------------------------------------------------------------------------------------
@@ -69,7 +72,7 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
                                                                   toString(obj), 
                                                                   str(class_or_type_or_tuple), 
                                                                   type(obj))
-    logDebug("utils.verifyType", text)
+    logNotSet(text, title="utils.verifyType")
     #raise errors.AssertionError(text)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -104,12 +107,25 @@ def toString(value, defaultIfNull=""):
   return v
 
 # --------------------------------------------------------------------------------------------------------------------
+def sanitizeString(value):
+  """ Attempt to convert string. returns defaultIfNull if null. """
+  verify(isinstance(value, basestring), "type mismatch: sanitizeString")
+  ret = ""
+  for t in ("utf-8", "latin1"):
+    try:
+      ret = str(value.decode(t, "replace"))
+      break
+    except UnicodeEncodeError:
+      pass
+  return ret
+
+# --------------------------------------------------------------------------------------------------------------------
 def printTiming(func):
   def wrapper(*arg):
       t1 = time.time()
       res = func(*arg)
       t2 = time.time()
-      logDebug(func.func_name, "{}({}) took {:.2} ms".format(",".join(map(str, arg)), (t2-t1) * 1000.0))
+      logNotSet("{}({}) took {:.2} ms".format(func.func_name, ",".join(map(str, arg)), (t2-t1) * 1000.0))
       return res
   return wrapper
 

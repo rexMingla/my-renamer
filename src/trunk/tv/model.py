@@ -6,6 +6,7 @@
 # Purpose of document: Model and other classes pertaining to the set of tv seasons to be modified in the workbench
 # --------------------------------------------------------------------------------------------------------------------
 import copy
+
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
@@ -74,7 +75,7 @@ class TreeItem(object):
         return QtGui.QBrush(QtCore.Qt.red)      
       elif column == Columns.COL_OLD_NAME:
         if role == QtCore.Qt.ToolTipRole:
-          return "Folder: {}".format(self.raw.inputFolder_)
+          return "Folder: {}".format(self.raw.inputFolder)
         else:        
           if isResolved:
             return "Season: {} #: <Unknown>".format(self.raw.seasonName)
@@ -156,7 +157,7 @@ class TvModel(QtCore.QAbstractItemModel):
       return None
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
-      return (item.raw, item.isMoveItemCandidate())
+      return (copy.copy(item.raw), item.isMoveItemCandidate())
     
     item = index.internalPointer()
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:

@@ -8,6 +8,7 @@
 from common import fileHelper
 from common import logModel
 from common import outputFormat
+from common import thread
 from common import utils
 from movie import movieHelper
 
@@ -23,7 +24,7 @@ class MovieExploreThread(renamerModule.ExploreThread):
     i = 0
     for i, file in enumerate(files):
       movie = movieHelper.MovieHelper.processFile(file)
-      self._onNewData(movie)
+      self._onData(movie)
       self._onProgress(int(100 * (i + 1) / len(files)))
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
@@ -33,7 +34,7 @@ class MovieExploreThread(renamerModule.ExploreThread):
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  "Search", 
                                  "Search complete. {} files processed in {}.".format(i + 1,
-                                                                                 renamerModule.prettyTime(self.startTime))))
+                                                                                 thread.prettyTime(self.startTime))))
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieRenamerModule(renamerModule.RenamerModule):

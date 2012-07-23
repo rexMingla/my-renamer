@@ -7,6 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 from common import fileHelper
 from common import outputFormat
+from common import thread
 from common import logModel
 from common import utils
 
@@ -22,19 +23,20 @@ class SeriesExploreThread(renamerModule.ExploreThread):
     folderCount = 0
     for i, d in enumerate(dirs):
       s = seasonHelper.SeasonHelper.getSeasonForFolder(d, self._ext)
-      self._onNewData(s)
+      if s:
+        self._onData(s)
+        folderCount += 1
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      "Search", 
                                      "User cancelled. {} of {} folders processed.".format(i, len(dirs))))              
         break
       self._onProgress(int(100 * (i + 1) / len(dirs)))
-      folderCount += 1
     
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  "Search", 
                                  "Search complete. {} folders processed in {}".format(folderCount, 
-                                                                                      renamerModule.prettyTime(self.startTime))))
+                                                                                      thread.prettyTime(self.startTime))))
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesRenamerModule(renamerModule.RenamerModule):
@@ -60,7 +62,7 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
     for season in seasons:
       outputFolder = formatSettings["folder"]
       if outputFolder == config.USE_SOURCE_DIRECTORY:
-        outputFolder = season.inputFolder_
+        outputFolder = season.inputFolder
       oFormat = outputFormat.OutputFormat(formatSettings["format"])
       for ep in season.moveItemCandidates:
         if ep.performMove:
