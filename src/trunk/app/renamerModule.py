@@ -5,56 +5,19 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Base module responsible for the renaming of movies and tv series
 # --------------------------------------------------------------------------------------------------------------------
-import time
-
 from PyQt4 import QtCore
+
+import collections
 
 from common import extension
 from common import fileHelper
 from common import logModel
 from common import moveItemActioner
 from common import utils
+from common import thread
 
 # --------------------------------------------------------------------------------------------------------------------
-def prettyTime(startTime):
-  secs = time.clock() - startTime
-  utils.verify(secs >= 0, "Can't be negative")
-  if secs < 60:
-    return "{:.1f} secs".format(secs)
-  mins = secs / 60
-  if mins < 60:
-    return "{:.1f} mins".format(mins)
-  hours = seconds / (60 * 60)
-  return "{:.1f} hours".format(hours)
-
-# --------------------------------------------------------------------------------------------------------------------
-class MyThread(QtCore.QThread):
-  progressSignal = QtCore.pyqtSignal(int)
-  logSignal = QtCore.pyqtSignal(object)
-  newDataSignal = QtCore.pyqtSignal(object)
-
-  def __init__(self):
-    super(MyThread, self).__init__()
-    self.userStopped = False
-    self.startTime = time.clock()
-  
-  def __del__(self):
-    self.join()
-    
-  def join(self):
-    self.userStopped = True
-    
-  def _onLog(self, msg):
-    self.logSignal.emit(msg)
-  
-  def _onProgress(self, percentage):
-    self.progressSignal.emit(percentage)
-    
-  def _onNewData(self, data):
-    self.newDataSignal.emit(data)
-
-# --------------------------------------------------------------------------------------------------------------------
-class RenameThread(MyThread):  
+class RenameThread(thread.WorkerThread):  
   def __init__(self, mode, actioner, items):
     super(RenameThread, self).__init__()
     utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
@@ -64,13 +27,11 @@ class RenameThread(MyThread):
     self._items = items
     
   def run(self):
-    results = {} #hist
+    results = collections.defaultdict(int) #hist
     for i, item in enumerate(self._items):
       source, dest = item
       res = self._actioner.performAction(source, dest)
       self._onLog(moveItemActioner.MoveItemActioner.resultToLogItem(res, source, dest))
-      if not res in results:
-        results[res] = 0  
       results[res] += 1
       self._onProgress(int(100 * (i + 1) / len(self._items)))
       if self.userStopped:
@@ -84,7 +45,7 @@ class RenameThread(MyThread):
                                                            moveItemActioner.MoveItemActioner.summaryText(results))))   
     
 # --------------------------------------------------------------------------------------------------------------------
-class ExploreThread(MyThread):
+class ExploreThread(thread.WorkerThread):
   def __init__(self, folder, isRecursive, ext):
     super(ExploreThread, self).__init__()
     utils.verifyType(folder, str)
@@ -214,7 +175,5 @@ class RenamerModule(QtCore.QObject):
     self._stopThread()  
     
   def _onDataFound(self, data):
-    utils.verify(data, "Must have data!")
-    if data:
-      self._model.addItem(data)    
+    self._model.addItem(data)    
 

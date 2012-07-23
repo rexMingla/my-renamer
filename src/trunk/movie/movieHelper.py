@@ -47,13 +47,13 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
 class Movie(object):
   def __init__(self, filename, title, part="", year="", subsFiles=None):
     super(Movie, self).__init__()
-    self.filename = str(filename)
+    self.filename = utils.toString(filename)
     self.inPath = os.path.dirname(self.filename)
     self.ext = os.path.splitext(self.filename)[1].lower()
-    self.title = str(title)
+    self.title = utils.toString(title)
     #self.subsFiles = subsFiles # not used atm
     #dynamic properties
-    self.year = str(year)
+    self.year = utils.toString(year)
     self.genres = []
     self.collision_number = None #marked if multiple entries have the same name
     self.part = "" #disc number
@@ -78,7 +78,7 @@ class MovieInfo(object):
     super(MovieInfo, self).__init__()
     self.title = title
     self.year = year
-    self.genres = genres or [] 
+    self.genres = genres or []
     
   def __copy__(self):
     return MovieInfo(self.title, self.year, list(self.genres))
@@ -90,7 +90,7 @@ class MovieHelper:
     files = []
     for dirName, _, filenames in os.walk(folder):
       for baseName in extensionFilter.filterFiles(sorted(filenames)):
-        files.append(fileHelper.FileHelper.joinPath(dirName, baseName))
+        files.append(utils.sanitizeString(fileHelper.FileHelper.joinPath(dirName, baseName)))
       if not isRecursive:
         break
     return files
@@ -110,7 +110,7 @@ class MovieHelper:
     basename = fileHelper.FileHelper.basename(filename)
     name, ext = os.path.splitext(basename)
     ext = ext.lower()
-    title, part, year, result = None, None, None, None
+    title, part, year, result = "", "", "", None
     if not os.path.exists(filename):
       result = Result.FILE_NOT_FOUND #somehow this happens
     elif os.path.getsize(filename) < _MIN_VIDEO_SIZE_BYTES:
@@ -121,16 +121,16 @@ class MovieHelper:
       assert(m)
       title = m.groupdict().get("title")
       year = m.groupdict().get("year")
-      part = None
+      part = ""
       partStr = basename
       moviesInFolder = len(glob.glob("{}/*{}".format(fileHelper.FileHelper.dirname(filename), ext)))
       if moviesInFolder < 3: #use the folder name if there aren't many files in the folder
         partStr = filename
-      pm = _PART_MATCH.match(filename)
+      pm = _PART_MATCH.match(partStr)
       if pm:
         part = pm.group(1)
         if part.isalpha():
-          part = str(" abcdef".index(part))
+          part = utils.toString(" abcdef".index(part))
       if title.find(" ") == -1:
         title = title.replace(".", " ")
       title = re.sub(r"[\(\[\{\s]+$", "", title)
@@ -147,11 +147,11 @@ class MovieHelper:
     info = MovieInfo(title, year)
     try:
       m = pymdb.Movie(title)
-      info.title = str(m.title or title)
-      info.year = str(m.year or year)
-      info.genres = m.genre or []
-    except (AttributeError, ValueError, pymdb.MovieError) as e:
-      utils.logWarning("Title: {} Error: {}".format(e, title), title="TVDB lookup")
+      info.title = utils.sanitizeString(m.title or title)
+      info.year = utils.sanitizeString(m.year or year)
+      info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
+    except (AttributeError, pymdb.MovieError) as e:
+      utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TVDB lookup")
     return info
   
   @staticmethod
@@ -175,6 +175,11 @@ class MovieHelper:
       ret = _CACHE[cacheKey]
     else:
       ret = MovieHelper.getInfoFromTvdb(title, year)
+      utils.logDebug("{} ({}".format(title, year))
+      import jsonpickle
+      f = open("test.txt", "w")
+      f.write(jsonpickle.encode({"test" : ret}))
+      f.close()      
       if ret:
         _CACHE[cacheKey] = copy.copy(ret)
     return ret 

@@ -10,6 +10,7 @@ import os
 import re
 
 import tvdb_api
+import tvdb_exceptions
 
 from common import extension, fileHelper, utils
 import episode
@@ -134,8 +135,8 @@ class SeasonHelper:
         ep = season[i]
         show = episode.DestinationEpisode(int(ep["episodenumber"]), str(ep["episodename"]))
         eps.addItem(show)
-    except:
-      utils.logDebug("Could not find season. Show: {} seasonNum: {}".format(show, seasonNum), 1)
+    except tvdb_exceptions.tvdb_exception as e:
+      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(show, seasonNum, e))
     return eps
     
   @staticmethod
@@ -183,12 +184,8 @@ class SeasonHelper:
   @staticmethod
   def getSeasonForFolder(folder, extensionFilter):
     seasonName, seriesNum = SeasonHelper.seasonFromFolderName(folder)
-    tempFiles = extensionFilter.filterFiles(os.listdir(folder))
-    files = []
-    for f in tempFiles:
-      filename = fileHelper.FileHelper.joinPath(folder, f) 
-      if fileHelper.FileHelper.isFile(filename):
-        files.append(filename)
+    tempFiles = [fileHelper.FileHelper.joinPath(folder, f) for f in extensionFilter.filterFiles(os.listdir(folder))]
+    files = [f for f in tempFiles if fileHelper.FileHelper.isFile(f)]
     s = None
     if not seasonName == episode.UNRESOLVED_NAME or len(files):
       sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
@@ -196,7 +193,7 @@ class SeasonHelper:
       if seasonName != episode.UNRESOLVED_NAME:
         destMap = SeasonHelper.getSeason(seasonName, seriesNum)
       s = season.Season(seasonName, seriesNum, sourceMap, destMap, folder)
-      s.inputFolder_ = folder
+      s.inputFolder = folder
     return s
     
   @staticmethod

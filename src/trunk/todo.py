@@ -19,10 +19,8 @@
 #    2011-05-04  2011-05-11      Feat          Package with py2exe
 #    2011-05-05  2011-05-05      Bug           Fix Filename resolution bug: "/Season 2/.track" -> epNum: 2 not -1 
 #    2011-05-05  2011-05-09      Impr          Thread out move/copy
-#    2011-05-05                  Impr          Reorganise library. ie. Remove qt from common module
 #    2011-05-05  2011-05-11      Bug           Transition from READY to MISSING_NEW is incorrect in work bench
 #    2011-05-05  2011-05-08      Impr          Add filename completer to file/folder dialogs
-#    2011-05-08                  Impr          Clean up EpisodeMap.setKeyForFilename
 #    2011-05-16  2012-07-20      Impr          Colour unresolved folders in list
 #    2011-05-16  2011-05-16      Impr          Select/deselect all option
 #    2011-05-16  2011-05-16      Impr          Tooltips
@@ -30,7 +28,7 @@
 #    2011-05-23                  Impr          Show preview in changeSeasonWidget denoting how many episode are in the season
 #    2011-05-23  2012-07-15      Impr          Remove dependence on Qt in serialization (removed serialization)
 
-#    v 0.2
+#    v 0.2 (really 0.9)
 #    2012-07-13  2012-07-15      Impr          Replace serialization with jsonpickle lib
 #    2012-07-13  2012-07-22      Impr          Save log to file
 #    2012-07-13  2012-07-22      Impr          Increase logging. timing, etc.
@@ -39,7 +37,13 @@
 #    2012-07-13  2012-07-15      Impr          Cache tv series lookups
 #    2012-07-13  2012-07-15      Impr          Show progress for folder search
 #    2012-07-13  2012-07-20      Impr          Integrate with movie code
-#    2012-07-15                  Impr          Fix setup.py
 
+#    v 0.3 (probably 0.99)
+#    2012-07-15                  Impr          Fix setup.py
+#    2012-07-23                  Impr          Support multiple genres. maybe create links?
+#    2012-07-23                  Impr          Rename subtitle files too
+#    2012-07-23                  Impr          Fix command line opts
+#    2012-07-23                  Impr          Clean up and optimise the filth. at least make it more pythonic.
+#    2012-07-23                  Impr          Support multiple IMDB and TVDB apis and allow use preference.
 
 

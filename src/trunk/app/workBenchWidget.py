@@ -38,7 +38,9 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     self._changeMovieWidget.accepted.connect(self._onChangeMovieFinished)    
     
     self.movieModel = movieModel.MovieModel(self)
-    self.movieView.setModel(self.movieModel)
+    self._sortModel = movieModel.SortFilterModel(self)
+    self._sortModel.setSourceModel(self.movieModel)    
+    self.movieView.setModel(self._sortModel)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_YEAR, QtGui.QHeaderView.Interactive)
@@ -47,8 +49,9 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_GENRE, QtGui.QHeaderView.Interactive)
     self.movieView.horizontalHeader().setStretchLastSection(True)
     self.movieView.verticalHeader().setDefaultSectionSize(20)
+    self.movieView.setSortingEnabled(True)
     self.movieModel.workBenchChangedSignal.connect(self._onWorkBenchChanged)
-    
+        
     self.yearCheckBox.toggled.connect(self.movieModel.requireYearChanged)
     self.genreCheckBox.toggled.connect(self.movieModel.requireGenreChanged)
     self.movieView.clicked.connect(self._onMovieClicked)
@@ -146,12 +149,14 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
       seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
       self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
 
-  def _onMovieClicked(self, modelIndex):
-    self._currentIndex = modelIndex
+  def _currentMovieModelIndex(self, index):
+    return self._sortModel.mapToSource(index)
       
-  def _editMovie(self, modelIndex):
-    self._currentIndex = modelIndex
-    movie = self.movieModel.data(modelIndex, movieModel.RAW_DATA_ROLE)
+  def _onMovieClicked(self, index):
+    self._currentIndex = self._currentMovieModelIndex(index)
+      
+  def _editMovie(self):
+    movie = self.movieModel.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
     utils.verifyType(movie, movieHelper.Movie)
     self._changeMovieWidget.setData(movie)
     self._changeMovieWidget.show()    
@@ -178,7 +183,7 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
   def _editSeason(self):
     seasonData, isMoveItemCandidate = self.tvModel.data(self._currentIndex, model.RAW_DATA_ROLE)
     if not isMoveItemCandidate: #maybe get the parent
-      self._changeSeasonWidget.setData(seasonData.inputFolder_, seasonData.seasonName, seasonData.seasonNum)
+      self._changeSeasonWidget.setData(seasonData)
       self._changeSeasonWidget.show()
   
   def _editEpisode(self):
@@ -194,8 +199,9 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     self.tvModel.setData(self._currentIndex, QtCore.QVariant(newKey), model.RAW_DATA_ROLE)
     
   def _onChangeSeasonFinished(self):
-    showName = self._changeSeasonWidget.showName()
-    seasonNum = self._changeSeasonWidget.seasonNumber()
+    return # todo:!
+    #showName = self._changeSeasonWidget.showName()
+    #seasonNum = self._changeSeasonWidget.seasonNumber()
     var = QtCore.QVariant.fromList([QtCore.QVariant(showName), QtCore.QVariant(seasonNum)])
     self.tvModel.setData(self._currentIndex, var, model.RAW_DATA_ROLE)
     

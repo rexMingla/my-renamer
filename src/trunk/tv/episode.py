@@ -9,6 +9,7 @@ import copy
 import os
 
 from common import utils
+
 import episode
 
 UNRESOLVED_KEY = -1
@@ -142,7 +143,6 @@ class EpisodeMap(object):
     ret = EpisodeMap()
     for key, value in self.matches.items():
       ret.matches[key] = copy.copy(value)
-    for item in self.unresolved:
-      ret.unresolved.append(copy.copy(item))
+    ret.unresolved = map(copy.copy, self.unresolved)
     return ret
       

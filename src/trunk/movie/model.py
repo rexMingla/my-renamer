@@ -16,6 +16,13 @@ from common import utils
 import movieHelper
 
 # --------------------------------------------------------------------------------------------------------------------
+class SortFilterModel(QtGui.QSortFilterProxyModel):
+  def lessThan(self, left, right):
+    leftData = self.sourceModel().data(left, QtCore.Qt.ToolTipRole) #use tooltip so that filename is col is full path
+    rightData = self.sourceModel().data(right, QtCore.Qt.ToolTipRole) 
+    return leftData < rightData   
+    
+# --------------------------------------------------------------------------------------------------------------------
 class Columns:
   """ Columns used in workbench model. """
   COL_OLD_NAME = 0
@@ -136,8 +143,6 @@ class MovieModel(QtCore.QAbstractTableModel):
       utils.verifyType(value, movieHelper.Movie)
       item = self._movies[index.row()]
       item.movie = copy.copy(value)
-      #item._updateStatusText(self._requireYear, self._requireGenre)
-      #self.dataChanged.emit(self.index(index.row(), 0), self.index(index.row(), Columns.NUM_COLS))
       if not self._bulkProcessing:
         self._updateStatusText()
     elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
