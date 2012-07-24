@@ -166,12 +166,12 @@ class MovieHelper:
     return _CACHE
 
   @staticmethod
-  def getItem(title, year):
+  def getItem(title, year, useCache=True):
     """ retrieves season from cache or tvdb if not present """
     cacheKey = "{} ({})".format(title, year)
     global _CACHE
     ret = None
-    if cacheKey in _CACHE:
+    if useCache and cacheKey in _CACHE:
       ret = _CACHE[cacheKey]
     else:
       ret = MovieHelper.getInfoFromTvdb(title, year)
