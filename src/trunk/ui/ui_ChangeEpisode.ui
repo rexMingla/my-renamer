@@ -33,7 +33,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="filenameLabel_">
+      <widget class="QLabel" name="filenameLabel">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
          <horstretch>0</horstretch>
@@ -65,14 +65,14 @@
          <number>4</number>
         </property>
         <item>
-         <widget class="QRadioButton" name="pickFromListRadio_">
+         <widget class="QRadioButton" name="pickFromListRadio">
           <property name="text">
            <string>Pick From List</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="episodeComboBox_">
+         <widget class="QComboBox" name="episodeComboBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -84,7 +84,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QRadioButton" name="ignoreRadio_">
+       <widget class="QRadioButton" name="ignoreRadio">
         <property name="text">
          <string>Ignore File</string>
         </property>
@@ -94,7 +94,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="buttonBox_">
+    <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -108,7 +108,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox_</sender>
+   <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>ChangeEpisode</receiver>
    <slot>accept()</slot>
@@ -124,7 +124,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>buttonBox_</sender>
+   <sender>buttonBox</sender>
    <signal>rejected()</signal>
    <receiver>ChangeEpisode</receiver>
    <slot>reject()</slot>

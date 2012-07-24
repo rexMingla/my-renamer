@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>238</width>
-    <height>359</height>
+    <width>486</width>
+    <height>339</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -111,6 +111,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="useCacheCheckBox">
+       <property name="text">
+        <string>use cached data</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -139,6 +149,12 @@
       </property>
       <item>
        <widget class="QTableWidget" name="episodeTable">
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
         <attribute name="horizontalHeaderHighlightSections">
          <bool>false</bool>
         </attribute>
@@ -146,7 +162,7 @@
          <bool>true</bool>
         </attribute>
         <attribute name="verticalHeaderHighlightSections">
-         <bool>false</bool>
+         <bool>true</bool>
         </attribute>
         <column>
          <property name="text">
@@ -271,6 +287,12 @@
      </item>
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>

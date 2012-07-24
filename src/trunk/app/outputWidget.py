@@ -100,7 +100,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
         color = "black"
       formattedText = "Example: {}".format(fileHelper.FileHelper.sanitizeFilename(formattedText))
       self.formatExampleLabel.setText(formattedText)
-      self.formatExampleLabel.setStyleSheet("QLabel { color: %s; }" % color)
+      self.formatExampleLabel.setStyleSheet("QLabel {{ color: {}; }}".format(color))
       
   def _showFolderSelectionDialog(self):
     folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.specificDirectoryEdit.text())

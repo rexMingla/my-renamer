@@ -68,7 +68,7 @@ class FileHelper:
     if not FileHelper.dirExists(d):
       try:
         os.makedirs(d)
-      except:
+      except os.error:
         ret = False
     return ret
   
@@ -112,7 +112,7 @@ class FileHelper:
     if FileHelper.fileExists(f):
       try:
         os.remove(f)
-      except:
+      except os.error:
         ret = False
     return ret
 
@@ -127,7 +127,7 @@ class FileHelper:
         try:
           shutil.move(source, dest)
           ret = True
-        except:
+        except shutil.Error:
           pass
     return ret
   
@@ -142,7 +142,7 @@ class FileHelper:
         try:
           shutil.copy2(source, dest)
           ret = True
-        except:
+        except shutil.Error:
           pass
     return ret
       

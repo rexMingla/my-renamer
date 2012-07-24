@@ -55,7 +55,7 @@ class SeasonHelper:
   def episodeMapFromIndex(index, files):
     utils.verifyType(files, list)
     epMap = episode.EpisodeMap()
-    epRegex = "^.{%d}(\\d\\d?).*\\.[^\\.]*$" % (index)
+    epRegex = "^.{{{}}}(\\d\\d?).*\\.[^\\.]*$".format(index)
     for f in files:
       epNum = episode.UNRESOLVED_KEY
       if index >= 0:
@@ -122,21 +122,20 @@ class SeasonHelper:
     return index
   
   @staticmethod
-  @utils.printTiming
-  def getDestinationEpisodeMapFromTVDB(show, seasonNum):
-    utils.verifyType(show, str)
+  def getDestinationEpisodeMapFromTVDB(showName, seasonNum):
+    utils.verifyType(showName, str)
     utils.verifyType(seasonNum, int)
     eps = episode.EpisodeMap()
     import timeit
     try:
       tv = tvdb_api.Tvdb()
-      season = tv[show][seasonNum]
+      season = tv[showName][seasonNum]
       for i in season:
         ep = season[i]
-        show = episode.DestinationEpisode(int(ep["episodenumber"]), str(ep["episodename"]))
+        show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"]))
         eps.addItem(show)
     except tvdb_exceptions.tvdb_exception as e:
-      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(show, seasonNum, e))
+      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(showName, seasonNum, e))
     return eps
     
   @staticmethod
@@ -208,12 +207,12 @@ class SeasonHelper:
     return _CACHE
   
   @staticmethod
-  def getSeason(seasonName, seriesNum):
+  def getSeason(seasonName, seriesNum, useCache=True):
     """ retrieves season from cache or tvdb if not present """
     cacheKey = "{} ({})".format(seasonName, seriesNum)
     global _CACHE
     ret = None
-    if cacheKey in _CACHE:
+    if useCache and cacheKey in _CACHE:
       ret = _CACHE[cacheKey]
     else:
       ret = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)

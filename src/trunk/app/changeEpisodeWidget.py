@@ -22,12 +22,12 @@ class ChangeEpisodeWidget(QtGui.QDialog):
   def __init__(self, parent=None):
     super(QtGui.QDialog, self).__init__(parent)
     self._ui = uic.loadUi("ui/ui_ChangeEpisode.ui", self)
-    self._ui.pickFromListRadio_.toggled.connect(self._ui.episodeComboBox_.setEnabled)
+    self.pickFromListRadio.toggled.connect(self.episodeComboBox.setEnabled)
     self.setWindowModality(True)
     
   def showEvent(self, event):
     """ protected Qt function """
-    utils.verify(self._ui.episodeComboBox_.count() > 0, "No items in list")
+    utils.verify(self.episodeComboBox.count() > 0, "No items in list")
     self.setMaximumHeight(self.sizeHint().height())
     self.setMinimumHeight(self.sizeHint().height())
   
@@ -35,29 +35,29 @@ class ChangeEpisodeWidget(QtGui.QDialog):
     """ Fill the dialog with the data prior to being shown """
     utils.verifyType(ssn, season.Season)
     utils.verifyType(ep, moveItemCandidate.MoveItemCandidate)
-    self._ui.episodeComboBox_.clear()
+    self.episodeComboBox.clear()
     moveItemCandidates = copy.copy(ssn.moveItemCandidates)
     moveItemCandidates = sorted(moveItemCandidates, key=lambda item: item.destination.epNum)
     for mi in moveItemCandidates:
-      if mi.destination.epName <> episode.UNRESOLVED_NAME:
+      if mi.destination.epName != episode.UNRESOLVED_NAME:
         displayName = "{}: {}".format(mi.destination.epNum, mi.destination.epName)
-        self._ui.episodeComboBox_.addItem(displayName, mi.destination.epNum)
-    index = self._ui.episodeComboBox_.findData(ep.source.epNum)
-    if index <> -1:
-      self._ui.pickFromListRadio_.setChecked(True)
-      self._ui.episodeComboBox_.setCurrentIndex(index)
+        self.episodeComboBox.addItem(displayName, mi.destination.epNum)
+    index = self.episodeComboBox.findData(ep.source.epNum)
+    if index != -1:
+      self.pickFromListRadio.setChecked(True)
+      self.episodeComboBox.setCurrentIndex(index)
     else:
-      self._ui.ignoreRadio_.setChecked(True)
-    self._ui.filenameLabel_.setText(ep.source.filename)
-    self._ui.episodeComboBox_.setEnabled(index <> -1)
+      self.ignoreRadio.setChecked(True)
+    self.filenameLabel.setText(ep.source.filename)
+    self.episodeComboBox.setEnabled(index != -1)
     
   def episodeNumber(self):
     """ 
     Returns the currently selected episode number from the dialog. 
     Returns episode.UNRESOLVED_KEY if non is selected. 
     """
-    if self._ui.ignoreRadio_.isChecked():
+    if self.ignoreRadio.isChecked():
       return episode.UNRESOLVED_KEY
     else:
-      return self._ui.episodeComboBox_.itemData(self._ui.episodeComboBox_.currentIndex())
+      return self.episodeComboBox.itemData(self.episodeComboBox.currentIndex())
    

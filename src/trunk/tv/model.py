@@ -157,7 +157,7 @@ class TvModel(QtCore.QAbstractItemModel):
       return None
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
-      return (copy.copy(item.raw), item.isMoveItemCandidate())
+      return (copy.copy(item.raw), item.isMoveItemCandidate()) #wow. this is confusing as hell..
     
     item = index.internalPointer()
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
@@ -194,13 +194,7 @@ class TvModel(QtCore.QAbstractItemModel):
         ret = True
       else:
         self.beginRemoveRows(index, 0, item.childCount() - 1)
-        params = value.toList()
-        utils.verify(len(params) == 2, "Name and value must be in list")
-        seasonName = utils.toString(params[0].toString())
-        seasonNum, isOk = params[1].toInt()
-        utils.verify(isOk, "cast value to int")
-        newDestMap = seasonHelper.SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seasonNum)
-        item.raw.updateDestination(seasonName, seasonNum, newDestMap)
+        item.raw = value
         item.childItems = []
         for mi in item.raw.moveItemCandidates:
           item.appendChild(TreeItem(mi, item))

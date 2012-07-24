@@ -5,6 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: An item that may be selected for move/copy action
 # --------------------------------------------------------------------------------------------------------------------
+import copy
+
 from common import utils
 import episode
 
@@ -46,7 +48,7 @@ class MoveItemCandidate:
     return ret
   
   def __copy__(self):
-    return MoveItemCandidate(copy.copy(self.source, copy(self.destination)))
+    return MoveItemCandidate(copy.copy(self.source), copy.copy(self.destination))
     
   def __eq__(self, other):
     return self.source == other.source and self.destination == other.destination
