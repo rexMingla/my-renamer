@@ -15,14 +15,13 @@ from movie import movieHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetMovieThread(thread.WorkerThread):
-  def __init__(self, title, year, useCachedValue):
+  def __init__(self, title, year):
     super(GetMovieThread, self).__init__()
     self._title = title
     self._year = year
-    self._useCachedValue = useCachedValue
 
   def run(self):
-    destMap = movieHelper.MovieHelper.getItem(self._title, self._year, self._useCachedValue)
+    destMap = movieHelper.MovieHelper.getItem(self._title, self._year)
     self._onData(destMap)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -59,9 +58,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.buttonBox.setEnabled(False)
     self.useCacheCheckBox.setEnabled(False)
     
-    self._workerThread = GetMovieThread(utils.toString(self.titleEdit.text()), 
-                                        self.yearEdit.text(),
-                                        self.useCacheCheckBox.isChecked())
+    self._workerThread = GetMovieThread(utils.toString(self.titleEdit.text()), self.yearEdit.text())
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
@@ -84,7 +81,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     if data:
       self.setData(data)  
     else:
-      pass # message
+      QtGui.QMessageBox.information("Nothing found", "No results found for search")
     
   def _onMovieInfo(self, item):
     if item:
