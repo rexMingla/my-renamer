@@ -18,7 +18,7 @@ def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
   ret = "??"
   try:
     ret = inspect.stack()[index][3]
-  except:
+  except IndexError:
     pass
   return ret
 
@@ -110,8 +110,8 @@ def toString(value, defaultIfNull=""):
 def sanitizeString(value):
   """ Attempt to convert string. returns defaultIfNull if null. """
   verify(isinstance(value, basestring), "type mismatch: sanitizeString")
-  ret = ""
-  for t in ("utf-8", "latin1"):
+  ret = "could not retrieve value"
+  for t in ("utf-8", "latin1", "ascii"):
     try:
       ret = str(value.decode(t, "replace"))
       break

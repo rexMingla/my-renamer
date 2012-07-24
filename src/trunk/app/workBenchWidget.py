@@ -88,6 +88,7 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
   
   def stopExploring(self):
     self.setEnabled(True)
+    self.editSeasonButton.setEnabled(False)
     if self.mode == interfaces.Mode.MOVIE_MODE:
       self.movieModel.buildUpdateFinished()
 
@@ -100,7 +101,7 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     
   def _setMovieMode(self):
     self._currentModel = self.movieModel
-    self._setOverallCheckedState(self._currentModel.overallCheckedState() != None)
+    self._setOverallCheckedState(not self._currentModel.overallCheckedState())
 
     self.movieButton.setVisible(False)  
     self.editSeasonButton.setVisible(False)
@@ -114,7 +115,7 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     
   def _setTvMode(self):
     self._currentModel = self.tvModel
-    self._setOverallCheckedState(self._currentModel.overallCheckedState() != None)
+    self._setOverallCheckedState(not self._currentModel.overallCheckedState())
 
     self.tvButton.setVisible(False)
     self.editMovieButton.setVisible(False)
@@ -135,7 +136,8 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
               "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()) }
     else:
       return {"cache" : seasonHelper.SeasonHelper.cache(),
-              "state" : utils.toString(self.tvView.header().saveState().toBase64()) }
+              "state" : utils.toString(self.tvView.header().saveState().toBase64()),
+              "use_cache" : self._changeSeasonWidget.useCacheCheckBox.isChecked() }
   
   def setConfig(self, data, mode=None):
     utils.verifyType(data, dict)
@@ -147,6 +149,7 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
       self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
     else:
       seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
+      self._changeSeasonWidget.useCacheCheckBox.setChecked(data.get("use_cache", True))
       self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
 
   def _currentMovieModelIndex(self, index):
@@ -169,22 +172,33 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
   def _onTvClicked(self, modelIndex):
     self._currentIndex = modelIndex
     moveItemCandidateData, isMoveItemCandidate = self.tvModel.data(modelIndex, model.RAW_DATA_ROLE)
-    self.editEpisodeButton.setEnabled(isMoveItemCandidate and moveItemCandidateData.canEdit)
-    self.editSeasonButton.setEnabled(not isMoveItemCandidate)
+    #filthy. check if parent has season info
+    canEditEp = (isMoveItemCandidate and moveItemCandidateData.canEdit and 
+                bool(self.tvModel.data(modelIndex.parent(), model.RAW_DATA_ROLE)[0].destination.matches))
+    self.editEpisodeButton.setEnabled(canEditEp)
+    self.editSeasonButton.setEnabled(True)
 
   def _onTvDoubleClicked(self, modelIndex):
     utils.verifyType(modelIndex, QtCore.QModelIndex)
     moveItemCandidateData, isMoveItemCandidate = self.tvModel.data(modelIndex, model.RAW_DATA_ROLE)
-    if isMoveItemCandidate and moveItemCandidateData.canEdit:
-      self._editEpisode()
+    if isMoveItemCandidate:
+      if (isMoveItemCandidate and moveItemCandidateData.canEdit and 
+          bool(self.tvModel.data(modelIndex.parent(), model.RAW_DATA_ROLE)[0].destination.matches)):
+        self._editEpisode()
+      else:
+        QtGui.QMessageBox.information(self, "Can not edit Episode", 
+                                      "Episodes can only be edited for existing files where Season data has been defined.")
     else:
       self._editSeason()
         
   def _editSeason(self):
     seasonData, isMoveItemCandidate = self.tvModel.data(self._currentIndex, model.RAW_DATA_ROLE)
-    if not isMoveItemCandidate: #maybe get the parent
-      self._changeSeasonWidget.setData(seasonData)
-      self._changeSeasonWidget.show()
+    if isMoveItemCandidate:
+      self._currentIndex  = self._currentIndex.parent()
+      seasonData, isMoveItemCandidate = self.tvModel.data(self._currentIndex, model.RAW_DATA_ROLE)
+    utils.verify(not isMoveItemCandidate, "Must be a movie to have gotten here!")
+    self._changeSeasonWidget.setData(seasonData)
+    self._changeSeasonWidget.show()
   
   def _editEpisode(self):
     moveItemCandidateData, isMoveItemCandidate = self.tvModel.data(self._currentIndex, model.RAW_DATA_ROLE)
@@ -197,13 +211,12 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
   def _onChangeEpisodeFinished(self):
     newKey = self._changeEpisodeWidget.episodeNumber()
     self.tvModel.setData(self._currentIndex, QtCore.QVariant(newKey), model.RAW_DATA_ROLE)
+    self.tvView.expand(self._currentIndex.parent())
     
   def _onChangeSeasonFinished(self):
-    return # todo:!
-    #showName = self._changeSeasonWidget.showName()
-    #seasonNum = self._changeSeasonWidget.seasonNumber()
-    var = QtCore.QVariant.fromList([QtCore.QVariant(showName), QtCore.QVariant(seasonNum)])
-    self.tvModel.setData(self._currentIndex, var, model.RAW_DATA_ROLE)
+    data = self._changeSeasonWidget.data()
+    self.tvModel.setData(self._currentIndex, data, model.RAW_DATA_ROLE)
+    self.tvView.expand(self._currentIndex)
     
   def _setOverallCheckedState(self, state):
     if self._currentModel:
@@ -214,7 +227,7 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     if not self._currentModel:
       return
     cs = self._currentModel.overallCheckedState()
-    self.selectAllCheckBox.setEnabled(cs != None)
+    self.selectAllCheckBox.setEnabled(not cs)
     if cs == None:
       cs = QtCore.Qt.Unchecked
     self.selectAllCheckBox.setCheckState(cs)
