@@ -11,6 +11,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import fileHelper
 from common import thread
 from common import utils
 from tv import episode
@@ -54,9 +55,6 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.episodeTable.cellClicked.connect(self._onSelectionChanged)
     self._onThreadFinished()
     
-  def __del__(self):
-    self._stopThread()
-
   def __del__(self):
     self._isShuttingDown = True
     self._stopThread()
@@ -145,7 +143,8 @@ class ChangeSeasonWidget(QtGui.QDialog):
     """ Fill the dialog with the data prior to being shown """
     utils.verifyType(s, season.Season)
     self._data = s
-    self.folderLabel.setText(s.inputFolder)
+    self.folderEdit.setText(fileHelper.FileHelper.basename(s.inputFolder))    
+    self.folderEdit.setToolTip(s.inputFolder)
     self.seasonEdit.setText(s.seasonName)
     self.seasonSpin.setValue(s.seasonNum)
     self._setEpisodeMap(s.destination)

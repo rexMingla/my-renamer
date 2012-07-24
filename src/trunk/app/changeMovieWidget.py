@@ -8,8 +8,22 @@
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import fileHelper
+from common import thread 
 from common import utils
 from movie import movieHelper
+
+# --------------------------------------------------------------------------------------------------------------------
+class GetMovieThread(thread.WorkerThread):
+  def __init__(self, title, year, useCachedValue):
+    super(GetMovieThread, self).__init__()
+    self._title = title
+    self._year = year
+    self._useCachedValue = useCachedValue
+
+  def run(self):
+    destMap = movieHelper.MovieHelper.getItem(self._title, self._year, self._useCachedValue)
+    self._onData(destMap)
 
 # --------------------------------------------------------------------------------------------------------------------
 class ChangeMovieWidget(QtGui.QDialog):
@@ -19,19 +33,72 @@ class ChangeMovieWidget(QtGui.QDialog):
   def __init__(self, parent=None):
     super(ChangeMovieWidget, self).__init__(parent)
     uic.loadUi("ui/ui_ChangeMovie.ui", self)
+    self._workerThread = None
     self.setWindowModality(True)
+    self.searchButton.clicked.connect(self._search)
+    self.stopButton.clicked.connect(self._stopThread)    
     self.partCheckBox.toggled.connect(self.partSpinBox.setEnabled)
+    self._onThreadFinished()
+    
+  def __del__(self):
+    self._isShuttingDown = True
+    self._stopThread()
     
   def showEvent(self, event):
     """ protected Qt function """
     self.setMaximumHeight(self.sizeHint().height())
-    self.setMinimumHeight(self.sizeHint().height())
+    self.setMinimumHeight(self.sizeHint().height()) 
+    
+  def _search(self):
+    if self._workerThread and self._workerThread.isRunning():
+      return
+    self.searchButton.setVisible(False)
+    self.stopButton.setEnabled(True)
+    self.stopButton.setVisible(True)
+    self.dataGroupBox.setEnabled(False)
+    self.buttonBox.setEnabled(False)
+    self.useCacheCheckBox.setEnabled(False)
+    
+    self._workerThread = GetMovieThread(utils.toString(self.titleEdit.text()), 
+                                        self.yearEdit.text(),
+                                        self.useCacheCheckBox.isChecked())
+    self._workerThread.newDataSignal.connect(self._onMovieInfo)
+    self._workerThread.finished.connect(self._onThreadFinished)
+    self._workerThread.terminated.connect(self._onThreadFinished)    
+    self._workerThread.start()  
+    
+  def _stopThread(self):
+    self.stopButton.setEnabled(False)
+    if self._workerThread:
+      self._workerThread.join()
+    
+  def _onThreadFinished(self):    
+    self.stopButton.setVisible(False)
+    self.searchButton.setVisible(True)
+    self.searchButton.setEnabled(True)
+    self.dataGroupBox.setEnabled(True)
+    self.buttonBox.setEnabled(True)
+    self.useCacheCheckBox.setEnabled(True)
+    
+  def _onDataFound(self, data):
+    if data:
+      self.setData(data)  
+    else:
+      pass # message
+    
+  def _onMovieInfo(self, item):
+    if item:
+      utils.verifyType(item, movieHelper.MovieInfo)
+      self.titleEdit.setText(item.title)
+      self.yearEdit.setText(item.year or "")
+      self.genreEdit.setText(item.genres[0] if item.genres else "")    
   
   def setData(self, item):
     """ Fill the dialog with the data prior to being shown """
     utils.verifyType(item, movieHelper.Movie)
     self.item = item  
-    self.filenameLabel.setText(item.filename)
+    self.filenameEdit.setText(fileHelper.FileHelper.basename(item.filename))
+    self.filenameEdit.setToolTip(item.filename)
     self.titleEdit.setText(item.title)
     self.yearEdit.setText(item.year or "")
     self.genreEdit.setText(item.genre())
