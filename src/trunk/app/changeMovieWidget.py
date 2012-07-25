@@ -56,7 +56,6 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.stopButton.setVisible(True)
     self.dataGroupBox.setEnabled(False)
     self.buttonBox.setEnabled(False)
-    self.useCacheCheckBox.setEnabled(False)
     
     self._workerThread = GetMovieThread(utils.toString(self.titleEdit.text()), self.yearEdit.text())
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
@@ -75,13 +74,12 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.searchButton.setEnabled(True)
     self.dataGroupBox.setEnabled(True)
     self.buttonBox.setEnabled(True)
-    self.useCacheCheckBox.setEnabled(True)
     
   def _onDataFound(self, data):
     if data:
       self.setData(data)  
     else:
-      QtGui.QMessageBox.information("Nothing found", "No results found for search")
+      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
     
   def _onMovieInfo(self, item):
     if item:

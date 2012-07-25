@@ -12,6 +12,8 @@ import time
 
 import errors
 
+UNDECODABLE_ERROR_MESSAGE = "<could not decode>"
+
 # --------------------------------------------------------------------------------------------------------------------
 def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
   """ Print the function name. Useful in debugging """
@@ -95,10 +97,10 @@ def dictCompare(left, right):
   return isSame   
 
 # --------------------------------------------------------------------------------------------------------------------
-def toString(value, defaultIfNull=""):
-  """ Attempt to convert string. returns defaultIfNull if null. """
-  verify(isinstance(defaultIfNull, str), "type mismatch: defaultIfNull") #will go recursive if we use verifyType() here
-  v = defaultIfNull
+def toString(value, defaultIfError=""):
+  """ Attempt to convert string. returns defaultIfError if null. """
+  verify(isinstance(defaultIfError, str), "type mismatch: defaultIfError") #will go recursive if we use verifyType() here
+  v = defaultIfError
   try:
     v = str(value)
   except ValueError:
@@ -107,10 +109,10 @@ def toString(value, defaultIfNull=""):
   return v
 
 # --------------------------------------------------------------------------------------------------------------------
-def sanitizeString(value):
+def sanitizeString(value, defaultIfError=UNDECODABLE_ERROR_MESSAGE):
   """ Attempt to convert string. returns defaultIfNull if null. """
   verify(isinstance(value, basestring), "type mismatch: sanitizeString")
-  ret = "could not retrieve value"
+  ret = defaultIfError
   for t in ("utf-8", "latin1", "ascii"):
     try:
       ret = str(value.decode(t, "replace"))
