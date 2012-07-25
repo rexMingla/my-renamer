@@ -29,9 +29,8 @@ class GetSeasonThread(thread.WorkerThread):
     self._useCacheValue = useCacheValue
 
   def run(self):
-    destMap = seasonHelper.SeasonHelper.getSeason(self._seasonName, self._seaonsonNum, self._useCacheValue)
-    if destMap:
-      self._onData(destMap)
+    ret = seasonHelper.SeasonHelper.getSeasonInfo(self._seasonName, self._seaonsonNum, self._useCacheValue)
+    self._onData(ret)
 
 # --------------------------------------------------------------------------------------------------------------------
 class ChangeSeasonWidget(QtGui.QDialog):
@@ -72,7 +71,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self._workerThread = GetSeasonThread(utils.toString(self.seasonEdit.text()), 
                                          self.seasonSpin.value(),
                                          self.useCacheCheckBox.isChecked())
-    self._workerThread.newDataSignal.connect(self._setEpisodeMap)
+    self._workerThread.newDataSignal.connect(self._onDataFound)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()  
@@ -91,8 +90,14 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.useCacheCheckBox.setEnabled(True)
     self._onSelectionChanged()
     
-  def _onDataFound(self, data):
-    self.setData(data)
+  def _onDataFound(self, ret):
+    seasonName, epMap = ret
+    if epMap.matches:
+      self.seasonEdit.setText(seasonName)
+      self._setEpisodeMap(epMap)
+    else:
+      self._setEpisodeMap(episode.EpisodeMap())
+      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
 
   def _onSelectionChanged(self):
     currentIndex = self.episodeTable.currentItem().row() if self.episodeTable.currentItem() else -1

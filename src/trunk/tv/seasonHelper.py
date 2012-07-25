@@ -122,21 +122,28 @@ class SeasonHelper:
     return index
   
   @staticmethod
-  def getDestinationEpisodeMapFromTVDB(showName, seasonNum):
+  def getSeasonInfoFromTVDB(showName, seasonNum):
     utils.verifyType(showName, str)
     utils.verifyType(seasonNum, int)
+    sanitizedShowName = showName
     eps = episode.EpisodeMap()
-    import timeit
     try:
       tv = tvdb_api.Tvdb()
       season = tv[showName][seasonNum]
+      sanitizedShowName = utils.sanitizeString(tv[showName]["seriesname"], "") or showName
       for i in season:
         ep = season[i]
         show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"]))
         eps.addItem(show)
     except tvdb_exceptions.tvdb_exception as e:
       utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(showName, seasonNum, e))
-    return eps
+    return sanitizedShowName, eps  
+  
+  @staticmethod
+  def getDestinationEpisodeMapFromTVDB(showName, seasonNum):
+    utils.verifyType(showName, str)
+    utils.verifyType(seasonNum, int)
+    return SeasonHelper.getSeasonInfoFromTVDB(showName, seasonNum)[1]
     
   @staticmethod
   def getSourceEpisodeMapFromFilenames(files):
@@ -190,7 +197,7 @@ class SeasonHelper:
       sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
       destMap = episode.EpisodeMap()
       if seasonName != episode.UNRESOLVED_NAME:
-        destMap = SeasonHelper.getSeason(seasonName, seriesNum)
+        seasonName, destMap = SeasonHelper.getSeasonInfo(seasonName, seriesNum)
       s = season.Season(seasonName, seriesNum, sourceMap, destMap, folder)
       s.inputFolder = folder
     return s
@@ -207,18 +214,18 @@ class SeasonHelper:
     return _CACHE
   
   @staticmethod
-  def getSeason(seasonName, seriesNum, useCache=True):
+  def getSeasonInfo(seasonName, seriesNum, useCache=True):
     """ retrieves season from cache or tvdb if not present """
     cacheKey = "{} ({})".format(seasonName, seriesNum)
     global _CACHE
-    ret = None
+    epMap = None
     if useCache and cacheKey in _CACHE:
-      ret = _CACHE[cacheKey]
+      epMap = _CACHE[cacheKey]
     else:
-      ret = SeasonHelper.getDestinationEpisodeMapFromTVDB(seasonName, seriesNum)
-      if ret != episode.EpisodeMap():
-        _CACHE[cacheKey] = copy.copy(ret)
+      seasonName, epMap = SeasonHelper.getSeasonInfoFromTVDB(seasonName, seriesNum)
+      if epMap != episode.EpisodeMap():
+        _CACHE[cacheKey] = copy.copy(epMap)
         newKey = "{} ({})".format(seasonName, seriesNum)
         if newKey != cacheKey:
-          _CACHE[newKey] = copy.copy(ret)
-    return ret    
+          _CACHE[newKey] = copy.copy(epMap)
+    return seasonName, epMap    
