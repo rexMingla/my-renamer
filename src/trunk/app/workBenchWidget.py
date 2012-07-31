@@ -9,6 +9,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import fileHelper
 from common import utils
 from movie import model as movieModel
 from movie import movieHelper
@@ -59,6 +60,8 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     self.movieView.clicked.connect(self._onMovieClicked)
     self.movieView.doubleClicked.connect(self._editMovie)
     self.editMovieButton.clicked.connect(self._editMovie)
+    self.launchButton.clicked.connect(self._launch)
+    self.openButton.clicked.connect(self._open)
 
     self.tvModel = model.TvModel(self)
     self.tvView.setModel(self.tvModel)
@@ -80,6 +83,8 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
 
     self.editEpisodeButton.setEnabled(False)
     self.editSeasonButton.setEnabled(False)
+    self.launchButton.setEnabled(False)
+    self.openButton.setEnabled(False)
     self.selectAllCheckBox.setEnabled(False)
     
     self._currentModel = None
@@ -87,6 +92,36 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     self.stopActioning()
     self.stopExploring()
     
+  def _launchLocation(self, location):
+    path = QtCore.QDir.toNativeSeparators(location)
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl("file:///{}".format(path)))    
+    
+  def _launch(self):
+    f = ""
+    if self.mode == interfaces.Mode.TV_MODE:
+      moveItemCandidateData, isMoveItemCandidate = self.tvModel.data(self._currentIndex, model.RAW_DATA_ROLE)
+      assert(isMoveItemCandidate)
+      f = moveItemCandidateData.source.filename
+    else:
+      assert(self.mode == interfaces.Mode.MOVIE_MODE)
+      movie = self.movieModel.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
+      f = movie.filename
+    self._launchLocation(f)
+  
+  def _open(self):
+    f = ""
+    if self.mode == interfaces.Mode.TV_MODE:
+      moveItemCandidateData, isMoveItemCandidate = self.tvModel.data(self._currentIndex, model.RAW_DATA_ROLE)
+      if isMoveItemCandidate:
+        f = fileHelper.FileHelper.dirname(moveItemCandidateData.source.filename)
+      else:
+        f = moveItemCandidateData.inputFolder
+    else:
+      assert(self.mode == interfaces.Mode.MOVIE_MODE)
+      movie = self.movieModel.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
+      f = fileHelper.FileHelper.dirname(movie.filename)
+    self._launchLocation(f)
+      
   def _enable(self):
     self.setEnabled(True)
         
@@ -167,6 +202,8 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     return self._sortModel.mapToSource(index)
       
   def _onMovieClicked(self, index):
+    self.launchButton.setEnabled(True)
+    self.openButton.setEnabled(True)    
     self._currentIndex = self._currentMovieModelIndex(index)
       
   def _editMovie(self):
@@ -188,6 +225,8 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
                 bool(self.tvModel.data(modelIndex.parent(), model.RAW_DATA_ROLE)[0].destination.matches))
     self.editEpisodeButton.setEnabled(canEditEp)
     self.editSeasonButton.setEnabled(True)
+    self.launchButton.setEnabled(isMoveItemCandidate)
+    self.openButton.setEnabled(True)    
 
   def _onTvDoubleClicked(self, modelIndex):
     utils.verifyType(modelIndex, QtCore.QModelIndex)
