@@ -6,6 +6,7 @@
 # Purpose of document: Helper functions associated with tv series 
 # --------------------------------------------------------------------------------------------------------------------
 import copy
+import itertools
 import os
 import re
 
@@ -18,37 +19,39 @@ import season
 
 _CACHE = {}
 
+_RE_FOLDER_MATCH_1 = re.compile(r"^.*{0}(?P<name>.*){0}(?:season|series)\s+(?P<num>\d+).*$".format(re.escape(os.sep)), 
+                                flags=re.IGNORECASE) #/show/season
+_RE_FOLDER_MATCH_2 = re.compile(r"^.*{}(?P<name>.*)\s+\-\s+(?:season|series)\s+(?P<num>\d+).*$".format(re.escape(os.sep)), 
+                                flags=re.IGNORECASE) #/show - season
+_RE_EPISODE_MATCH = re.compile(r"^.*?(?P<epNum>\d\d?)\D*\.[^\.]*$")
+
+
 class SeasonHelper:
   """ Collection of tv series functions. """
   @staticmethod
   def seasonFromFolderName(folder):
     utils.verifyType(folder, str)
-    folder = folder.replace("\\","/")
-    if folder.endswith("/"):
-      folder = folder[:-1]
-    splitFolderRegex = "^.*/(.*)/(?:season|series)\\s+(\\d+)$"     #/show/season
-    sameFolderRegex  = "^.*/(.*)\\s+\\-\\s+(?:season|series)\\s+(\\d+)$"  #/show - season
+    folder = fileHelper.FileHelper.sanitizeFilename(folder)
     show = episode.UNRESOLVED_NAME
     seriesNum = episode.UNRESOLVED_KEY
-    m = re.match(splitFolderRegex, folder, flags=re.IGNORECASE)
-    if not m:
-      m = re.match(sameFolderRegex, folder, flags=re.IGNORECASE)
-    if m:
-      show = m.group(1)
-      seriesNum = int(m.group(2))
+    for regex in (_RE_FOLDER_MATCH_1, _RE_FOLDER_MATCH_2):
+      m = regex.match(folder)
+      if m:
+        show = m.group("name")
+        seriesNum = int(m.group("num"))
+        break
     return show, seriesNum
 
   @staticmethod
   def episodeNumFromLastNumInFilename(ep):
     utils.verifyType(ep, str)
-    episodeRegex = "^.*?(\\d\\d?)\\D*\\.[^\\.]*$"
-    m = re.match(episodeRegex, fileHelper.FileHelper.basename(ep), flags=re.IGNORECASE)
     epNum = episode.UNRESOLVED_KEY
+    m = _RE_EPISODE_MATCH.match(fileHelper.FileHelper.basename(ep))
     if m:
       epNum = int(m.group(1))
-      utils.logDebug("episode: {} #:{}".format(ep, epNum), 1)
+      utils.logNotSet("episode: {} #:{}".format(ep, epNum), 1)
     else:
-      utils.logDebug("unresolved: {}".format(ep), 1)
+      utils.logNotSet("unresolved: {}".format(ep), 1)
     return epNum
 
   @staticmethod
@@ -79,21 +82,17 @@ class SeasonHelper:
     left = None
     right = None
     bestMatchIndex = -1
-    for i, fa in enumerate(files):
-      fileA = fileHelper.FileHelper.basename(fa)
-      for fb in files[i+1:]:
-        fileB = fileHelper.FileHelper.basename(fb)
-        minLen = len(fileA)
-        if len(fileB) < minLen:
-          minLen = len(fileB)
+    basenames = [fileHelper.FileHelper.basename(f) for f in files]
+    for i, fa in enumerate(basenames):
+      for fb in basenames[i+1:]:
         matchIndex = 0
-        for k in range(minLen):
-          if not fileA[k] == fileB[k]:
-            matchIndex = k
+        for i, vals in enumerate(itertools.izip(fa, fb)):
+          if vals[0] != vals[1]:
+            matchIndex = i
             break
         if matchIndex > bestMatchIndex:
-          left = fileA
-          right = fileB
+          left = fa
+          right = fb
           bestMatchIndex = matchIndex
     return left, right
     
@@ -102,18 +101,13 @@ class SeasonHelper:
     utils.verifyType(files, list)
     utils.verifyType(startIndex, int)
     index = -1
-    if len(files) > 1:
-      fileA, fileB = SeasonHelper._getMatchTestFiles(files)
-      if not fileA:
-        fileA = files[0]
-        fileB = files[1]
-      minLen = len(fileA)
-      if len(fileB) < minLen:
-        minLen = len(fileB)
-      for i in range(startIndex, minLen-1):
-        if fileA[i] == fileB[i]:
-          a = fileA[i:i+2]
-          b = fileB[i:i+2]
+    fileA, fileB = SeasonHelper._getMatchTestFiles(files)
+    if fileA and fileB:
+      partsA = [fileA[i:i+2] for i in range(len(fileA) - 1)]
+      partsB = [fileB[i:i+2] for i in range(len(fileB) - 1)]
+      for i, parts in enumerate(itertools.izip(partsA, partsB)):
+        a, b = parts
+        if a[0] == b[0]:
           if re.match("\\d{2}", a) and re.match("\\d{2}", b) and not a == b:
             index = i
             break
