@@ -94,7 +94,7 @@ class LogModel(QtCore.QAbstractTableModel):
       return QtCore.QVariant("Action")
     elif section == LogColumns.COL_MESSAGE: 
       return QtCore.QVariant("Message")
-  
+    
   def addItem(self, item):
     utils.verifyType(item, LogItem)
     utils.log(item.logLevel, msg=item.shortMessage, longMsg=item.longMessage, title=item.action)

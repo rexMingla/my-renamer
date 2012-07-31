@@ -61,7 +61,7 @@ class MovieRenamerModule(renamerModule.RenamerModule):
     for movie in movies:
       outputFolder = formatSettings["folder"]
       if outputFolder == config.USE_SOURCE_DIRECTORY:
-        outputFolder = movie.inPath
+        outputFolder = fileHelper.FileHelper.dirname(movie.filename)
       genre = movie.genre("unknown")
       im = outputFormat.MovieInputMap(fileHelper.FileHelper.replaceSeparators(movie.title), 
                                       movie.year, 

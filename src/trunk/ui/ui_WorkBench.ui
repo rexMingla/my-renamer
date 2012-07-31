@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>517</width>
-    <height>343</height>
+    <height>309</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,6 +54,42 @@
       <number>4</number>
      </property>
      <item>
+      <widget class="QPushButton" name="openButton">
+       <property name="toolTip">
+        <string>Open containing folder for selected item</string>
+       </property>
+       <property name="text">
+        <string>Open Location</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="launchButton">
+       <property name="toolTip">
+        <string>Launch file in default program</string>
+       </property>
+       <property name="text">
+        <string>Launch File</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QPushButton" name="editSeasonButton">
        <property name="toolTip">
         <string>Edit selected season</string>
@@ -75,6 +111,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="editMovieButton">
+       <property name="toolTip">
+        <string>Edit selected movie</string>
+       </property>
        <property name="text">
         <string>Edit Movie</string>
        </property>
@@ -86,7 +125,7 @@
         <bool>true</bool>
        </property>
        <property name="title">
-        <string>Mark as incomplete if:</string>
+        <string>Mark as invalid if:</string>
        </property>
        <property name="flat">
         <bool>false</bool>
@@ -100,6 +139,9 @@
         </property>
         <item>
          <widget class="QCheckBox" name="yearCheckBox">
+          <property name="toolTip">
+           <string>Check this if year data is required</string>
+          </property>
           <property name="text">
            <string>Missing Year</string>
           </property>
@@ -107,6 +149,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="genreCheckBox">
+          <property name="toolTip">
+           <string>Check this if genre data is required</string>
+          </property>
           <property name="text">
            <string>Missing Genre</string>
           </property>
@@ -143,6 +188,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="movieButton">
+       <property name="toolTip">
+        <string>Change to movie mode</string>
+       </property>
        <property name="text">
         <string>Switch to Movies</string>
        </property>
@@ -150,8 +198,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="tvButton">
+       <property name="toolTip">
+        <string>Change to TV mode</string>
+       </property>
        <property name="text">
-        <string>Switch to Tv Series</string>
+        <string>Switch to TV Series</string>
        </property>
       </widget>
      </item>

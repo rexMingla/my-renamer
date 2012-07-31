@@ -56,7 +56,7 @@ def logError(msg, longMsg="", title=""):
   log(logging.ERROR, msg, longMsg, title)
   
 def log(level, msg, longMsg="", title=""):
-  logging.getLogger("renamer").log(level, msg or longMsg, extra={"title":title})  
+  logging.getLogger("renamer").log(level, msg or longMsg, extra={"title":title}) 
 
 # --------------------------------------------------------------------------------------------------------------------
 def verify(test, message):

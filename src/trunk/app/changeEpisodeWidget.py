@@ -10,8 +10,9 @@ import copy
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from common import utils
+from common import fileHelper
 from common import outputFormat
+from common import utils
 from tv import episode
 from tv import moveItemCandidate
 from tv import season
@@ -48,7 +49,8 @@ class ChangeEpisodeWidget(QtGui.QDialog):
       self.episodeComboBox.setCurrentIndex(index)
     else:
       self.ignoreRadio.setChecked(True)
-    self.filenameLabel.setText(ep.source.filename)
+    self.filenameEdit.setText(fileHelper.FileHelper.basename(ep.source.filename))
+    self.filenameEdit.setToolTip(ep.source.filename)
     self.episodeComboBox.setEnabled(index != -1)
     
   def episodeNumber(self):

@@ -48,7 +48,6 @@ class Movie(object):
   def __init__(self, filename, title, part="", year="", subsFiles=None):
     super(Movie, self).__init__()
     self.filename = filename #utils.toString(filename)
-    self.inPath = os.path.dirname(self.filename)
     self.ext = os.path.splitext(self.filename)[1].lower()
     self.title = utils.toString(title)
     #self.subsFiles = subsFiles # not used atm

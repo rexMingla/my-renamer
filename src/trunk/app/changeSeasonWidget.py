@@ -52,6 +52,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.upButton.clicked.connect(self._moveUp)
     self.downButton.clicked.connect(self._moveDown)
     self.episodeTable.cellClicked.connect(self._onSelectionChanged)
+    self.indexSpinBox.valueChanged.connect(self._updateColumnHeaders)
     self._onThreadFinished()
     
   def __del__(self):
@@ -113,6 +114,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     nextItem.setText(currentItem.text())
     currentItem.setText(temp)
     self.episodeTable.setCurrentItem(nextItem)
+    self._onSelectionChanged()
     
   def _moveUp(self):
     currentItem = self.episodeTable.currentItem()
@@ -122,27 +124,30 @@ class ChangeSeasonWidget(QtGui.QDialog):
     nextItem.setText(currentItem.text())
     currentItem.setText(temp)
     self.episodeTable.setCurrentItem(nextItem)
+    self._onSelectionChanged()
   
   def _add(self):
-    lastKey = str("0")
-    rowCount = self.episodeTable.rowCount()
-    if rowCount:
-      lastKey = self.episodeTable.verticalHeaderItem(rowCount - 1).text()
+    currentItem = self.episodeTable.currentItem()
+    row = currentItem.row() if currentItem else self.episodeTable.rowCount()
     item = QtGui.QTableWidgetItem("")
-    item.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)
-    
-    self.episodeTable.setRowCount(rowCount + 1)
-    self.episodeTable.setVerticalHeaderItem(rowCount, QtGui.QTableWidgetItem(str(int(lastKey) + 1)))
-    self.episodeTable.setItem(rowCount, _TITLE_COLUMN, item)
+    item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)    
+    #self.episodeTable.setRowCount(self.episodeTable.rowCount() + 1)
+    self.episodeTable.insertRow(row)
+    self.episodeTable.setItem(row, _TITLE_COLUMN, item)
+    self._onSelectionChanged()
+    self._updateColumnHeaders()
   
   def _remove(self):
     currentItem = self.episodeTable.currentItem()
     utils.verify(currentItem, "Must have current item to get here")
-    startIndex = int(self.episodeTable.verticalHeaderItem(0).text())
     self.episodeTable.removeRow(currentItem.row())
+    self._onSelectionChanged()
+    self._updateColumnHeaders()
+      
+  def _updateColumnHeaders(self):
+    startIndex = self.indexSpinBox.value()
     rowCount = self.episodeTable.rowCount()
-    if rowCount:
-      self.episodeTable.setVerticalHeaderLabels(map(str, range(startIndex, rowCount + startIndex)))
+    self.episodeTable.setVerticalHeaderLabels(map(str, range(startIndex, rowCount + startIndex)))
   
   def setData(self, s):
     """ Fill the dialog with the data prior to being shown """
@@ -160,14 +165,14 @@ class ChangeSeasonWidget(QtGui.QDialog):
     
     minValue = min(map(int, episodeMap.matches) or [0])
     maxValue = max(map(int, episodeMap.matches) or [-1])
+    self.indexSpinBox.setValue(minValue)
     
     epNums = map(str, range(minValue, maxValue + 1))
     self.episodeTable.setRowCount(len(epNums))
-    self.episodeTable.setVerticalHeaderLabels(epNums)
     for i, epNum in enumerate(epNums):
       ep = episodeMap.matches.get(epNum, "")
       item = QtGui.QTableWidgetItem(ep.epName)
-      item.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)
+      item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)
       self.episodeTable.setItem(i, _TITLE_COLUMN, item)
     self._onSelectionChanged()
     
