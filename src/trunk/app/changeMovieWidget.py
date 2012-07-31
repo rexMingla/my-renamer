@@ -75,18 +75,14 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.dataGroupBox.setEnabled(True)
     self.buttonBox.setEnabled(True)
     
-  def _onDataFound(self, data):
-    if data:
-      self.setData(data)  
-    else:
-      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
-    
   def _onMovieInfo(self, item):
-    if item:
-      utils.verifyType(item, movieHelper.MovieInfo)
+    utils.verifyType(item, movieHelper.MovieInfo)
+    if item.title and item.year:
       self.titleEdit.setText(item.title)
       self.yearEdit.setText(item.year or "")
       self.genreEdit.setText(item.genres[0] if item.genres else "")    
+    else:
+      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
   
   def setData(self, item):
     """ Fill the dialog with the data prior to being shown """
@@ -98,7 +94,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.yearEdit.setText(item.year or "")
     self.genreEdit.setText(item.genre())
     if item.part:
-      self.partSpinBox.setValue(item.part)
+      self.partSpinBox.setValue(int(item.part))
     self.partCheckBox.setChecked(bool(item.part))
     
   def data(self):
@@ -111,7 +107,7 @@ class ChangeMovieWidget(QtGui.QDialog):
       genre = []
     self.item.genres = genre
     self.item.part = None
-    if self.partCheckBox:
+    if self.partCheckBox.isChecked():
       self.item.part = self.partSpinBox.value()
     return self.item
     
