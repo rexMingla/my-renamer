@@ -25,13 +25,14 @@ class SortFilterModel(QtGui.QSortFilterProxyModel):
 # --------------------------------------------------------------------------------------------------------------------
 class Columns:
   """ Columns used in workbench model. """
-  COL_OLD_NAME = 0
-  COL_NEW_NAME = 1
-  COL_YEAR     = 2
-  COL_GENRE    = 3
-  COL_STATUS   = 4
-  COL_DISC     = 5
-  NUM_COLS     = 6
+  COL_CHECK    = 0
+  COL_OLD_NAME = 1
+  COL_NEW_NAME = 2
+  COL_YEAR     = 3
+  COL_GENRE    = 4
+  COL_STATUS   = 5
+  COL_DISC     = 6
+  NUM_COLS     = 7
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
 
@@ -83,6 +84,8 @@ class MovieModel(QtCore.QAbstractTableModel):
   Represents 0 or more movies
   """
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
+  beginUpdateSignal = QtCore.pyqtSignal()
+  endUpdateSignal = QtCore.pyqtSignal()  
   
   def __init__(self, parent=None):
     super(MovieModel, self).__init__(parent)
@@ -103,7 +106,7 @@ class MovieModel(QtCore.QAbstractTableModel):
                     QtCore.Qt.ToolTipRole, 
                     QtCore.Qt.CheckStateRole, 
                     RAW_DATA_ROLE) or \
-      (role == QtCore.Qt.CheckStateRole and index.column() != Columns.COL_OLD_NAME):
+      (role == QtCore.Qt.CheckStateRole and index.column() != Columns.COL_CHECK):
       return None
     
     item = self._movies[index.row()]    
@@ -114,13 +117,14 @@ class MovieModel(QtCore.QAbstractTableModel):
     col = index.column()
     if role == QtCore.Qt.ForegroundRole and not item.isValid():
       return QtGui.QBrush(QtCore.Qt.red)      
-    if col == Columns.COL_OLD_NAME:
+    elif col == Columns.COL_CHECK:
       if role == QtCore.Qt.CheckStateRole:
         if item.performMove(): 
           return QtCore.Qt.Checked
         else:
           return QtCore.Qt.Unchecked
-      elif role == QtCore.Qt.DisplayRole:
+    elif col == Columns.COL_OLD_NAME:
+      if role == QtCore.Qt.DisplayRole:
         return fileHelper.FileHelper.basename(movie.filename)
       else:
         return movie.filename
@@ -145,7 +149,7 @@ class MovieModel(QtCore.QAbstractTableModel):
       item.movie = copy.copy(value)
       if not self._bulkProcessing:
         self._updateStatusText()
-    elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
+    elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_CHECK:
       item = self._movies[index.row()]
       item.wantToMove = value == QtCore.Qt.Checked
       self.dataChanged.emit(index, index)
@@ -161,9 +165,9 @@ class MovieModel(QtCore.QAbstractTableModel):
     movie = item.movie
     
     f = QtCore.Qt.ItemIsSelectable
-    if item.isValid() or index.column() != Columns.COL_OLD_NAME:
+    if item.isValid() or index.column() != Columns.COL_CHECK:
       f |= QtCore.Qt.ItemIsEnabled 
-    if index.column() == Columns.COL_OLD_NAME:
+    if index.column() == Columns.COL_CHECK:
       f |= QtCore.Qt.ItemIsUserCheckable
     return f
 
@@ -225,7 +229,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     if not isChecked:
       cs = QtCore.Qt.Unchecked
     for i, _ in enumerate(self._movies):
-      idx = self.index(i, Columns.COL_OLD_NAME)
+      idx = self.index(i, Columns.COL_CHECK)
       self.setData(idx, cs, QtCore.Qt.CheckStateRole) 
     self._bulkProcessing = False
     self._emitWorkBenchChanged()
@@ -238,6 +242,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     self.workBenchChangedSignal.emit(hasItems)
     
   def _updateStatusText(self):
+    self.beginUpdateSignal.emit()
     self._bulkProcessing = True
     for movie in self._movies:
       oldStatusText = movie.cachedStatusText
@@ -249,6 +254,7 @@ class MovieModel(QtCore.QAbstractTableModel):
         self.dataChanged.emit(self.index(movie.index, 0), self.index(movie.index, Columns.NUM_COLS))
     self._bulkProcessing = False
     self._emitWorkBenchChanged()
+    self.endUpdateSignal.emit()
     
   def buildUpdateFinished(self):
     self._updateStatusText()

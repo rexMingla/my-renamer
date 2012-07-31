@@ -41,6 +41,8 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     self._sortModel = movieModel.SortFilterModel(self)
     self._sortModel.setSourceModel(self.movieModel)    
     self.movieView.setModel(self._sortModel)
+    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_CHECK, QtGui.QHeaderView.Fixed)
+    self.movieView.horizontalHeader().resizeSection(movieModel.Columns.COL_CHECK, 25)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
     self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_YEAR, QtGui.QHeaderView.Interactive)
@@ -72,6 +74,9 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     self.tvView.doubleClicked.connect(self._onTvDoubleClicked)
     self.editEpisodeButton.clicked.connect(self._editEpisode)
     self.editSeasonButton.clicked.connect(self._editSeason)
+    
+    self.movieModel.beginUpdateSignal.connect(self._disable)
+    self.movieModel.endUpdateSignal.connect(self._enable)
 
     self.editEpisodeButton.setEnabled(False)
     self.editSeasonButton.setEnabled(False)
@@ -81,23 +86,29 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     
     self.stopActioning()
     self.stopExploring()
+    
+  def _enable(self):
+    self.setEnabled(True)
+        
+  def _disable(self):
+    self.setEnabled(False)
         
   def startExploring(self):
     self._currentModel.clear()
-    self.setEnabled(False)
+    self._disable()
   
   def stopExploring(self):
-    self.setEnabled(True)
+    self._enable()
     self.editSeasonButton.setEnabled(False)
     if self.mode == interfaces.Mode.MOVIE_MODE:
       self.movieModel.buildUpdateFinished()
 
   def startActioning(self):
-    self.setEnabled(False)
+    self._disable()
 
   def stopActioning(self):
     self.tvView.expandAll()    
-    self.setEnabled(True)
+    self._enable()
     
   def _setMovieMode(self):
     self._currentModel = self.movieModel
@@ -227,7 +238,7 @@ class WorkBenchWidget(interfaces.LoadWidgetInterface):
     if not self._currentModel:
       return
     cs = self._currentModel.overallCheckedState()
-    self.selectAllCheckBox.setEnabled(not cs)
+    self.selectAllCheckBox.setEnabled(not cs is None)
     if cs == None:
       cs = QtCore.Qt.Unchecked
     self.selectAllCheckBox.setCheckState(cs)

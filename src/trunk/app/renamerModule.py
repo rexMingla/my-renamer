@@ -41,7 +41,7 @@ class RenameThread(thread.WorkerThread):
         break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  self._mode,
-                                 "Duration: {}. {}".format(prettyTime(self.startTime),
+                                 "Duration: {}. {}".format(thread.prettyTime(self.startTime),
                                                            moveItemActioner.MoveItemActioner.summaryText(results))))   
     
 # --------------------------------------------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ class RenamerModule(QtCore.QObject):
   def setActive(self):
     for w in self._widgets:
       w.setMode(self.mode)    
-        
+                
     self._outputWidget.renameSignal.connect(self._rename)
     self._outputWidget.stopSignal.connect(self._stopRename)
     self._inputWidget.exploreSignal.connect(self._explore)
@@ -147,7 +147,7 @@ class RenamerModule(QtCore.QObject):
     for w in self._widgets:
       w.setMode(None)    
     self._stopThread() #TODO: maybe prompt? In future, run in background.
-    
+        
     try:
       self._outputWidget.renameSignal.disconnect(self._rename)
       self._outputWidget.stopSignal.disconnect(self._stopRename)

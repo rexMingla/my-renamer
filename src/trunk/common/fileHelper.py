@@ -15,7 +15,7 @@ import utils
 
 _VALID_BASENAME_CHARACTERS = "".join([string.ascii_letters,
                                       string.digits,
-                                      " !#$%&'()*+,-.\\/;=@[\]^_`{}~"]) # string.punctuation without :?"<>| 
+                                      " !#$%&'()+,-.\\/;=@[\]^_`{}~"]) # string.punctuation without :?"<>| 
 _RE_PATH = re.compile(r"(\\|/+)")
 _RE_INALID_FILENAME = re.compile("[^{}]".format(re.escape(_VALID_BASENAME_CHARACTERS)))
 _RE_VALID_FILENAME = re.compile("^([{}])*$".format(re.escape(_VALID_BASENAME_CHARACTERS)))
@@ -102,8 +102,12 @@ class FileHelper:
     utils.verifyType(replaceChar, str)
     drive, tail = FileHelper.splitDrive(f)
     tail = _RE_INALID_FILENAME.sub(replaceChar, tail)
-    ret = "".join([drive, tail]).replace("\\", os.sep).replace("/", os.sep)
+    ret = FileHelper.replaceSeparators("".join([drive, tail]), os.sep)
     return ret
+  
+  @staticmethod
+  def replaceSeparators(name, replaceChar="-"):
+    return name.replace("\\", replaceChar).replace("/", replaceChar)
   
   @staticmethod
   def removeFile(f):

@@ -47,7 +47,7 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
 class Movie(object):
   def __init__(self, filename, title, part="", year="", subsFiles=None):
     super(Movie, self).__init__()
-    self.filename = utils.toString(filename)
+    self.filename = filename #utils.toString(filename)
     self.inPath = os.path.dirname(self.filename)
     self.ext = os.path.splitext(self.filename)[1].lower()
     self.title = utils.toString(title)
@@ -56,7 +56,7 @@ class Movie(object):
     self.year = utils.toString(year)
     self.genres = []
     self.collision_number = None #marked if multiple entries have the same name
-    self.part = "" #disc number
+    self.part = part #disc number
     self.result = None #Filthy, just temporary   
     
   def genre(self, valueIfNull=""):
@@ -120,7 +120,7 @@ class MovieHelper:
       m = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)
       assert(m)
       title = m.groupdict().get("title")
-      year = m.groupdict().get("year")
+      year = m.groupdict().get("year", "")
       part = ""
       partStr = basename
       moviesInFolder = len(glob.glob("{}/*{}".format(fileHelper.FileHelper.dirname(filename), ext)))
@@ -131,10 +131,12 @@ class MovieHelper:
         part = pm.group(1)
         if part.isalpha():
           part = utils.toString(" abcdef".index(part))
+        else:
+          part = int(part)  
       if title.find(" ") == -1:
         title = title.replace(".", " ")
-      title = re.sub(r"[\(\[\{\s]+$", "", title)
-      title = re.sub(r"^\w+\-", "", title)
+      title = re.sub(r"[\(\[\{\s]+$", "", title) #clean end
+      title = re.sub(r"^\w+\-", "", title) #strip anywords at the start before a - character
       #todo: fix subs...
       #subsFiles = [change_ext(filename, e) for e in _SUBTITLE_EXTENSIONS
       #              if os.path.exists(change_ext(filename, e)) ]
@@ -168,7 +170,7 @@ class MovieHelper:
   @staticmethod
   def getItem(title, year, useCache=True):
     """ retrieves season from cache or tvdb if not present """
-    cacheKey = "{} ({})".format(title, year)
+    cacheKey = utils.sanitizeString("{} ({})".format(title, year))
     global _CACHE
     ret = None
     if useCache and cacheKey in _CACHE:
@@ -182,5 +184,8 @@ class MovieHelper:
       f.close()      
       if ret:
         _CACHE[cacheKey] = copy.copy(ret)
+        newKey = utils.sanitizeString("{} ({})".format(title, year))        
+        if cacheKey != newKey:
+          _CACHE[cacheKey] = copy.copy(ret)
     return ret 
     

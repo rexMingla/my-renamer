@@ -66,10 +66,10 @@ class SeriesRenamerModule(renamerModule.RenamerModule):
       oFormat = outputFormat.OutputFormat(formatSettings["format"])
       for ep in season.moveItemCandidates:
         if ep.performMove:
-          im = outputFormat.TvInputMap(season.seasonName, 
+          im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(season.seasonName), 
                                        season.seasonNum, 
                                        ep.destination.epNum, 
-                                       ep.destination.epName)
+                                       fileHelper.FileHelper.replaceSeparators(ep.destination.epName))
           newName = oFormat.outputToString(im, ep.source.extension_, outputFolder)
           newName = fileHelper.FileHelper.sanitizeFilename(newName)
           filenames.append((ep.source.filename, newName))

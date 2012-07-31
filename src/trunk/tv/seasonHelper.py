@@ -13,7 +13,10 @@ import re
 import tvdb_api
 import tvdb_exceptions
 
-from common import extension, fileHelper, utils
+from common import extension
+from common import fileHelper
+from common import utils
+
 import episode
 import season
 
@@ -31,7 +34,7 @@ class SeasonHelper:
   @staticmethod
   def seasonFromFolderName(folder):
     utils.verifyType(folder, str)
-    folder = fileHelper.FileHelper.sanitizeFilename(folder)
+    folder = fileHelper.FileHelper.replaceSeparators(folder, os.sep)
     show = episode.UNRESOLVED_NAME
     seriesNum = episode.UNRESOLVED_KEY
     for regex in (_RE_FOLDER_MATCH_1, _RE_FOLDER_MATCH_2):
@@ -160,7 +163,7 @@ class SeasonHelper:
     utils.verifyType(rootFolder, str)
     utils.verifyType(isRecursive, bool)
     folders = []
-    rootFolder = fileHelper.FileHelper.sanitizeFilename(rootFolder)
+    rootFolder = fileHelper.FileHelper.replaceSeparators(rootFolder, os.sep)
     if not isRecursive:
       if fileHelper.FileHelper.dirExists(rootFolder):
         folders.append(rootFolder)
@@ -210,7 +213,7 @@ class SeasonHelper:
   @staticmethod
   def getSeasonInfo(seasonName, seriesNum, useCache=True):
     """ retrieves season from cache or tvdb if not present """
-    cacheKey = "{} ({})".format(seasonName, seriesNum)
+    cacheKey = utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
     global _CACHE
     epMap = None
     if useCache and cacheKey in _CACHE:
@@ -219,7 +222,7 @@ class SeasonHelper:
       seasonName, epMap = SeasonHelper.getSeasonInfoFromTVDB(seasonName, seriesNum)
       if epMap != episode.EpisodeMap():
         _CACHE[cacheKey] = copy.copy(epMap)
-        newKey = "{} ({})".format(seasonName, seriesNum)
+        newKey = utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
         if newKey != cacheKey:
           _CACHE[newKey] = copy.copy(epMap)
     return seasonName, epMap    
