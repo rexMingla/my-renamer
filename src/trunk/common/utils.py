@@ -94,7 +94,7 @@ def dictCompare(left, right):
   verifyType(left, dict)
   verifyType(right, dict)
   isSame = len(left) == len(right) and all(l in right and left[l] == right[l] for l in left)
-  return isSame   
+  return isSame 
 
 # --------------------------------------------------------------------------------------------------------------------
 def toString(value, defaultIfError=""):
@@ -131,4 +131,11 @@ def printTiming(func):
       return res
   return wrapper
 
-
+# --------------------------------------------------------------------------------------------------------------------
+def bytesPrettyPrint(bytes_):
+  verify(bytes_ >= 0, "Can't be negative")
+  denoms = ["B", "KB", "MB", "GB"]
+  for i, denom in enumerate(denoms):
+    if bytes_ < pow(1000, i + 1):
+      break
+  return "{:.1f} {}".format(bytes_ / pow(1000, i), denom)

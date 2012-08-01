@@ -106,6 +106,10 @@ class FileHelper:
     return ret
   
   @staticmethod
+  def getFileSize(f):
+    return os.path.getsize(f) if FileHelper.fileExists(f) else 0
+  
+  @staticmethod
   def replaceSeparators(name, replaceChar="-"):
     return name.replace("\\", replaceChar).replace("/", replaceChar)
   

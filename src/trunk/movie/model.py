@@ -25,14 +25,15 @@ class SortFilterModel(QtGui.QSortFilterProxyModel):
 # --------------------------------------------------------------------------------------------------------------------
 class Columns:
   """ Columns used in workbench model. """
-  COL_CHECK    = 0
-  COL_OLD_NAME = 1
-  COL_NEW_NAME = 2
-  COL_YEAR     = 3
-  COL_GENRE    = 4
-  COL_STATUS   = 5
-  COL_DISC     = 6
-  NUM_COLS     = 7
+  COL_CHECK     = 0
+  COL_OLD_NAME  = 1
+  COL_NEW_NAME  = 2
+  COL_YEAR      = 3
+  COL_GENRE     = 4
+  COL_STATUS    = 5
+  COL_DISC      = 6
+  COL_FILE_SIZE = 7
+  NUM_COLS      = 8
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
 
@@ -138,6 +139,8 @@ class MovieModel(QtCore.QAbstractTableModel):
       return movie.year
     elif col == Columns.COL_GENRE:
       return movie.genre()
+    elif col == Columns.COL_FILE_SIZE:
+      return utils.bytesPrettyPrint(movie.fileSize) if movie.result == movieHelper.Result.FOUND else ""
        
   def setData(self, index, value, role):
     if not index.isValid() or role not in (QtCore.Qt.CheckStateRole, RAW_DATA_ROLE):
@@ -187,6 +190,8 @@ class MovieModel(QtCore.QAbstractTableModel):
       return "Year"
     elif section == Columns.COL_GENRE:
       return "Genre"
+    elif section == Columns.COL_FILE_SIZE:
+      return "File Size"
 
   def rowCount(self, parent):
     return len(self._movies)

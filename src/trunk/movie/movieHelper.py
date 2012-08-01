@@ -45,9 +45,10 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
 
 # --------------------------------------------------------------------------------------------------------------------
 class Movie(object):
-  def __init__(self, filename, title, part="", year="", subsFiles=None):
+  def __init__(self, filename, title, part="", year="", fileSize=0, subsFiles=None):
     super(Movie, self).__init__()
     self.filename = filename #utils.toString(filename)
+    self.fileSize = fileSize
     self.ext = os.path.splitext(self.filename)[1].lower()
     self.title = utils.toString(title)
     #self.subsFiles = subsFiles # not used atm
@@ -109,10 +110,11 @@ class MovieHelper:
     basename = fileHelper.FileHelper.basename(filename)
     name, ext = os.path.splitext(basename)
     ext = ext.lower()
+    size = fileHelper.FileHelper.getFileSize(filename) 
     title, part, year, result = "", "", "", None
     if not os.path.exists(filename):
       result = Result.FILE_NOT_FOUND #somehow this happens
-    elif os.path.getsize(filename) < _MIN_VIDEO_SIZE_BYTES:
+    elif size < _MIN_VIDEO_SIZE_BYTES:
       result = Result.SAMPLE_VIDEO
     else:
       result = Result.FOUND
@@ -139,7 +141,7 @@ class MovieHelper:
       #todo: fix subs...
       #subsFiles = [change_ext(filename, e) for e in _SUBTITLE_EXTENSIONS
       #              if os.path.exists(change_ext(filename, e)) ]
-    movie = Movie(filename, title, part, year)
+    movie = Movie(filename, title, part, year, size)
     movie.result = result
     return movie
     
