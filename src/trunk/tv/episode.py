@@ -9,6 +9,7 @@ import copy
 import os
 
 from common import utils
+from common import fileHelper
 
 import episode
 
@@ -23,6 +24,7 @@ class SourceEpisode(object):
     utils.verifyType(filename, str)
     self.epNum = epNum
     self.filename = filename
+    self.fileSize = fileHelper.FileHelper.getFileSize(filename)
     (dummy, self.extension_) = os.path.splitext(filename)
     
   @staticmethod

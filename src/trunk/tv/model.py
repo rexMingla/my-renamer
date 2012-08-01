@@ -20,11 +20,12 @@ import seasonHelper
 # --------------------------------------------------------------------------------------------------------------------
 class Columns:
   """ Columns used in workbench model. """
-  COL_OLD_NAME = 0
-  COL_NEW_NUM  = 1
-  COL_NEW_NAME = 2
-  COL_STATUS   = 3
-  NUM_COLS     = 4
+  COL_OLD_NAME  = 0
+  COL_NEW_NUM   = 1
+  COL_NEW_NAME  = 2
+  COL_STATUS    = 3
+  COL_FILE_SIZE = 4
+  NUM_COLS      = 5
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
   
@@ -69,6 +70,9 @@ class TreeItem(object):
         return self.raw.destination.epName
       elif column == Columns.COL_STATUS:
         return moveItemCandidate.MoveItemCandidate.typeStr(self.raw.matchType())
+      elif column == Columns.COL_FILE_SIZE:
+        if self.raw.matchType() != moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+          return utils.bytesPrettyPrint(self.raw.source.fileSize) 
     elif self.isSeason():
       isResolved = self.raw.seasonNum == episode.UNRESOLVED_KEY
       if role == QtCore.Qt.ForegroundRole and isResolved:
@@ -246,6 +250,8 @@ class TvModel(QtCore.QAbstractItemModel):
         return "New Name"
       elif section == Columns.COL_STATUS:
         return "Status"
+      elif section == Columns.COL_FILE_SIZE:
+        return "File Size"    
     return None
 
   def index(self, row, column, parent):
