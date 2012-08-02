@@ -178,10 +178,10 @@ class ChangeSeasonWidget(QtGui.QDialog):
     
   def data(self):    
     destMap = episode.EpisodeMap() 
+    startIndex = self.indexSpinBox.value()
     for i in range(self.episodeTable.rowCount()):
       epName = self.episodeTable.item(i, _TITLE_COLUMN)
-      destMap.addItem(episode.DestinationEpisode(int(self.episodeTable.verticalHeaderItem(i).text()), 
-                                                 utils.toString(epName.text())))
+      destMap.addItem(episode.DestinationEpisode(i + startIndex, utils.toString(epName.text())))
     self._data.updateDestination(utils.toString(self.seasonEdit.text()), self.seasonSpin.value(), destMap)
     return copy.copy(self._data)
 

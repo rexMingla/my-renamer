@@ -136,7 +136,7 @@ class EpisodeMap(object):
 
   def __eq__(self, other):
     utils.verifyType(other, EpisodeMap)
-    return utils.listCompare(self.unresolved, other.unresolved) and utils.dictCompare(self.matches, other.matches)
+    return other and utils.listCompare(self.unresolved, other.unresolved) and utils.dictCompare(self.matches, other.matches)
   
   def __str__(self):
     return "<EpisodeMap: #matches:{} #unresolved:{}>".format(len(self.matches), len(self.unresolved))
