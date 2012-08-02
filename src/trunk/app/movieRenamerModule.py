@@ -19,21 +19,24 @@ import outputWidget
 # --------------------------------------------------------------------------------------------------------------------
 class MovieExploreThread(renamerModule.ExploreThread):
   def run(self):
-    files = movieHelper.MovieHelper.getFiles(self._folder, self._ext, self._isRecursive)
+    files = movieHelper.MovieHelper.getFiles(self._folder, self._ext, self._isRecursive, self._minFileSize)
     hist = {} #result histogram
     i = 0
-    for i, file in enumerate(files):
-      movie = movieHelper.MovieHelper.processFile(file)
-      self._onData(movie)
+    count = 0
+    for i, f in enumerate(files):
+      movie = movieHelper.MovieHelper.processFile(f)
+      if movie:
+        count += 1
+        self._onData(movie)
       self._onProgress(int(100 * (i + 1) / len(files)))
       if self.userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      "Search", 
-                                     "User cancelled. {} of {} files processed.".format(i + 1, len(files))))              
+                                     "User cancelled. {} of {} files processed.".format(count, len(files))))              
         break
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  "Search", 
-                                 "Search complete. {} files processed in {}.".format(i + 1,
+                                 "Search complete. {} files processed in {}.".format(count,
                                                                                  thread.prettyTime(self.startTime))))
 
 # --------------------------------------------------------------------------------------------------------------------

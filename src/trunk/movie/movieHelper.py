@@ -20,7 +20,6 @@ from common import utils
 _PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
 _MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
 _MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
-_MIN_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 # 20 MB
 
 _CACHE = {}
 
@@ -45,10 +44,10 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
 
 # --------------------------------------------------------------------------------------------------------------------
 class Movie(object):
-  def __init__(self, filename, title, part="", year="", fileSize=0, subsFiles=None):
+  def __init__(self, filename, title, part="", year="", subsFiles=None):
     super(Movie, self).__init__()
     self.filename = filename #utils.toString(filename)
-    self.fileSize = fileSize
+    self.fileSize = fileHelper.FileHelper.getFileSize(filename)
     self.ext = os.path.splitext(self.filename)[1].lower()
     self.title = utils.toString(title)
     #self.subsFiles = subsFiles # not used atm
@@ -86,11 +85,13 @@ class MovieInfo(object):
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
   @staticmethod
-  def getFiles(folder, extensionFilter, isRecursive):
+  def getFiles(folder, extensionFilter, isRecursive, minFileSizeBytes):
     files = []
     for dirName, _, filenames in os.walk(folder):
       for baseName in extensionFilter.filterFiles(sorted(filenames)):
-        files.append(utils.sanitizeString(fileHelper.FileHelper.joinPath(dirName, baseName)))
+        name = fileHelper.FileHelper.joinPath(dirName, baseName)
+        if fileHelper.FileHelper.getFileSize(name) > minFileSizeBytes:
+          files.append(name)
       if not isRecursive:
         break
     return files
@@ -110,12 +111,9 @@ class MovieHelper:
     basename = fileHelper.FileHelper.basename(filename)
     name, ext = os.path.splitext(basename)
     ext = ext.lower()
-    size = fileHelper.FileHelper.getFileSize(filename) 
     title, part, year, result = "", "", "", None
     if not os.path.exists(filename):
       result = Result.FILE_NOT_FOUND #somehow this happens
-    elif size < _MIN_VIDEO_SIZE_BYTES:
-      result = Result.SAMPLE_VIDEO
     else:
       result = Result.FOUND
       m = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)

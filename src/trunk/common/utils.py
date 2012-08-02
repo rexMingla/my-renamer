@@ -8,11 +8,11 @@
 # --------------------------------------------------------------------------------------------------------------------
 import logging
 import inspect
+import re
 import time
 
-import errors
-
 UNDECODABLE_ERROR_MESSAGE = "<could not decode>"
+MIN_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 # 20 MB
 
 # --------------------------------------------------------------------------------------------------------------------
 def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
@@ -64,7 +64,7 @@ def verify(test, message):
   if not test:
     text = "assertion failed: {} stack: {}".format(message, stackFunctionName(2))
     logNotSet(text, title="utils.verify")
-    raise errors.AssertionError(text)      
+    raise AssertionError(text)      
       
 # --------------------------------------------------------------------------------------------------------------------
 def verifyType(obj, class_or_type_or_tuple, msg=""):
@@ -75,7 +75,7 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
                                                                   str(class_or_type_or_tuple), 
                                                                   type(obj))
     logNotSet(text, title="utils.verifyType")
-    #raise errors.AssertionError(text)
+    #raise AssertionError(text)
 
 # --------------------------------------------------------------------------------------------------------------------
 def listCompare(left, right):
@@ -132,10 +132,15 @@ def printTiming(func):
   return wrapper
 
 # --------------------------------------------------------------------------------------------------------------------
-def bytesPrettyPrint(bytes_):
-  verify(bytes_ >= 0, "Can't be negative")
+def stringToBytes(text):
+  m = re.match(r"^(\d+)\s+(B|KB|MB|GB)$", text, re.IGNORECASE)
+  return int(m.group(1)) * pow(1024, ["B", "KB", "MB", "GB"].index(m.group(2).upper())) if m else 0
+
+# --------------------------------------------------------------------------------------------------------------------
+def bytesToString(bytes_):
+  bytes_ = bytes_ if bytes_ > 0 else MIN_VIDEO_SIZE_BYTES
   denoms = ["B", "KB", "MB", "GB"]
   for i, denom in enumerate(denoms):
-    if bytes_ < pow(1000, i + 1):
+    if bytes_ < pow(1024, i + 1):
       break
-  return "{:.1f} {}".format(bytes_ / pow(1000, i), denom)
+  return "{:.1f} {}".format(bytes_ / pow(1024, i), denom)

@@ -140,7 +140,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     elif col == Columns.COL_GENRE:
       return movie.genre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesPrettyPrint(movie.fileSize) if movie.result == movieHelper.Result.FOUND else ""
+      return utils.bytesToString(movie.fileSize) if movie.result == movieHelper.Result.FOUND else ""
        
   def setData(self, index, value, role):
     if not index.isValid() or role not in (QtCore.Qt.CheckStateRole, RAW_DATA_ROLE):

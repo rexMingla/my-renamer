@@ -72,7 +72,7 @@ class TreeItem(object):
         return moveItemCandidate.MoveItemCandidate.typeStr(self.raw.matchType())
       elif column == Columns.COL_FILE_SIZE:
         if self.raw.matchType() != moveItemCandidate.MoveItemCandidate.MISSING_OLD:
-          return utils.bytesPrettyPrint(self.raw.source.fileSize) 
+          return utils.bytesToString(self.raw.source.fileSize) 
     elif self.isSeason():
       isResolved = self.raw.seasonNum == episode.UNRESOLVED_KEY
       if role == QtCore.Qt.ForegroundRole and isResolved:

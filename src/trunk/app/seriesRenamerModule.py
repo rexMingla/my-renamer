@@ -22,7 +22,7 @@ class SeriesExploreThread(renamerModule.ExploreThread):
     dirs = seasonHelper.SeasonHelper.getFolders(self._folder, self._isRecursive)
     folderCount = 0
     for i, d in enumerate(dirs):
-      s = seasonHelper.SeasonHelper.getSeasonForFolder(d, self._ext)
+      s = seasonHelper.SeasonHelper.getSeasonForFolder(d, self._ext, self._minFileSize)
       if s:
         self._onData(s)
         folderCount += 1

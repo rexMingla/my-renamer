@@ -46,14 +46,16 @@ class RenameThread(thread.WorkerThread):
     
 # --------------------------------------------------------------------------------------------------------------------
 class ExploreThread(thread.WorkerThread):
-  def __init__(self, folder, isRecursive, ext):
+  def __init__(self, folder, isRecursive, ext, minFileSize):
     super(ExploreThread, self).__init__()
     utils.verifyType(folder, str)
     utils.verifyType(isRecursive, bool)
     utils.verifyType(ext, extension.FileExtensions)
+    utils.verifyType(minFileSize, int)
     self._folder = folder
     self._isRecursive = isRecursive
     self._ext = ext
+    self._minFileSize = minFileSize
     
   def run(self):
     self._callback(self)
@@ -102,7 +104,8 @@ class RenamerModule(QtCore.QObject):
     data = self._inputWidget.getConfig()
     self._workerThread = self._exploreFunctor(data["folder"], 
                                               data["recursive"], 
-                                              extension.FileExtensions(data["extensions"].split()))
+                                              extension.FileExtensions(data["extensions"].split()),
+                                              data["minFileSizeBytes"])
     self._workerThread.progressSignal.connect(self._inputWidget.progressBar.setValue)
     self._workerThread.newDataSignal.connect(self._onDataFound)
     self._workerThread.logSignal.connect(self._logWidget.appendMessage)

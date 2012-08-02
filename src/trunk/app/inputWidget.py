@@ -73,13 +73,18 @@ class InputWidget(interfaces.LoadWidgetInterface):
   def getConfig(self):
     data = {"folder" : utils.toString(self.folderEdit.text()),
             "recursive" : self.isRecursiveCheckBox.isChecked(),
-            "extensions" : utils.toString(self.fileExtensionEdit.text()) }
+            "extensions" : utils.toString(self.fileExtensionEdit.text()),
+            "minFileSizeBytes" : 
+              utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText()))}
     return data
   
   def setConfig(self, data):
     self.folderEdit.setText(data.get("folder", ""))
     self.isRecursiveCheckBox.setChecked(data.get("recursive", True))
     self.fileExtensionEdit.setText(data.get("extensions", extension.DEFAULT_VIDEO_EXTENSIONS.extensionString()))
+    fileSize, fileDenom = utils.bytesToString(data.get("minFileSizeBytes", utils.MIN_VIDEO_SIZE_BYTES)).split()
+    self.sizeSpinBox.setValue(int(float(fileSize)))
+    self.sizeComboBox.setCurrentIndex(self.sizeComboBox.findText(fileDenom))
     
   
   

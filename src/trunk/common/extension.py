@@ -63,15 +63,11 @@ class FileExtensions:
     if self == ALL_FILE_EXTENSIONS:
       ret = files
     else:
-      for f in files:
-        for ext in self._extensions_:
-          if f.endswith(ext):
-            ret.append(f)
-            break
+      ret = [f for f in files for ext in self._extensions_ if f.lower().endswith(ext)]
     return ret
   
   def __eq__(self, other):
     return utils.listCompare(self._extensions_, other._extensions_)
 
 ALL_FILE_EXTENSIONS      = FileExtensions([FileExtensions.ALL_FILES])
-DEFAULT_VIDEO_EXTENSIONS = FileExtensions([".avi", ".divx", ".mkv", ".mpg", ".mp4", ".wmv"])
+DEFAULT_VIDEO_EXTENSIONS = FileExtensions([".avi", ".divx", ".mkv", ".mpg", ".mp4", ".vob", ".wmv"])
