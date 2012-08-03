@@ -139,7 +139,7 @@ class MovieHelper:
       #todo: fix subs...
       #subsFiles = [change_ext(filename, e) for e in _SUBTITLE_EXTENSIONS
       #              if os.path.exists(change_ext(filename, e)) ]
-    movie = Movie(filename, title, part, year, size)
+    movie = Movie(filename, title, part, year)
     movie.result = result
     return movie
     
