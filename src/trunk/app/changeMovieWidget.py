@@ -16,7 +16,7 @@ from movie import movieHelper
 # --------------------------------------------------------------------------------------------------------------------
 class GetMovieThread(thread.WorkerThread):
   def __init__(self, title, year):
-    super(GetMovieThread, self).__init__()
+    super(GetMovieThread, self).__init__("movie search")
     self._title = title
     self._year = year
 

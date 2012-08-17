@@ -23,7 +23,7 @@ _TITLE_COLUMN = 0
 # --------------------------------------------------------------------------------------------------------------------
 class GetSeasonThread(thread.WorkerThread):
   def __init__(self, seasonName, seasonNum, useCacheValue):
-    super(GetSeasonThread, self).__init__()
+    super(GetSeasonThread, self).__init__("tv search")
     self._seasonName = seasonName
     self._seaonsonNum = seasonNum
     self._useCacheValue = useCacheValue

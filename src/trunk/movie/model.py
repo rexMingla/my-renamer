@@ -59,12 +59,12 @@ class MovieItem(object):
             self.movie.genre() == other.movie.genre())
   
   def isValid(self):
-    return self.cachedStatusText == movieHelper.Result.as_string(movieHelper.Result.FOUND)
+    return self.cachedStatusText == movieHelper.Result.resultStr(movieHelper.Result.FOUND)
     
   def _updateStatusText(self, requireYear, requireGenre):
     ret = ""
     if self.movie.result != movieHelper.Result.FOUND:
-      ret = movieHelper.Result.as_string(self.movie.result)
+      ret = movieHelper.Result.resultStr(self.movie.result)
     elif self.isDuplicate:
       ret = "Duplicate"
     elif requireYear and not self.movie.year:
@@ -72,7 +72,7 @@ class MovieItem(object):
     elif requireGenre and not self.movie.genres:
       ret = _GENRE_REQUIRED
     else:
-      ret = movieHelper.Result.as_string(self.movie.result)
+      ret = movieHelper.Result.resultStr(self.movie.result)
     self.cachedStatusText = ret
     return ret
     
