@@ -12,10 +12,84 @@ from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
+
 import episode
 import moveItemCandidate
 import season
 import seasonHelper
+
+from PyQt4 import QtCore, QtGui
+
+# --------------------------------------------------------------------------------------------------------------------
+class SeriesDelegate(QtGui.QStyledItemDelegate):
+  def __init__ (self, parent = None):
+    QtGui.QStyledItemDelegate.__init__(self, parent)  
+    
+  def createEditor(self, parent, option, index):
+    model = index.model()
+    item, isMoveCandidate = model.data(index, RAW_DATA_ROLE)
+    if not isMoveCandidate:
+      return None
+
+    season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
+    if ep.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+      return None
+
+    if index.column() == Columns.COL_NEW_NAME:
+      comboBox = QtGui.QComboBox(parent)
+      
+      comboBox.addItem("Not set", episode.UNRESOLVED_KEY)
+      comboBox.insertSeparator(1)
+      # fill it
+
+      moveItemCandidates = copy.copy(season.moveItemCandidates)
+      moveItemCandidates = sorted(moveItemCandidates, key=lambda item: item.destination.epNum)
+      for mi in moveItemCandidates:
+        if mi.destination.epName != episode.UNRESOLVED_NAME:
+          displayName = "{}: {}".format(mi.destination.epNum, mi.destination.epName)
+          comboBox.addItem(displayName, mi.destination.epNum)
+      comboBox.setCurrentIndex(comboBox.findData(ep.source.epNum))
+      # Commit data to the model once the selection has changed
+      comboBox.currentIndexChanged.connect(self.commitEditorData)
+      return comboBox;
+
+  def setEditorData(self, editor, index):
+    model = index.model()
+    item, isMoveCandidate = model.data(index, RAW_DATA_ROLE)
+    if not isMoveCandidate:
+      return None
+
+    season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
+    if ep.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+      return None
+
+    if index.column() == Columns.COL_NEW_NAME:
+      editor.setCurrentIndex(editor.findData(ep.source.epNum))
+ 
+  def setModelData(self, editor, model, index):
+    print "::setModelData"
+    model = index.model()
+    item, isMoveCandidate = model.data(index, RAW_DATA_ROLE)
+    if not isMoveCandidate:
+      return None
+
+    season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
+    if ep.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+      return None
+
+    if index.column() == Columns.COL_NEW_NAME:
+      model.setData(index, editor.itemData(editor.currentIndex()), RAW_DATA_ROLE)
+
+  def commitEditorData(self):
+    editor = self.sender()
+    self.commitData.emit(editor)
+
+  def closeAndCommitEditorData(self):
+    self.commitEditorData()
+    self.closeEditor.emit(editor)
+    
+  def sizeHint(self, option, index):
+    return super(SeriesDelegate, self).sizeHint(option, index)  
 
 # --------------------------------------------------------------------------------------------------------------------
 class Columns:
@@ -28,7 +102,7 @@ class Columns:
   NUM_COLS      = 5
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
-  
+
 # --------------------------------------------------------------------------------------------------------------------
 class TreeItem(object):
   """ Individual item in the workbench model. The item may represent a season or a moveItemCandidate. """ 
@@ -52,7 +126,7 @@ class TreeItem(object):
   def data(self, column, role=QtCore.Qt.DisplayRole):
     if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, QtCore.Qt.ForegroundRole):
       return None
-    
+
     if self.isMoveItemCandidate():
       if role == QtCore.Qt.ForegroundRole and self.raw.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_NEW:
         return QtGui.QBrush(QtCore.Qt.red)       
@@ -86,7 +160,7 @@ class TreeItem(object):
           else:
             return "Season: {} #: {}".format(self.raw.seasonName, self.raw.seasonNum)
     return None
-    
+
   def parent(self):
     return self.parent
 
@@ -94,13 +168,13 @@ class TreeItem(object):
     if self.parent:
       return self.parent.childItems.index(self)
     return 0
-  
+
   def isSeason(self):
     return isinstance(self.raw, season.Season)
-  
+
   def isMoveItemCandidate(self):
     return isinstance(self.raw, moveItemCandidate.MoveItemCandidate)
-  
+
   def canCheck(self):
     if self.isMoveItemCandidate():
       return self.raw.canMove
@@ -109,7 +183,7 @@ class TreeItem(object):
         if c.canCheck():
           return True
       return False
-  
+
   def checkState(self):
     cs = QtCore.Qt.Checked
     if self.isMoveItemCandidate():
@@ -131,14 +205,14 @@ class TreeItem(object):
       else:
         cs = QtCore.Qt.PartiallyChecked
     return cs
-  
+
   def setCheckState(self, cs):
     isChecked = cs == QtCore.Qt.Checked
     if self.isMoveItemCandidate() and self.raw.canMove:
       self.raw.performMove = isChecked
     elif self.isSeason():
       self.raw.performMove = isChecked
-      
+
 # --------------------------------------------------------------------------------------------------------------------
 class TvModel(QtCore.QAbstractItemModel):
   """ 
@@ -146,13 +220,14 @@ class TvModel(QtCore.QAbstractItemModel):
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
   """
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
-  
+
   def __init__(self, parent=None):
     super(TvModel, self).__init__(parent)
     self._seasons = []
     self.rootItem = TreeItem(("",))
     self._bulkProcessing = False
-    
+    self._view = parent # hack
+
   def columnCount(self, parent):
     return Columns.NUM_COLS
 
@@ -162,7 +237,7 @@ class TvModel(QtCore.QAbstractItemModel):
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
       return (copy.copy(item.raw), item.isMoveItemCandidate()) #wow. this is confusing as hell..
-    
+
     item = index.internalPointer()
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       if item.canCheck():
@@ -170,19 +245,19 @@ class TvModel(QtCore.QAbstractItemModel):
       return None
     else:
       return item.data(index.column(), role)
-    
+
   def setData(self, index, value, role):
     if not index.isValid():
       return False
     ret = False
-    
+
     if role == RAW_DATA_ROLE:
       item = index.internalPointer()
       if item.isMoveItemCandidate():
         parentItem = item.parent
         parentIndex = index.parent()
         utils.verify(parentItem.isSeason(), "Not a Season")
-        
+
         self.beginRemoveRows(parentIndex, 0, parentItem.childCount() - 1)
         newSourceMap = copy.copy(parentItem.raw.source)
         intVal, isOk = value.toInt()
@@ -194,7 +269,13 @@ class TvModel(QtCore.QAbstractItemModel):
           parentItem.appendChild(TreeItem(mi, parentItem))
         self.endRemoveRows()
         self.beginInsertRows(parentIndex, 0, parentItem.childCount() - 1)
-        self.endInsertRows()              
+        #fix the check boxes
+        for j in range(len(parentItem.childItems)):
+          idx = self.index(j, Columns.COL_NEW_NAME, parentIndex)
+          self._view.closePersistentEditor(idx)
+          if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
+            self._view.openPersistentEditor(idx)
+        self.endInsertRows()            
         ret = True
       else:
         self.beginRemoveRows(index, 0, item.childCount() - 1)
@@ -204,6 +285,12 @@ class TvModel(QtCore.QAbstractItemModel):
           item.appendChild(TreeItem(mi, item))
         self.endRemoveRows()
         self.beginInsertRows(index, 0, item.childCount() - 1)
+        #fix the check boxes
+        for j in range(len(item.childItems)):
+          idx = self.index(j, Columns.COL_NEW_NAME, index)
+          self._view.closePersistentEditor(idx)
+          if item.canCheck() and item.childItems[j].raw.source.filename: #more filth...
+            self._view.openPersistentEditor(idx)
         self.endInsertRows()
         self.dataChanged.emit(index.sibling(index.row(), 0), index.sibling(index.row(), Columns.NUM_COLS-1))
         ret = True
@@ -226,16 +313,17 @@ class TvModel(QtCore.QAbstractItemModel):
   def flags(self, index):
     if not index.isValid():
       return QtCore.Qt.NoItemFlags
-    
+
     item = index.internalPointer()
-    
-    f = QtCore.Qt.ItemIsSelectable
+
+    f = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
     if item.canCheck():
       f |= QtCore.Qt.ItemIsEnabled 
       if index.column() == Columns.COL_OLD_NAME:
         f |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsTristate
-      #elif index.column() == Columns.COL_NEW_NAME and item.isMoveItemCandidate() and item.raw.oldName_:
-      #  f |= QtCore.Qt.ItemIsEditable
+      elif index.column() == Columns.COL_NEW_NAME and item.isMoveItemCandidate() and item.raw.canEdit and \
+        bool(self.data(index.parent(), RAW_DATA_ROLE)[0].destination.matches): #filth....
+        f |= QtCore.Qt.ItemIsEditable
     elif item.isMoveItemCandidate() and item.raw.canEdit:
       f |= QtCore.Qt.ItemIsEnabled       
     return f
@@ -291,7 +379,7 @@ class TvModel(QtCore.QAbstractItemModel):
       parent = parent.internalPointer()
 
     return parent.childCount()
-  
+
   def addItem(self, s):
     utils.verifyType(s, season.Season)
     #check if already in list
@@ -299,18 +387,18 @@ class TvModel(QtCore.QAbstractItemModel):
     ti = TreeItem(s, self.rootItem)
     self.rootItem.appendChild(ti)
     for mi in s.moveItemCandidates:
-      ti.appendChild(TreeItem(mi, ti))  
+      ti.appendChild(TreeItem(mi, ti))
     self._seasons.append(s)
     self.endInsertRows()      
     self._emitWorkBenchChanged()
-    
+
   def clear(self):
     self.beginResetModel()
     self._seasons = []
     self.rootItem = TreeItem(("",))  
     self.endResetModel()
     self._emitWorkBenchChanged()
-    
+
   def items(self):
     seasons = []
     for i in range(self.rootItem.childCount()):
@@ -320,19 +408,19 @@ class TvModel(QtCore.QAbstractItemModel):
       if seasonItem.checkState() != QtCore.Qt.Unchecked:
         seasons.append(raw)
     return seasons
-  
+
   def overallCheckedState(self):
     filteredItems = [i for i in self.rootItem.childItems if i.canCheck()]
     if not filteredItems:
       return None
-    
+
     ret = QtCore.Qt.PartiallyChecked
     if all(i.checkState() == QtCore.Qt.Checked for i in filteredItems):
       ret = QtCore.Qt.Checked 
     elif all(i.checkState() == QtCore.Qt.Unchecked for i in filteredItems):
       ret = QtCore.Qt.Unchecked 
     return ret
-  
+
   def setOverallCheckedState(self, isChecked):
     utils.verifyType(isChecked, bool)
     self._bulkProcessing = True
@@ -344,7 +432,7 @@ class TvModel(QtCore.QAbstractItemModel):
       self.setData(idx, cs, QtCore.Qt.CheckStateRole)
     self._bulkProcessing = False
     self._emitWorkBenchChanged()
-  
+
   def _hasMoveableItems(self):
     ret = False
     for i in range(self.rootItem.childCount()):
@@ -355,5 +443,21 @@ class TvModel(QtCore.QAbstractItemModel):
     return ret
 
   def _emitWorkBenchChanged(self):
+    if self._bulkProcessing:
+      return    
     hasItems = self._hasMoveableItems()
     self.workBenchChangedSignal.emit(hasItems)
+    
+  def beginUpdate(self):
+    self._bulkProcessing = True
+    
+  def endUpdate(self):
+    self._bulkProcessing = False      
+    for i in range(self.rootItem.childCount()):
+      parent = self.index(i, Columns.COL_OLD_NAME, QtCore.QModelIndex())
+      parentItem = self.rootItem.childItems[i]
+      for j in range(len(parentItem.childItems)):
+        index = self.index(j, Columns.COL_NEW_NAME, parent)
+        self._view.closePersistentEditor(index)
+        if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
+          self._view.openPersistentEditor(index) 

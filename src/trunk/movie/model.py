@@ -243,6 +243,8 @@ class MovieModel(QtCore.QAbstractTableModel):
     return any(m.performMove() for m in self._movies)
 
   def _emitWorkBenchChanged(self):
+    if self._bulkProcessing:
+      return
     hasItems = self._hasMoveableItems()
     self.workBenchChangedSignal.emit(hasItems)
     
@@ -261,7 +263,11 @@ class MovieModel(QtCore.QAbstractTableModel):
     self._emitWorkBenchChanged()
     self.endUpdateSignal.emit()
     
-  def buildUpdateFinished(self):
+  def beginUpdate(self):
+    self._bulkProcessing = True
+    
+  def endUpdate(self):
+    self._bulkProcessing = False    
     self._updateStatusText()
     
   def requireYearChanged(self, require):

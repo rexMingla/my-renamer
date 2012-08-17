@@ -84,7 +84,7 @@ class EpisodeMap(object):
     if item.epNum == UNRESOLVED_KEY:
       self.unresolved.append(item)
     elif epNumStr in self.matches:
-      utils.logDebug("key already exists: {}".format(item.epNum), 1)
+      utils.logNotSet("key already exists: {}".format(item.epNum), 1)
       tempItem = copy.copy(item)
       tempItem.epNum = UNRESOLVED_KEY
       self.unresolved.append(tempItem)

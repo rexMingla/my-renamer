@@ -23,8 +23,8 @@ class InputWidget(interfaces.LoadWidgetInterface):
   exploreSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
   
-  def __init__(self, parent=None):
-    super(InputWidget, self).__init__("input", parent)
+  def __init__(self, mode, parent=None):
+    super(InputWidget, self).__init__("input/{}".format(mode), parent)
     uic.loadUi("ui/ui_InputWidget.ui", self)
     self.folderButton_.clicked.connect(self._showFolderSelectionDialog)
     self.findButton.clicked.connect(self.exploreSignal)

@@ -22,11 +22,11 @@ class OutputWidget(interfaces.LoadWidgetInterface):
   renameSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
   
-  def __init__(self, parent=None):
-    super(OutputWidget, self).__init__("output", parent)
-    self._fmt = None
-    
+  def __init__(self, mode, fmt, parent=None):
+    super(OutputWidget, self).__init__("output/{}".format(mode), parent)    
     uic.loadUi("ui/ui_OutputWidget.ui", self)
+    
+    self._setOutputFormat(fmt)
     self.renameButton.clicked.connect(self.renameSignal)
     self.stopButton.clicked.connect(self.stopSignal)
         
@@ -44,13 +44,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     
     self.stopActioning()
     self.stopExploring()
-    
-  def _setMovieMode(self):
-    self._setOutputFormat(outputFormat.MovieInputMap)
-
-  def _setTvMode(self):
-    self._setOutputFormat(outputFormat.TvInputMap)
-  
+      
   def startExploring(self):
     self.renameButton.setEnabled(False)
   
@@ -72,36 +66,30 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     
   def _setOutputFormat(self, fmt):
     self._fmt = fmt
-    if not self._fmt:
-      self.formatEdit.setText("")
-      self.formatEdit.setToolTip("")
-      return
-    
     if self.formatEdit.text().isEmpty():
       self.formatEdit.setText(self._fmt.defaultFormatStr())
     #tooltip
     toolTipText = ["Available options:"]
     for key, value in self._fmt.exampleInputMap().data.items():
       toolTipText.append("%s -> %s" % (key, value))
-    if self.mode == interfaces.Mode.MOVIE_MODE:
-      toolTipText.append("Enclose text withihn %( )% to optionally include text is a value is present.")
+    if self._fmt.defaultFormatStr().find("%(") != -1:
+      toolTipText.append("Enclose text within %( )% to optionally include text is a value is present.")
       toolTipText.append("Eg. %( Disc <part> )%")
     self.formatEdit.setToolTip("\n".join(toolTipText))
     
     self._updatePreviewText()
     
   def _updatePreviewText(self):
-    if self._fmt:
-      text = utils.toString(self.formatEdit.text())
-      oFormat = outputFormat.OutputFormat(text)
-      formattedText = oFormat.outputToString(self._fmt.exampleInputMap())
-      color = "red"
-      if fileHelper.FileHelper.isValidFilename(formattedText):
-        color = "black"
-      formattedText = "Example: {}".format(fileHelper.FileHelper.sanitizeFilename(formattedText))
-      self.formatExampleLabel.setText(formattedText)
-      self.formatExampleLabel.setStyleSheet("QLabel {{ color: {}; }}".format(color))
-      
+    text = utils.toString(self.formatEdit.text())
+    oFormat = outputFormat.OutputFormat(text)
+    formattedText = oFormat.outputToString(self._fmt.exampleInputMap())
+    color = "red"
+    if fileHelper.FileHelper.isValidFilename(formattedText):
+      color = "black"
+    formattedText = "Example: {}".format(fileHelper.FileHelper.sanitizeFilename(formattedText))
+    self.formatExampleLabel.setText(formattedText)
+    self.formatExampleLabel.setStyleSheet("QLabel {{ color: {}; }}".format(color))
+    
   def _showFolderSelectionDialog(self):
     folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.specificDirectoryEdit.text())
     if folder:
@@ -118,11 +106,8 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     return data
   
   def setConfig(self, data):
-    fmt = data.get("format", "")
-    if not fmt and self._fmt:
-      fmt = self._fmt.defaultFormatStr()
-    if fmt:
-      self.formatEdit.setText(fmt)
+    fmt = data.get("format", self._fmt.defaultFormatStr())
+    self.formatEdit.setText(fmt)
     outputDir = data.get("folder", config.USE_SOURCE_DIRECTORY)
     if outputDir == config.USE_SOURCE_DIRECTORY:
       self.specificDirectoryEdit.setText("")
