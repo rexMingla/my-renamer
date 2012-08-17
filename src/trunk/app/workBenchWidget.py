@@ -235,7 +235,6 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self.movieView.horizontalHeader().setStretchLastSection(True)
     self.movieView.verticalHeader().setDefaultSectionSize(20)
     self.movieView.setSortingEnabled(True)
-    self._model.workBenchChangedSignal.connect(self._onWorkBenchChanged)
         
     self.yearCheckBox.toggled.connect(self._model.requireYearChanged)
     self.genreCheckBox.toggled.connect(self._model.requireGenreChanged)

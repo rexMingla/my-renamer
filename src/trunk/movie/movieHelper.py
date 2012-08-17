@@ -30,7 +30,7 @@ class Result:
   FOUND = 3
   
   @staticmethod 
-  def as_string(result):
+  def resultStr(result):
     if result == Result.SAMPLE_VIDEO:     return "Too small"
     elif result == Result.FILE_NOT_FOUND: return "File not found"
     elif result == Result.FOUND:          return "OK"

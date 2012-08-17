@@ -39,59 +39,24 @@ class ModuleFactory:
                              workBenchWidget.TvWorkBenchWidget(parent))
 
 # --------------------------------------------------------------------------------------------------------------------
-class RenameThread(thread.WorkerThread):  
-  def __init__(self, mode, actioner, items):
-    super(RenameThread, self).__init__()
-    utils.verifyType(actioner, moveItemActioner.MoveItemActioner)
+class RenameThread(thread.AdvancedWorkerThread):  
+  def __init__(self, name, actioner, items):
+    super(RenameThread, self).__init__(name)
     utils.verifyType(items, list)
-    self._mode = mode
     self._actioner = actioner
     self._items = items
     
-  def run(self):
-    results = collections.defaultdict(int) #hist
-    for i, item in enumerate(self._items):
-      source, dest = item
-      res = self._actioner.performAction(source, dest)
-      self._onLog(moveItemActioner.MoveItemActioner.resultToLogItem(res, source, dest))
-      results[res] += 1
-      self._onProgress(int(100 * (i + 1) / len(self._items)))
-      if self.userStopped:
-        self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                     self._mode,
-                                     "User cancelled. {} of {} files actioned.".format(i + 1, len(self._items))))              
-        break
-    self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                 self._mode,
-                                 "Duration: {}. {}".format(thread.prettyTime(self.startTime),
-                                                           moveItemActioner.MoveItemActioner.summaryText(results))))   
+  def _getAllItems(self):
+    return self._items
+   
+  def _applyToItem(self, item):
+    source, dest = item
+    ret = self._actioner.performAction(source, dest)
+    return item, ret
     
-# --------------------------------------------------------------------------------------------------------------------
-class ExploreThread(thread.WorkerThread):
-  def __init__(self, getExploreItemsCb, transformExploreItemCb):
-    super(ExploreThread, self).__init__()
-    self._getExploreItemsCb = getExploreItemsCb
-    self._transformExploreItemCb = transformExploreItemCb
-    
-  def run(self):
-    items = self._getExploreItemsCb()
-    itemCount = 0
-    for i, item in enumerate(items):
-      item = self._transformExploreItemCb(item)
-      if item:
-        self._onData(item)
-        itemCount += 1
-      if self.userStopped:
-        self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                     "Search",
-                                     "User cancelled. {} of {} items processed.".format(i, len(items))))              
-        break
-      self._onProgress(int(100.0 * (i + 1) / len(items)))
-    
-    self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
-                                 "Search", 
-                                 "Search complete. {} items processed in {}".format(itemCount, 
-                                                                                    thread.prettyTime(self.startTime))))    
+  def _formatLogItem(self, item, result):
+    source, dest = item
+    return moveItemActioner.MoveItemActioner.resultToLogItem(result, source, dest)   
     
 # --------------------------------------------------------------------------------------------------------------------
 class Mode:
@@ -142,7 +107,9 @@ class RenamerModule(QtCore.QObject):
       w.startExploring()
       
     data = self.inputWidget.getConfig()
-    self._workerThread = ExploreThread(self._getExploreItems, self._transformExploreItem)
+    self._workerThread = thread.AdvancedWorkerThread("explore {}".format(self.mode), 
+                                                     self._getExploreItems, 
+                                                     self._transformExploreItem)
     self._workerThread.progressSignal.connect(self.inputWidget.progressBar.setValue)
     self._workerThread.newDataSignal.connect(self.workBenchWidget.addItem)
     self._workerThread.logSignal.connect(self.logSignal)
@@ -164,11 +131,9 @@ class RenamerModule(QtCore.QObject):
       w.startActioning()
 
     formatSettings = self.outputWidget.getConfig()
-    filenames = self._getRenameItems()
-    actioner = moveItemActioner.MoveItemActioner(canOverwrite= not formatSettings["dontOverwrite"], \
-                                                 keepSource=not formatSettings["move"])    
-    self.outputWidget.startActioning()
-    self._workerThread = RenameThread(self.mode, actioner, filenames)
+    actioner = moveItemActioner.MoveItemActioner(canOverwrite=not formatSettings["move"], 
+                                                 keepSource=not formatSettings["dontOverwrite"])    
+    self._workerThread = RenameThread("rename {}".format(self.mode), actioner, self._getRenameItems())
     self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
     self._workerThread.logSignal.connect(self.logSignal)
     self._workerThread.finished.connect(self._onThreadFinished)
@@ -243,9 +208,13 @@ class TvRenamerModule(RenamerModule):
     
   def _transformExploreItem(self, item):
     data = self.inputWidget.getConfig()
-    return seasonHelper.SeasonHelper.getSeasonForFolder(item, 
-                                                        extension.FileExtensions(data["extensions"].split()), 
-                                                        data["minFileSizeBytes"]) 
+    season = seasonHelper.SeasonHelper.getSeasonForFolder(item, 
+                                                          extension.FileExtensions(data["extensions"].split()), 
+                                                          data["minFileSizeBytes"]) 
+    if season:
+      return season, season.resultStr(season.status)
+    else:
+      return None, None
   
 # --------------------------------------------------------------------------------------------------------------------
 class MovieRenamerModule(RenamerModule):
@@ -287,4 +256,9 @@ class MovieRenamerModule(RenamerModule):
                                             data["minFileSizeBytes"])
     
   def _transformExploreItem(self, item):
-    return movieHelper.MovieHelper.processFile(item) 
+    item = movieHelper.MovieHelper.processFile(item)
+    if item:
+      return item, movieHelper.Result.resultStr(item.result)
+    else:
+      return None, None
+    
