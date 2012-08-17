@@ -45,16 +45,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="autoClearCheckBox">
-       <property name="toolTip">
-        <string>Clear before every run</string>
-       </property>
-       <property name="text">
-        <string>Auto Clear</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

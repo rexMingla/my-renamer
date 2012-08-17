@@ -14,14 +14,9 @@ from PyQt4 import uic
 from common import utils
 
 import config
-
-import seriesRenamerModule
-import movieRenamerModule
-import inputWidget
 import logWidget
-import outputWidget
-import workBenchWidget
 import interfaces
+import renamerModule
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
@@ -33,45 +28,36 @@ class MainWindow(QtGui.QMainWindow):
     utils.initLogging(logFile)
     utils.logInfo("Starting app")    
     
-    self._inputWidget = inputWidget.InputWidget(parent)
-    self._workBenchWidget = workBenchWidget.WorkBenchWidget(parent)
-    self._outputWidget = outputWidget.OutputWidget(parent)
+    uic.loadUi("ui/ui_MainWindow.ui", self)        
+    self._inputStackWidget = QtGui.QStackedWidget(parent)
+    self._workBenchStackWidget = QtGui.QStackedWidget(parent)
+    self._outputStackWidget = QtGui.QStackedWidget(parent)
     self._logWidget = logWidget.LogWidget(parent)
-    self._workBenchWidget.workBenchChangedSignal.connect(self._outputWidget.renameButton.setEnabled)     
-    
-    self._seriesModule = seriesRenamerModule.SeriesRenamerModule(self._inputWidget, 
-                                                                self._outputWidget,
-                                                                self._workBenchWidget, 
-                                                                self._logWidget,
-                                                                self)
-    self._movieModule = movieRenamerModule.MovieRenamerModule(self._inputWidget, 
-                                                                self._outputWidget,
-                                                                self._workBenchWidget, 
-                                                                self._logWidget,
-                                                                self)
-    self._workBenchWidget.movieButton.clicked.connect(self._setMovieMode)
-    self._workBenchWidget.tvButton.clicked.connect(self._setTvMode)
-
-    uic.loadUi("ui/ui_MainWindow.ui", self)
-    self.setCentralWidget(self._workBenchWidget)
-            
-    #widgets
+    self.setCentralWidget(self._workBenchStackWidget)
+                
+    #dock widgets
     dockAreas = QtCore.Qt.AllDockWidgetAreas
-    self._addDockWidget(self._inputWidget, dockAreas, QtCore.Qt.TopDockWidgetArea, "Input Settings")
-    self._addDockWidget(self._outputWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
+    self._addDockWidget(self._inputStackWidget, dockAreas, QtCore.Qt.TopDockWidgetArea, "Input Settings")
+    self._addDockWidget(self._outputStackWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
     self._addDockWidget(self._logWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
+    self._modeToModule = {}
+    self._addModule(renamerModule.ModuleFactory.createModule(interfaces.Mode.MOVIE_MODE, self))
+    self._addModule(renamerModule.ModuleFactory.createModule(interfaces.Mode.TV_MODE, self))
     self._mode = None
-    self._modeToModule = {self._seriesModule.mode : self._seriesModule, 
-                          self._movieModule.mode : self._movieModule}
-    config.ConfigManager.loadConfig(self._configFile)
-    self.setConfig()
+    
+    self.loadConfig()
+    
+  def _addModule(self, module):
+    self._modeToModule[module.mode] = module
+    self._inputStackWidget.addWidget(module.inputWidget)
+    self._workBenchStackWidget.addWidget(module.workBenchWidget)
+    self._outputStackWidget.addWidget(module.outputWidget) 
+    module.workBenchWidget.modeChangedSignal.connect(self._setMode)    
+    module.logSignal.connect(self._logWidget.appendMessage)
     
   def closeEvent(self, event):
-    self.getConfig()
-    if self._mode:
-      self._modeToModule[self._mode].setInactive() #force save of data 
-    config.ConfigManager.saveConfig(self._configFile)
+    self.saveConfig()
     event.accept()
     
   def _addDockWidget(self, widget, areas, defaultArea, name):
@@ -93,20 +79,32 @@ class MainWindow(QtGui.QMainWindow):
     self._setMode(interfaces.Mode.TV_MODE)
 
   def _setMode(self, mode):
-    assert(mode in interfaces.VALID_MODES)
+    assert(mode in interfaces.VALID_MODES)    
     
     if self._mode:
       self._modeToModule[self._mode].setInactive()
+    
     self._mode = mode
-    self._modeToModule[self._mode].setActive()
+    module = self._modeToModule[self._mode]
+    self._inputStackWidget.setCurrentWidget(module.inputWidget)
+    self._workBenchStackWidget.setCurrentWidget(module.workBenchWidget)
+    self._outputStackWidget.setCurrentWidget(module.outputWidget)
+    module.setActive()
     self.setWindowTitle("Tv and Movie ReNamer [{} mode]".format(self._mode))
   
-  def getConfig(self):
+  def saveConfig(self):
     config.ConfigManager.setData("mw/geometry", utils.toString(self.saveGeometry().toBase64()))
     config.ConfigManager.setData("mw/windowState", utils.toString(self.saveState().toBase64()))
     config.ConfigManager.setData("mw/mode", self._mode)
     
-  def setConfig(self):
+    for m in self._modeToModule.values():
+      for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
+        config.ConfigManager.setData(w.configName, w.getConfig())
+    config.ConfigManager.saveConfig(self._configFile)
+    
+  def loadConfig(self):
+    config.ConfigManager.loadConfig(self._configFile)
+    
     geo = config.ConfigManager.getData("mw/geometry", "AdnQywABAAAAAACWAAAAlgAAA6sAAAKmAAAAngAAALQAAAOjAAACngAAAAAAAA==")
     state = config.ConfigManager.getData("mw/windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAMGAAAAafwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAADBgAAAOQA////AAAAAwAAAwYAAADa/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAdwAAAFIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAHcAAABKgAAAMkA////AAADBgAAAKAAAAAEAAAABAAAAAgAAAAI/AAAAAA=")
     self.restoreGeometry(QtCore.QByteArray.fromBase64(geo))
@@ -115,6 +113,10 @@ class MainWindow(QtGui.QMainWindow):
     if not mode in interfaces.VALID_MODES:
       mode = interfaces.Mode.TV_MODE
     self._setMode(mode)
+    
+    for m in self._modeToModule.values():
+      for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
+        w.setConfig(config.ConfigManager.getData(w.configName, {}))    
   
 
     
