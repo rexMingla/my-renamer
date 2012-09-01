@@ -22,11 +22,11 @@ class Season:
   
   @staticmethod
   def resultStr(result):
-    if   result == Season.OK:                return "OK"
-    elif result == Season.UNBALANCED_FILES:  return "UNBALANCED FILES"
-    elif result == Season.SEASON_NOT_FOUND:  return "SEASON NOT FOUND"
-    elif result == Season.SEASON_UNRESOLVED: return "SEASON UNRESOLVED"
-    else:                                    assert(false); return "UNKNOWN"
+    if   result == Season.OK:                return "Ok"
+    elif result == Season.UNBALANCED_FILES:  return "Partially resolved"
+    elif result == Season.SEASON_NOT_FOUND:  return "Season not found"
+    elif result == Season.SEASON_UNRESOLVED: return "Season unknown"
+    else:                                    assert(false); return "Unknown"
   
   def __str__(self):
     return "season: {} season #: {} status: {}".format(self.seasonName, self.seasonNum, Season.resultStr(self.status))

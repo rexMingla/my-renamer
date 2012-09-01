@@ -15,13 +15,14 @@ from movie import movieHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetMovieThread(thread.WorkerThread):
-  def __init__(self, title, year):
+  def __init__(self, title, year, useCacheValue):
     super(GetMovieThread, self).__init__("movie search")
     self._title = title
     self._year = year
+    self._useCacheValue = useCacheValue
 
   def run(self):
-    destMap = movieHelper.MovieHelper.getItem(self._title, self._year)
+    destMap = movieHelper.MovieHelper.getItem(self._title, self._year, self._useCacheValue)
     self._onData(destMap)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -57,7 +58,9 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.dataGroupBox.setEnabled(False)
     self.buttonBox.setEnabled(False)
     
-    self._workerThread = GetMovieThread(utils.toString(self.titleEdit.text()), self.yearEdit.text())
+    self._workerThread = GetMovieThread(utils.toString(self.titleEdit.text()), 
+                                        self.yearEdit.text(), 
+                                        self.useCacheCheckBox.isChecked())
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    

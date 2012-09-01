@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>517</width>
-    <height>309</height>
+    <height>506</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -87,6 +87,22 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="selectAllCheckBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Select/deselect all files</string>
+       </property>
+       <property name="text">
+        <string>Select / Deselect All</string>
+       </property>
+       <property name="tristate">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -144,7 +160,7 @@
      <item>
       <widget class="QGroupBox" name="movieGroupBox">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="title">
         <string>Mark as invalid if:</string>
@@ -183,19 +199,50 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="selectAllCheckBox">
+      <widget class="QGroupBox" name="duplicatesGroupBox">
        <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="toolTip">
-        <string>Select/deselect all files</string>
-       </property>
-       <property name="text">
-        <string>Select / Deselect All</string>
-       </property>
-       <property name="tristate">
         <bool>true</bool>
        </property>
+       <property name="title">
+        <string>Duplicates:</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="spacing">
+         <number>4</number>
+        </property>
+        <property name="margin">
+         <number>4</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="autoScanCheckBox">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="toolTip">
+           <string>Automatically check for duplicate movies after each change. This may take a long time.</string>
+          </property>
+          <property name="text">
+           <string>Auto Scan</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="scanButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Scan and mark all duplicate movies</string>
+          </property>
+          <property name="text">
+           <string>Rescan</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>

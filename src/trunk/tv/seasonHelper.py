@@ -146,16 +146,23 @@ class SeasonHelper:
   @staticmethod
   def getSeasonInfo(seasonName, seriesNum, useCache=True):
     """ retrieves season from cache or tvdb if not present """
-    cacheKey = utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
     global _CACHE
     epMap = None
+    
+    cacheKey = utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
     if useCache and cacheKey in _CACHE:
       epMap = _CACHE[cacheKey]
     else:
       seasonName, epMap = SeasonHelper.getSeasonInfoFromTVDB(seasonName, seriesNum)
       if epMap != episode.EpisodeMap():
-        _CACHE[cacheKey] = copy.copy(epMap)
         newKey = utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
-        if newKey != cacheKey:
-          _CACHE[newKey] = copy.copy(epMap)
+        cachedEpMap = copy.copy(epMap)
+        _CACHE[newKey] = cachedEpMap
+        _CACHE[cacheKey] = cachedEpMap
     return seasonName, epMap    
+  
+  @staticmethod
+  def setSeasonInfo(seasonName, seriesNum, item): 
+    utils.verifyType(item, episode.EpisodeMap)
+    global _CACHE
+    _CACHE[utils.sanitizeString("{} ({})".format(seasonName, seriesNum))] = item  

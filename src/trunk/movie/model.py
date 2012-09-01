@@ -18,9 +18,14 @@ import movieHelper
 # --------------------------------------------------------------------------------------------------------------------
 class SortFilterModel(QtGui.QSortFilterProxyModel):
   def lessThan(self, left, right):
-    leftData = self.sourceModel().data(left, QtCore.Qt.ToolTipRole) #use tooltip so that filename is col is full path
-    rightData = self.sourceModel().data(right, QtCore.Qt.ToolTipRole) 
-    return leftData < rightData   
+    if left.column() == Columns.COL_FILE_SIZE:
+      leftData = self.sourceModel().data(left, RAW_DATA_ROLE).fileSize 
+      rightData = self.sourceModel().data(right, RAW_DATA_ROLE).fileSize
+      return leftData < rightData   
+    else:
+      leftData = self.sourceModel().data(left, QtCore.Qt.ToolTipRole) #use tooltip so that filename is col is full path
+      rightData = self.sourceModel().data(right, QtCore.Qt.ToolTipRole) 
+      return leftData < rightData   
     
 # --------------------------------------------------------------------------------------------------------------------
 class Columns:
@@ -94,6 +99,8 @@ class MovieModel(QtCore.QAbstractTableModel):
     self._bulkProcessing = False
     self._requireYear = True
     self._requireGenre = True
+    self._isAutoRescan = False 
+    self._isDirty = False #may want this for later. ie. prevent save if rescan hasnt been performed for files.
     
   def columnCount(self, parent):
     return Columns.NUM_COLS
@@ -149,15 +156,19 @@ class MovieModel(QtCore.QAbstractTableModel):
     if role == RAW_DATA_ROLE:
       utils.verifyType(value, movieHelper.Movie)
       item = self._movies[index.row()]
-      item.movie = copy.copy(value)
-      if not self._bulkProcessing:
-        self._updateStatusText()
+      newMovie = copy.copy(value)
+      if item.movie != newMovie:
+        item.movie = newMovie
+        if not self._bulkProcessing and self._isAutoRescan:
+          self._updateStatusText()
+        else:
+          self._isDirty = True
     elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_CHECK:
       item = self._movies[index.row()]
       item.wantToMove = value == QtCore.Qt.Checked
       self.dataChanged.emit(index, index)
-      if not self._bulkProcessing:
-        self._emitWorkBenchChanged()    
+    if not self._bulkProcessing:
+      self._emitWorkBenchChanged()
     return True
     
   def flags(self, index):
@@ -200,7 +211,8 @@ class MovieModel(QtCore.QAbstractTableModel):
     self.beginResetModel()
     self._movies = []
     self.endResetModel()
-    self._emitWorkBenchChanged()
+    if not self._bulkProcessing:
+      self._emitWorkBenchChanged()    
   
   def addItem(self, m):
     utils.verifyType(m, movieHelper.Movie)
@@ -209,8 +221,10 @@ class MovieModel(QtCore.QAbstractTableModel):
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
     item = MovieItem(m, count)
     self._movies.append(item)
+    self._isDirty = True
     self.endInsertRows()     
-    self._emitWorkBenchChanged()
+    if not self._bulkProcessing:
+      self._emitWorkBenchChanged()    
   
   def items(self):
     return [i.movie for i in self._movies if i.performMove()]
@@ -229,46 +243,44 @@ class MovieModel(QtCore.QAbstractTableModel):
   
   def setOverallCheckedState(self, isChecked):
     utils.verifyType(isChecked, bool)
-    self._bulkProcessing = True
+    self.beginUpdate()
     cs = QtCore.Qt.Checked
     if not isChecked:
       cs = QtCore.Qt.Unchecked
     for i, _ in enumerate(self._movies):
       idx = self.index(i, Columns.COL_CHECK)
       self.setData(idx, cs, QtCore.Qt.CheckStateRole) 
-    self._bulkProcessing = False
+    self.endUpdate()
     self._emitWorkBenchChanged()
   
   def _hasMoveableItems(self):
     return any(m.performMove() for m in self._movies)
 
   def _emitWorkBenchChanged(self):
-    if self._bulkProcessing:
-      return
     hasItems = self._hasMoveableItems()
     self.workBenchChangedSignal.emit(hasItems)
     
   def _updateStatusText(self):
-    self.beginUpdateSignal.emit()
-    self._bulkProcessing = True
+    self.beginUpdate()
     for movie in self._movies:
       oldStatusText = movie.cachedStatusText
       #check for dup
       movie.isDuplicate = (movie.movie.result == movieHelper.Result.FOUND and 
                            any(m.isMatch(movie) for m in self._movies if m.index != movie.index))
-      newStatusText = movie._updateStatusText(self._requireYear, self._requireGenre) #update the status
+      newStatusText = movie._updateStatusText(self._requireGenre, self._requireYear) #update the status
       if oldStatusText != newStatusText:
         self.dataChanged.emit(self.index(movie.index, 0), self.index(movie.index, Columns.NUM_COLS))
-    self._bulkProcessing = False
+    self._isDirty = False
+    self.endUpdate()
     self._emitWorkBenchChanged()
-    self.endUpdateSignal.emit()
     
   def beginUpdate(self):
     self._bulkProcessing = True
+    self.beginUpdateSignal.emit()
     
   def endUpdate(self):
     self._bulkProcessing = False    
-    self._updateStatusText()
+    self.endUpdateSignal.emit()
     
   def requireYearChanged(self, require):
     if self._requireYear != require:
@@ -278,6 +290,17 @@ class MovieModel(QtCore.QAbstractTableModel):
   def requireGenreChanged(self, require):
     if self._requireGenre != require:
       self._requireGenre = require
-      self._updateStatusText()    
+      self._updateStatusText()
+      
+  def autoScanChanged(self, isAutoRescan):
+    if self._isAutoRescan != isAutoRescan:
+      self._isAutoRescan = isAutoRescan
+      if self._isAutoRescan:
+        self.scanForDuplicates()
+        
+  def scanForDuplicates(self):
+    self._updateStatusText()
     
+  def isDirty(self):
+    return self._isDirty
     

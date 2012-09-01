@@ -14,6 +14,7 @@ from common import utils
 from movie import model as movieModel
 from movie import movieHelper
 from tv import model
+from tv import season
 from tv import seasonHelper
 
 import changeEpisodeWidget
@@ -39,7 +40,10 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     
   def _setModel(self, m):
     self._model = m
-    self._model.workBenchChangedSignal.connect(self._onWorkBenchChanged)        
+    self._model.workBenchChangedSignal.connect(self._onWorkBenchChanged)
+    self._onWorkBenchChanged(False)
+    self._model.beginUpdateSignal.connect(self.startWorkBenching)
+    self._model.endUpdateSignal.connect(self.stopWorkBenching)      
     
   def _setMovieMode(self):
     self.modeChangedSignal.emit(interfaces.Mode.MOVIE_MODE)
@@ -49,7 +53,10 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     
   def _launchLocation(self, location):
     path = QtCore.QDir.toNativeSeparators(location)
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl("file:///{}".format(path)))    
+    if not QtGui.QDesktopServices.openUrl(QtCore.QUrl("file:///{}".format(path))):
+      QtGui.QMessageBox.information(self, "An error occured", 
+                                    "Could not find path:\n{}".format(path))
+      
     
   def _launch(self):
     raise NotImplementedError("BaseWorkBenchWidget._launch")
@@ -62,6 +69,12 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
         
   def _disable(self):
     self.setEnabled(False)
+    
+  def startWorkBenching(self):
+    self._disable()
+        
+  def stopWorkBenching(self):
+    self._enable()
         
   def startExploring(self):
     self._model.clear()
@@ -70,8 +83,8 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   
   def stopExploring(self):
     self._enable()
-    self.editSeasonButton.setEnabled(False)
     self._model.endUpdate()
+    self._onWorkBenchChanged(bool(self._model.items())) #HACK: TODO: 
     
   def startActioning(self):
     self._disable()
@@ -87,11 +100,11 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     raise NotImplementedError("BaseWorkBenchWidget.getConfig not implemented")
 
   def _setOverallCheckedState(self, state):
-    return
+    self._disable()
     self._model.setOverallCheckedState(state)
+    self._enable()
     
   def _onWorkBenchChanged(self, hasChecked):
-    return
     utils.verifyType(hasChecked, bool)
     cs = self._model.overallCheckedState()
     self.selectAllCheckBox.setEnabled(not cs is None)
@@ -124,19 +137,19 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     self.tvView.header().setResizeMode(model.Columns.COL_NEW_NUM, QtGui.QHeaderView.Interactive)
     self.tvView.header().setResizeMode(model.Columns.COL_STATUS, QtGui.QHeaderView.Interactive)
     self.tvView.header().setStretchLastSection(True)
-    self.selectAllCheckBox.clicked.connect(self._setOverallCheckedState)
-    self.tvView.setItemDelegateForColumn(model.Columns.COL_NEW_NAME, model.SeriesDelegate(self))
+    #self.tvView.setItemDelegateForColumn(model.Columns.COL_NEW_NAME, model.SeriesDelegate(self))
     
     self.tvView.clicked.connect(self._onTvClicked)
     self.tvView.doubleClicked.connect(self._onTvDoubleClicked)
-    #self.editEpisodeButton.clicked.connect(self._editEpisode)
-    self.editEpisodeButton.setVisible(False)
+    self.editEpisodeButton.clicked.connect(self._editEpisode)
     self.editSeasonButton.clicked.connect(self._editSeason)
     
     self.movieView.setVisible(False)
     self.tvButton.setVisible(False)  
+    self.editMovieButton.setVisible(False)
     self.movieGroupBox.setVisible(False)
-        
+    self.duplicatesGroupBox.setVisible(False)
+    
   def _launch(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, model.RAW_DATA_ROLE)
     assert(isMoveItemCandidate)
@@ -149,7 +162,7 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     else:
       f = moveItemCandidateData.inputFolder
     self._launchLocation(f)
-            
+    
   def getConfig(self):
     return {"cache" : seasonHelper.SeasonHelper.cache(),
             "state" : utils.toString(self.tvView.header().saveState().toBase64()),
@@ -160,6 +173,11 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
     self._changeSeasonWidget.useCacheCheckBox.setChecked(data.get("use_cache", True))
     self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
+    
+  def stopExploring(self):
+    super(TvWorkBenchWidget, self).stopExploring()
+    self.editSeasonButton.setEnabled(False)
+    self.tvView.expandAll()
             
   def _onTvClicked(self, modelIndex):
     self._currentIndex = modelIndex
@@ -176,12 +194,12 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     utils.verifyType(modelIndex, QtCore.QModelIndex)
     moveItemCandidateData, isMoveItemCandidate = self._model.data(modelIndex, model.RAW_DATA_ROLE)
     if isMoveItemCandidate:
-      pass #if (isMoveItemCandidate and moveItemCandidateData.canEdit and 
-      #    bool(self._model.data(modelIndex.parent(), model.RAW_DATA_ROLE)[0].destination.matches)):
-      #  self._editEpisode()
-      #else:
-      #  QtGui.QMessageBox.information(self, "Can not edit Episode", 
-      #                                "Episodes can only be edited for existing files where Season data has been defined.")
+      if (isMoveItemCandidate and moveItemCandidateData.canEdit and 
+          bool(self._model.data(modelIndex.parent(), model.RAW_DATA_ROLE)[0].destination.matches)):
+        self._editEpisode()
+      else:
+        QtGui.QMessageBox.information(self, "Can not edit Episode", 
+                                      "Episodes can only be edited for existing files where Season data has been defined.")
     else:
       self._editSeason()
         
@@ -209,6 +227,8 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     
   def _onChangeSeasonFinished(self):
     data = self._changeSeasonWidget.data()
+    utils.verifyType(data, season.Season)
+    seasonHelper.SeasonHelper.setSeasonInfo(data.seasonName, data.seasonNum, data.destination)    
     self._model.setData(self._currentIndex, data, model.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)
   
@@ -236,19 +256,27 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self.movieView.verticalHeader().setDefaultSectionSize(20)
     self.movieView.setSortingEnabled(True)
         
-    self.yearCheckBox.toggled.connect(self._model.requireYearChanged)
-    self.genreCheckBox.toggled.connect(self._model.requireGenreChanged)
+    self.yearCheckBox.toggled.connect(self._requireYearChanged)
+    self.genreCheckBox.toggled.connect(self._requireGenreChanged)
     self.movieView.clicked.connect(self._onMovieClicked)
     self.movieView.doubleClicked.connect(self._editMovie)
     self.editMovieButton.clicked.connect(self._editMovie)
+    self.scanButton.clicked.connect(self._scanForDuplicates)
+    self.autoScanCheckBox.toggled.connect(self.scanButton.setDisabled)
+    self.autoScanCheckBox.clicked.connect(self._model.autoScanChanged)
+    
+    self._requireYearChanged(self.yearCheckBox.isChecked())
+    self._requireGenreChanged(self.genreCheckBox.isChecked())
+    self._model.autoScanChanged(self.autoScanCheckBox.isChecked())
     
     self.tvView.setVisible(False)
     self.movieButton.setVisible(False)  
     self.editSeasonButton.setVisible(False)
     self.editEpisodeButton.setVisible(False)    
- 
+     
   def _launch(self):
     movie = self._model.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
+    self._launchLocation(movie.filename)
   
   def _open(self):
     movie = self._model.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
@@ -267,13 +295,17 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self.yearCheckBox.setChecked(data.get("no_year_as_error", True))
     self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
     self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
+    
+  def stopExploring(self):
+    super(MovieWorkBenchWidget, self).stopExploring()
+    self._scanForDuplicates()       
 
   def _currentMovieModelIndex(self, index):
     return self._sortModel.mapToSource(index)
       
   def _onMovieClicked(self, index):
     self.launchButton.setEnabled(True)
-    self.openButton.setEnabled(True)    
+    self.openButton.setEnabled(True)
     self._currentIndex = self._currentMovieModelIndex(index)
       
   def _editMovie(self):
@@ -283,8 +315,21 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self._changeMovieWidget.show()    
       
   def _onChangeMovieFinished(self):
-    data = self._changeMovieWidget.data()
+    data = self._changeMovieWidget.data()    
     utils.verifyType(data, movieHelper.Movie)
+    movieHelper.MovieHelper.setItem(data)
     self._model.setData(self._currentIndex, data, model.RAW_DATA_ROLE)
-            
- 
+    
+  def _scanForDuplicates(self):
+    self._model.scanForDuplicates()
+    
+  def _requireYearChanged(self, requireYear):
+    self._disable()
+    self._model.requireYearChanged(requireYear)
+    self._enable()
+
+  def _requireGenreChanged(self, requireGenre):
+    self._disable()
+    self._model.requireGenreChanged(requireGenre)
+    self._enable()
+     

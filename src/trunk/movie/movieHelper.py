@@ -176,15 +176,15 @@ class MovieHelper:
       ret = _CACHE[cacheKey]
     else:
       ret = MovieHelper.getInfoFromTvdb(title, year)
-      utils.logDebug("{} ({}".format(title, year))
-      import jsonpickle
-      f = open("test.txt", "w")
-      f.write(jsonpickle.encode({"test" : ret}))
-      f.close()      
       if ret:
         _CACHE[cacheKey] = copy.copy(ret)
         newKey = utils.sanitizeString("{} ({})".format(title, year))        
         if cacheKey != newKey:
           _CACHE[cacheKey] = copy.copy(ret)
     return ret 
-    
+  
+  @staticmethod
+  def setItem(item): 
+    utils.verifyType(item, MovieInfo)
+    global _CACHE
+    _CACHE[utils.sanitizeString("{} ({})".format(item.title, item.year))] = item
