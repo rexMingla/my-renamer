@@ -5,7 +5,6 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Thread abstraction
 # --------------------------------------------------------------------------------------------------------------------
-import os
 import time
 
 from PyQt4 import QtCore
@@ -78,9 +77,9 @@ class AdvancedWorkerThread(WorkerThread):
     if self._formatLogItemCb:
       return self._formatLogItemCb(item, result)
     else:
-      fullLog = "{} {}".format(item, result)
-      shortLog = " ".join([ word if os.path.isabs(word) else os.path.basename(word) for word in fullLog.split()])
-      return logModel.LogItem(logModel.LogLevel.INFO, self._name, shortLog, fullLog) 
+      #fullLog = "{} {}".format(item, result)
+      #shortLog = " ".join([ word if os.path.isabs(word) else os.path.basename(word) for word in fullLog.split()])
+      return None#return logModel.LogItem(logModel.LogLevel.INFO, self._name, shortLog, fullLog) 
     
   def run(self):
     items = self._getAllItems()
@@ -99,12 +98,13 @@ class AdvancedWorkerThread(WorkerThread):
       if self._userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      self._name,
-                                     "User cancelled. {} of {} processed.".format(i, numItems)))              
+                                     "User cancelled. {} of {} processed.".format(i + 1, numItems)))              
         break
       self._onProgress(int(100.0 * (i + 1) / numItems))
     
-    results["total"] = sum(v for _, v in results.items())
-    summaryText = " ".join([("{}:{}".format(key, results[key])) for key in sorted(results, key=lambda k: results[k])])
+    results["Total"] = sum(v for _, v in results.items())
+    summaryText = " ".join([("{}:{}".format(key, results[key])) 
+                            for key in sorted(results, key=lambda k: results[k] + 1 if k == "Total" else 0)])
     self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                  self._name, 
                                  "Action complete. {} processed in {}. Summary: {}".format(itemCount, 

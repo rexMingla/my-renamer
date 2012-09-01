@@ -220,13 +220,15 @@ class TvModel(QtCore.QAbstractItemModel):
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
   """
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
+  beginUpdateSignal = QtCore.pyqtSignal()
+  endUpdateSignal = QtCore.pyqtSignal()  
 
   def __init__(self, parent=None):
     super(TvModel, self).__init__(parent)
     self._seasons = []
     self.rootItem = TreeItem(("",))
     self._bulkProcessing = False
-    self._view = parent # hack
+    #self._view = parent # hack
 
   def columnCount(self, parent):
     return Columns.NUM_COLS
@@ -272,9 +274,9 @@ class TvModel(QtCore.QAbstractItemModel):
         #fix the check boxes
         for j in range(len(parentItem.childItems)):
           idx = self.index(j, Columns.COL_NEW_NAME, parentIndex)
-          self._view.closePersistentEditor(idx)
-          if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
-            self._view.openPersistentEditor(idx)
+          #self._view.closePersistentEditor(idx)
+          #if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
+          #  self._view.openPersistentEditor(idx)
         self.endInsertRows()            
         ret = True
       else:
@@ -288,9 +290,9 @@ class TvModel(QtCore.QAbstractItemModel):
         #fix the check boxes
         for j in range(len(item.childItems)):
           idx = self.index(j, Columns.COL_NEW_NAME, index)
-          self._view.closePersistentEditor(idx)
-          if item.canCheck() and item.childItems[j].raw.source.filename: #more filth...
-            self._view.openPersistentEditor(idx)
+          #self._view.closePersistentEditor(idx)
+          #if item.canCheck() and item.childItems[j].raw.source.filename: #more filth...
+          #  self._view.openPersistentEditor(idx)
         self.endInsertRows()
         self.dataChanged.emit(index.sibling(index.row(), 0), index.sibling(index.row(), Columns.NUM_COLS-1))
         ret = True
@@ -306,7 +308,7 @@ class TvModel(QtCore.QAbstractItemModel):
       elif item.isMoveItemCandidate():
         self.dataChanged.emit(index.parent(), index.parent())
       ret = True
-    if ret:   
+    if not self._bulkProcessing:   
       self._emitWorkBenchChanged()
     return ret
 
@@ -316,14 +318,14 @@ class TvModel(QtCore.QAbstractItemModel):
 
     item = index.internalPointer()
 
-    f = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
+    f = QtCore.Qt.ItemIsSelectable# | QtCore.Qt.ItemIsEditable
     if item.canCheck():
       f |= QtCore.Qt.ItemIsEnabled 
       if index.column() == Columns.COL_OLD_NAME:
         f |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsTristate
-      elif index.column() == Columns.COL_NEW_NAME and item.isMoveItemCandidate() and item.raw.canEdit and \
-        bool(self.data(index.parent(), RAW_DATA_ROLE)[0].destination.matches): #filth....
-        f |= QtCore.Qt.ItemIsEditable
+      #elif index.column() == Columns.COL_NEW_NAME and item.isMoveItemCandidate() and item.raw.canEdit and \
+      #  bool(self.data(index.parent(), RAW_DATA_ROLE)[0].destination.matches): #filth....
+      #  f |= QtCore.Qt.ItemIsEditable
     elif item.isMoveItemCandidate() and item.raw.canEdit:
       f |= QtCore.Qt.ItemIsEnabled       
     return f
@@ -389,15 +391,17 @@ class TvModel(QtCore.QAbstractItemModel):
     for mi in s.moveItemCandidates:
       ti.appendChild(TreeItem(mi, ti))
     self._seasons.append(s)
-    self.endInsertRows()      
-    self._emitWorkBenchChanged()
+    self.endInsertRows()     
+    if not self._bulkProcessing:
+      self._emitWorkBenchChanged()    
 
   def clear(self):
     self.beginResetModel()
     self._seasons = []
     self.rootItem = TreeItem(("",))  
     self.endResetModel()
-    self._emitWorkBenchChanged()
+    if not self._bulkProcessing:
+      self._emitWorkBenchChanged()    
 
   def items(self):
     seasons = []
@@ -422,42 +426,39 @@ class TvModel(QtCore.QAbstractItemModel):
     return ret
 
   def setOverallCheckedState(self, isChecked):
+    print "setOverallCheckedState"
     utils.verifyType(isChecked, bool)
-    self._bulkProcessing = True
-    cs = QtCore.Qt.Checked
-    if not isChecked:
-      cs = QtCore.Qt.Unchecked
+    self.beginUpdate()
+    cs = QtCore.Qt.Checked if isChecked else QtCore.Qt.Unchecked
     for i in range(self.rootItem.childCount()):
       idx = self.index(i, Columns.COL_OLD_NAME, QtCore.QModelIndex())
       self.setData(idx, cs, QtCore.Qt.CheckStateRole)
-    self._bulkProcessing = False
+    self.endUpdate()
     self._emitWorkBenchChanged()
 
   def _hasMoveableItems(self):
-    ret = False
-    for i in range(self.rootItem.childCount()):
-      seasonItem = self.rootItem.child(i)
-      if seasonItem.checkState() != QtCore.Qt.Unchecked:
-        ret = True
-        break
-    return ret
+    return any(self.rootItem.child(i).checkState() != QtCore.Qt.Unchecked for i in range(self.rootItem.childCount()))
 
   def _emitWorkBenchChanged(self):
-    if self._bulkProcessing:
-      return    
     hasItems = self._hasMoveableItems()
     self.workBenchChangedSignal.emit(hasItems)
-    
+
   def beginUpdate(self):
+    print "beginUpdate"
     self._bulkProcessing = True
+    self.beginUpdateSignal.emit()
     
   def endUpdate(self):
-    self._bulkProcessing = False      
+    print "endUpdate"
+    self._bulkProcessing = False
+    self.endUpdateSignal.emit()
+    
+  def _oldUpdateStuff(self):
     for i in range(self.rootItem.childCount()):
       parent = self.index(i, Columns.COL_OLD_NAME, QtCore.QModelIndex())
       parentItem = self.rootItem.childItems[i]
       for j in range(len(parentItem.childItems)):
         index = self.index(j, Columns.COL_NEW_NAME, parent)
-        self._view.closePersistentEditor(index)
-        if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
-          self._view.openPersistentEditor(index) 
+        #self._view.closePersistentEditor(index)
+        #if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
+        #  self._view.openPersistentEditor(index) 

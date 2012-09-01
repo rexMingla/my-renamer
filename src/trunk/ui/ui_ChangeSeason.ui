@@ -131,6 +131,9 @@
      </item>
      <item>
       <widget class="QCheckBox" name="useCacheCheckBox">
+       <property name="toolTip">
+        <string>Use previously saved data if available</string>
+       </property>
        <property name="text">
         <string>use cached data</string>
        </property>
