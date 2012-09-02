@@ -5,8 +5,12 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Config singleton
 # --------------------------------------------------------------------------------------------------------------------
+import os
 import jsonpickle
 jsonpickle.set_encoder_options("simplejson", indent=2)
+
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
@@ -45,6 +49,20 @@ class ConfigManager(object):
   @staticmethod
   def saveConfig(filename):
     global _CONFIG
-    f = open(filename, "w")
-    f.write(jsonpickle.encode(_CONFIG))
-    f.close()
+    tmpFile = "{}.bak".format(filename)
+    try:
+      f = open(tmpFile, "w")
+      f.write(jsonpickle.encode(_CONFIG))
+      f.close()
+      if os.path.exists(filename):
+        os.remove(filename)
+      os.rename(tmpFile, filename)
+      #TEST: raise NotImplementedError("wtf")
+    except Exception as e: #json catches Exception so I guess we have to too
+      QtGui.QMessageBox.information(None, "An error occured",
+                                    "Unable to save to settings file:\n{}\n\nError: {}".format(filename, e))
+      #TODO: why you no stay up?      
+      #mb = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
+      #                       "An error occured", "Unable to save to settings file:\n{}".format(filename))
+      #mb.setInformativeText("Error: {}".format(str(e)))
+      #mb.show()

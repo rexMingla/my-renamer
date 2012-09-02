@@ -148,7 +148,6 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     self.tvButton.setVisible(False)  
     self.editMovieButton.setVisible(False)
     self.movieGroupBox.setVisible(False)
-    self.duplicatesGroupBox.setVisible(False)
     
   def _launch(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, model.RAW_DATA_ROLE)
@@ -258,16 +257,14 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
         
     self.yearCheckBox.toggled.connect(self._requireYearChanged)
     self.genreCheckBox.toggled.connect(self._requireGenreChanged)
+    self.duplicateCheckBox.toggled.connect(self._flagDuplicateChanged)
     self.movieView.clicked.connect(self._onMovieClicked)
     self.movieView.doubleClicked.connect(self._editMovie)
     self.editMovieButton.clicked.connect(self._editMovie)
-    self.scanButton.clicked.connect(self._scanForDuplicates)
-    self.autoScanCheckBox.toggled.connect(self.scanButton.setDisabled)
-    self.autoScanCheckBox.clicked.connect(self._model.autoScanChanged)
     
     self._requireYearChanged(self.yearCheckBox.isChecked())
     self._requireGenreChanged(self.genreCheckBox.isChecked())
-    self._model.autoScanChanged(self.autoScanCheckBox.isChecked())
+    self._flagDuplicateChanged(self.duplicateCheckBox.isChecked())
     
     self.tvView.setVisible(False)
     self.movieButton.setVisible(False)  
@@ -287,6 +284,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     return {"cache" : movieHelper.MovieHelper.cache(),
             "no_year_as_error" : self.yearCheckBox.isChecked(),
             "no_genre_as_error" : self.genreCheckBox.isChecked(),
+            "duplicate_as_error" : self.duplicateCheckBox.isChecked(),
             "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()) }
   
   def setConfig(self, data, mode=None):
@@ -294,11 +292,8 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     movieHelper.MovieHelper.setCache(data.get("cache", {}))
     self.yearCheckBox.setChecked(data.get("no_year_as_error", True))
     self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
+    self.duplicateCheckBox.setChecked(data.get("duplicate_as_error", True)),
     self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
-    
-  def stopExploring(self):
-    super(MovieWorkBenchWidget, self).stopExploring()
-    self._scanForDuplicates()       
 
   def _currentMovieModelIndex(self, index):
     return self._sortModel.mapToSource(index)
@@ -320,9 +315,6 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     movieHelper.MovieHelper.setItem(data)
     self._model.setData(self._currentIndex, data, model.RAW_DATA_ROLE)
     
-  def _scanForDuplicates(self):
-    self._model.scanForDuplicates()
-    
   def _requireYearChanged(self, requireYear):
     self._disable()
     self._model.requireYearChanged(requireYear)
@@ -332,4 +324,10 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self._disable()
     self._model.requireGenreChanged(requireGenre)
     self._enable()
-     
+
+  def _flagDuplicateChanged(self, flagDuplicate):
+    self._disable()
+    self._model.flagDuplicateChanged(flagDuplicate)
+    self._enable()
+
+  

@@ -42,8 +42,10 @@ class Columns:
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
 
-_YEAR_REQUIRED = "Year required"
-_GENRE_REQUIRED = "Genre required"
+_MISSING_YEAR = "Missing Year"
+_MISSING_GENRE = "Missing Genre"
+_DUPLICATE = "Duplicate"
+_OK = "Ok"
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieItem(object):
@@ -54,7 +56,7 @@ class MovieItem(object):
     self.index = index
     self.wantToMove = True
     self.cachedStatusText = "Unknown"
-    self.isDuplicate = False
+    self.duplicates = []
     
   def isMatch(self, other):
     utils.verifyType(other, MovieItem)
@@ -62,28 +64,7 @@ class MovieItem(object):
             self.movie.title == other.movie.title and self.movie.year == other.movie.year and 
             self.movie.part == other.movie.part and self.movie.ext == other.movie.ext and 
             self.movie.genre() == other.movie.genre())
-  
-  def isValid(self):
-    return self.cachedStatusText == movieHelper.Result.resultStr(movieHelper.Result.FOUND)
-    
-  def _updateStatusText(self, requireYear, requireGenre):
-    ret = ""
-    if self.movie.result != movieHelper.Result.FOUND:
-      ret = movieHelper.Result.resultStr(self.movie.result)
-    elif self.isDuplicate:
-      ret = "Duplicate"
-    elif requireYear and not self.movie.year:
-      ret = _YEAR_REQUIRED
-    elif requireGenre and not self.movie.genres:
-      ret = _GENRE_REQUIRED
-    else:
-      ret = movieHelper.Result.resultStr(self.movie.result)
-    self.cachedStatusText = ret
-    return ret
-    
-  def performMove(self):
-    return self.wantToMove and self.isValid()
-      
+          
 # --------------------------------------------------------------------------------------------------------------------
 class MovieModel(QtCore.QAbstractTableModel):
   """ 
@@ -99,8 +80,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     self._bulkProcessing = False
     self._requireYear = True
     self._requireGenre = True
-    self._isAutoRescan = False 
-    self._isDirty = False #may want this for later. ie. prevent save if rescan hasnt been performed for files.
+    self._flagDuplicates = True
     
   def columnCount(self, parent):
     return Columns.NUM_COLS
@@ -123,11 +103,11 @@ class MovieModel(QtCore.QAbstractTableModel):
       return copy.copy(movie)
     
     col = index.column()
-    if role == QtCore.Qt.ForegroundRole and not item.isValid():
+    if role == QtCore.Qt.ForegroundRole and not self._isItemValid(item):
       return QtGui.QBrush(QtCore.Qt.red)      
     elif col == Columns.COL_CHECK:
       if role == QtCore.Qt.CheckStateRole:
-        if item.performMove(): 
+        if self._performMoveOnItem(item): 
           return QtCore.Qt.Checked
         else:
           return QtCore.Qt.Unchecked
@@ -158,11 +138,14 @@ class MovieModel(QtCore.QAbstractTableModel):
       item = self._movies[index.row()]
       newMovie = copy.copy(value)
       if item.movie != newMovie:
+        oldDups = item.duplicates
         item.movie = newMovie
-        if not self._bulkProcessing and self._isAutoRescan:
-          self._updateStatusText()
-        else:
-          self._isDirty = True
+        self._updateItemStatus(item)
+        newDups = item.duplicates
+        for nowDupIndex in (i for i in newDups if not i in oldDups):
+          self._updateItemStatus(self._movies[nowDupIndex])
+        for nowNotDupIndex in (i for i in oldDups if not i in newDups):
+          self._updateItemStatus(self._movies[nowNotDupIndex])
     elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_CHECK:
       item = self._movies[index.row()]
       item.wantToMove = value == QtCore.Qt.Checked
@@ -179,7 +162,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     movie = item.movie
     
     f = QtCore.Qt.ItemIsSelectable
-    if item.isValid() or index.column() != Columns.COL_CHECK:
+    if self._isItemValid(item) or index.column() != Columns.COL_CHECK:
       f |= QtCore.Qt.ItemIsEnabled 
     if index.column() == Columns.COL_CHECK:
       f |= QtCore.Qt.ItemIsUserCheckable
@@ -221,23 +204,56 @@ class MovieModel(QtCore.QAbstractTableModel):
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
     item = MovieItem(m, count)
     self._movies.append(item)
-    self._isDirty = True
     self.endInsertRows()     
     if not self._bulkProcessing:
       self._emitWorkBenchChanged()    
   
   def items(self):
-    return [i.movie for i in self._movies if i.performMove()]
+    return [m.movie for m in self._movies if self._performMoveOnItem(m)]
+  
+  def _isItemValid(self, item):
+    return item.cachedStatusText == _OK  or (item.cachedStatusText == _DUPLICATE and not self._flagDuplicates)
+  
+  def _updateItemStatus(self, item):
+    oldStatusText = item.cachedStatusText
+    self._updateDuplicatesForItem(item)
+    self._updateItemStatusText(item)
+    newStatusText = item.cachedStatusText
+    if oldStatusText != newStatusText:
+      self.dataChanged.emit(self.index(item.index, 0), self.index(item.index, Columns.NUM_COLS))
+      
+  def _updateItemStatusText(self, item):
+    ret = ""
+    if item.movie.result != movieHelper.Result.FOUND:
+      ret = movieHelper.Result.resultStr(self.movie.result)
+    elif item.duplicates:
+      ret = _DUPLICATE
+    elif self._requireYear and not item.movie.year:
+      ret = _MISSING_YEAR
+    elif self._requireGenre and not item.movie.genres:
+      ret = _MISSING_GENRE
+    else:
+      ret = _OK
+    item.cachedStatusText = ret
+    return ret  
+    
+  def _performMoveOnItem(self, item):
+    return item.wantToMove and self._isItemValid(item)
+  
+  def _updateDuplicatesForItem(self, item):
+    item.duplicates = []
+    if item.movie.result == movieHelper.Result.FOUND:
+      item.duplicates = [m.index for m in self._movies if m.index != item.index and m.isMatch(item)]
   
   def overallCheckedState(self):
-    filtered = [m for m in self._movies if m.isValid()]
+    filtered = [m for m in self._movies if self._isItemValid(m)]
     if not filtered:
       return None
     
     ret = QtCore.Qt.PartiallyChecked
-    if all(m.performMove() for m in filtered):
+    if all(self._performMoveOnItem(m) for m in filtered):
       ret = QtCore.Qt.Checked
-    elif all(not(m.performMove()) for m in filtered):
+    elif all(not self._performMoveOnItem(m) for m in filtered):
       ret = QtCore.Qt.Unchecked
     return ret
   
@@ -254,53 +270,38 @@ class MovieModel(QtCore.QAbstractTableModel):
     self._emitWorkBenchChanged()
   
   def _hasMoveableItems(self):
-    return any(m.performMove() for m in self._movies)
+    return any(self._performMoveOnItem(m) for m in self._movies)
 
   def _emitWorkBenchChanged(self):
     hasItems = self._hasMoveableItems()
     self.workBenchChangedSignal.emit(hasItems)
     
-  def _updateStatusText(self):
-    self.beginUpdate()
+  def _updateAllStatusText(self):
     for movie in self._movies:
-      oldStatusText = movie.cachedStatusText
-      #check for dup
-      movie.isDuplicate = (movie.movie.result == movieHelper.Result.FOUND and 
-                           any(m.isMatch(movie) for m in self._movies if m.index != movie.index))
-      newStatusText = movie._updateStatusText(self._requireGenre, self._requireYear) #update the status
-      if oldStatusText != newStatusText:
-        self.dataChanged.emit(self.index(movie.index, 0), self.index(movie.index, Columns.NUM_COLS))
-    self._isDirty = False
-    self.endUpdate()
-    self._emitWorkBenchChanged()
+      self._updateItemStatus(movie)
     
   def beginUpdate(self):
     self._bulkProcessing = True
     self.beginUpdateSignal.emit()
     
   def endUpdate(self):
-    self._bulkProcessing = False    
+    self._updateAllStatusText()
+    self._bulkProcessing = False 
+    self._emitWorkBenchChanged()
     self.endUpdateSignal.emit()
     
   def requireYearChanged(self, require):
     if self._requireYear != require:
       self._requireYear = require
-      self._updateStatusText()
+      self._updateAllStatusText()
     
   def requireGenreChanged(self, require):
     if self._requireGenre != require:
       self._requireGenre = require
-      self._updateStatusText()
+      self._updateAllStatusText()
       
-  def autoScanChanged(self, isAutoRescan):
-    if self._isAutoRescan != isAutoRescan:
-      self._isAutoRescan = isAutoRescan
-      if self._isAutoRescan:
-        self.scanForDuplicates()
-        
-  def scanForDuplicates(self):
-    self._updateStatusText()
-    
-  def isDirty(self):
-    return self._isDirty
+  def flagDuplicateChanged(self, flag):
+    if self._flagDuplicates != flag:
+      self._flagDuplicates = flag
+      self._updateAllStatusText()
     
