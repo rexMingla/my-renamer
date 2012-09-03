@@ -133,6 +133,11 @@ class EpisodeMap(object):
           oldEp.epNum = episode.UNRESOLVED_KEY          
           self.unresolved.append(oldEp)
         self.matches[str(sourceEp.epNum)] = sourceEp
+        
+  def removeFile(self, filename):
+    utils.verifyType(filename, str)
+    self.matches = dict( (k, v) for k, v in self.matches.items() if filename != v.filename)
+    self.unresolved = [v for v in self.unresolved if filename != v.filename]
 
   def __eq__(self, other):
     utils.verifyType(other, EpisodeMap)

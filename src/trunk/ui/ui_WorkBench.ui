@@ -87,18 +87,15 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="selectAllCheckBox">
+      <widget class="QPushButton" name="deleteButton">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="toolTip">
-        <string>Select/deselect all files</string>
+        <string>Delete to recycling bin</string>
        </property>
        <property name="text">
-        <string>Select / Deselect All</string>
-       </property>
-       <property name="tristate">
-        <bool>true</bool>
+        <string>Delete</string>
        </property>
       </widget>
      </item>
@@ -197,6 +194,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="duplicateCheckBox">
+          <property name="toolTip">
+           <string>If a file matches name, year and other attributes it is considered a duplicate</string>
+          </property>
           <property name="text">
            <string>Duplicate</string>
           </property>
@@ -217,6 +217,22 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="selectAllCheckBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Select/deselect all files</string>
+       </property>
+       <property name="text">
+        <string>Select / Deselect All</string>
+       </property>
+       <property name="tristate">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="movieButton">

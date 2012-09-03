@@ -270,14 +270,14 @@ class TvModel(QtCore.QAbstractItemModel):
         for mi in parentItem.raw.moveItemCandidates:
           parentItem.appendChild(TreeItem(mi, parentItem))
         self.endRemoveRows()
-        self.beginInsertRows(parentIndex, 0, parentItem.childCount() - 1)
+        #self.beginInsertRows(parentIndex, 0, parentItem.childCount() - 1)
         #fix the check boxes
-        for j in range(len(parentItem.childItems)):
-          idx = self.index(j, Columns.COL_NEW_NAME, parentIndex)
-          #self._view.closePersistentEditor(idx)
-          #if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
-          #  self._view.openPersistentEditor(idx)
-        self.endInsertRows()            
+        #for j in range(len(parentItem.childItems)):
+        #  idx = self.index(j, Columns.COL_NEW_NAME, parentIndex)
+        #  #self._view.closePersistentEditor(idx)
+        #  #if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
+        #  #  self._view.openPersistentEditor(idx)
+        #self.endInsertRows()            
         ret = True
       else:
         self.beginRemoveRows(index, 0, item.childCount() - 1)
@@ -326,7 +326,7 @@ class TvModel(QtCore.QAbstractItemModel):
       #elif index.column() == Columns.COL_NEW_NAME and item.isMoveItemCandidate() and item.raw.canEdit and \
       #  bool(self.data(index.parent(), RAW_DATA_ROLE)[0].destination.matches): #filth....
       #  f |= QtCore.Qt.ItemIsEditable
-    elif item.isMoveItemCandidate() and item.raw.canEdit:
+    elif not item.isMoveItemCandidate() or item.raw.canEdit:
       f |= QtCore.Qt.ItemIsEnabled       
     return f
 
@@ -462,3 +462,31 @@ class TvModel(QtCore.QAbstractItemModel):
         #self._view.closePersistentEditor(index)
         #if parentItem.canCheck() and parentItem.childItems[j].raw.source.filename: #more filth...
         #  self._view.openPersistentEditor(index) 
+        
+  def delete(self, index):
+    if not index.isValid():
+      return
+    
+    oldCheckedState = self.overallCheckedState()
+    row = index.row()
+    item = index.internalPointer()
+    if item.isSeason():
+      self.beginRemoveRows(index.parent(), row, row)
+      self.rootItem.childItems.pop(row)
+      self._seasons.pop(row)
+      self.endRemoveRows()
+    else:
+      parentItem = item.parent
+      self.beginRemoveRows(index.parent(), 0, parentItem.childCount() - 1)
+      parentItem.childItems = []
+      parentItem.raw.removeSourceFile(item.raw.source.filename) 
+      self.endRemoveRows()
+
+      self.beginInsertRows(index.parent(), 0, len(parentItem.raw.moveItemCandidates) - 1)
+      for mi in parentItem.raw.moveItemCandidates:
+        parentItem.appendChild(TreeItem(mi, parentItem))
+      self.endInsertRows()
+      
+    newCheckedState = self.overallCheckedState()
+    if oldCheckedState != newCheckedState:
+      self._emitWorkBenchChanged()
