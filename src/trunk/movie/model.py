@@ -187,7 +187,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     elif section == Columns.COL_FILE_SIZE:
       return "File Size"
 
-  def rowCount(self, parent):
+  def rowCount(self, parent=None):
     return len(self._movies)
   
   def clear(self):
@@ -304,4 +304,19 @@ class MovieModel(QtCore.QAbstractTableModel):
     if self._flagDuplicates != flag:
       self._flagDuplicates = flag
       self._updateAllStatusText()
+      
+  def delete(self, index):
+    if not index.isValid():
+      return
     
+    row = index.row()
+    self.beginRemoveRows(QtCore.QModelIndex(), row, row)
+    item = self._movies[row]
+    dups = [i - 1 if i > row else i for i in item.duplicates]
+    self._movies.pop(row)
+    for item in self._movies[row:]:
+      item.index -= 1
+    self.endRemoveRows()
+    
+    for i in dups:
+      self._updateItemStatus(self._movies[i])

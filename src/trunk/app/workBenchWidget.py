@@ -8,6 +8,7 @@
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
+from send2trash import send2trash
 
 from common import fileHelper
 from common import utils
@@ -20,6 +21,7 @@ from tv import seasonHelper
 import changeEpisodeWidget
 import changeMovieWidget
 import changeSeasonWidget
+import config
 import interfaces
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -35,6 +37,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self.selectAllCheckBox.clicked.connect(self._setOverallCheckedState)
     self.launchButton.clicked.connect(self._launch)
     self.openButton.clicked.connect(self._open)    
+    self.deleteButton.clicked.connect(self._delete)
     self.movieButton.clicked.connect(self._setMovieMode)
     self.tvButton.clicked.connect(self._setTvMode)
     
@@ -56,7 +59,6 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     if not QtGui.QDesktopServices.openUrl(QtCore.QUrl("file:///{}".format(path))):
       QtGui.QMessageBox.information(self, "An error occured", 
                                     "Could not find path:\n{}".format(path))
-      
     
   def _launch(self):
     raise NotImplementedError("BaseWorkBenchWidget._launch")
@@ -83,6 +85,10 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   
   def stopExploring(self):
     self._enable()
+    self.editSeasonButton.setEnabled(False)
+    self.launchButton.setEnabled(False)
+    self.openButton.setEnabled(False)
+    self.deleteButton.setEnabled(False)        
     self._model.endUpdate()
     self._onWorkBenchChanged(bool(self._model.items())) #HACK: TODO: 
     
@@ -113,6 +119,21 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self.selectAllCheckBox.setCheckState(cs)
     self.workBenchChangedSignal.emit(hasChecked)
     
+  def _delete(self):
+    raise NotImplementedError("BaseWorkBenchWidget._delete not implemented")
+    
+  def _deleteLocation(self, location):
+    isDel = False
+    try:
+      send2trash(location)
+      isDel = True
+    except OSError as e:
+      mb = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
+                                   "An error occured", "Unable to move to trash. Path:\n{}".format(location))
+      mb.setDetailedText("Error:\n{}".format(str(e)))
+      mb.exec_()  
+    return isDel
+    
   def addItem(self, item):
     self._model.addItem(item)
     
@@ -139,7 +160,7 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     self.tvView.header().setStretchLastSection(True)
     #self.tvView.setItemDelegateForColumn(model.Columns.COL_NEW_NAME, model.SeriesDelegate(self))
     
-    self.tvView.clicked.connect(self._onTvClicked)
+    self.tvView.selectionModel().selectionChanged.connect(self._onSelectionChanged)
     self.tvView.doubleClicked.connect(self._onTvDoubleClicked)
     self.editEpisodeButton.clicked.connect(self._editEpisode)
     self.editSeasonButton.clicked.connect(self._editSeason)
@@ -175,19 +196,28 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     
   def stopExploring(self):
     super(TvWorkBenchWidget, self).stopExploring()
-    self.editSeasonButton.setEnabled(False)
     self.tvView.expandAll()
             
-  def _onTvClicked(self, modelIndex):
-    self._currentIndex = modelIndex
-    moveItemCandidateData, isMoveItemCandidate = self._model.data(modelIndex, model.RAW_DATA_ROLE)
-    #filthy. check if parent has season info
-    canEditEp = (isMoveItemCandidate and moveItemCandidateData.canEdit and 
-                bool(self._model.data(modelIndex.parent(), model.RAW_DATA_ROLE)[0].destination.matches))
-    self.editEpisodeButton.setEnabled(canEditEp)
-    self.editSeasonButton.setEnabled(True)
-    self.launchButton.setEnabled(isMoveItemCandidate)
-    self.openButton.setEnabled(True)    
+  def _onSelectionChanged(self, selection):
+    indexes = selection.indexes()
+    self._currentIndex = selection.indexes()[0] if selection.indexes() else None
+    if bool(self._currentIndex):
+      moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, model.RAW_DATA_ROLE)
+      #filthy. check if parent has season info
+      canEditEp = (isMoveItemCandidate and moveItemCandidateData.canEdit and 
+                  bool(self._model.data(self._currentIndex.parent(), model.RAW_DATA_ROLE)[0].destination.matches))
+      self.editEpisodeButton.setEnabled(canEditEp)
+      self.editSeasonButton.setEnabled(True)
+      self.launchButton.setEnabled(isMoveItemCandidate)
+      self.openButton.setEnabled(True)
+      self.deleteButton.setEnabled(not isMoveItemCandidate or 
+                                   fileHelper.FileHelper.fileExists(moveItemCandidateData.source.filename))
+    else:
+      self.editEpisodeButton.setEnabled(False)
+      self.editSeasonButton.setEnabled(False)
+      self.launchButton.setEnabled(False)
+      self.openButton.setEnabled(False)
+      self.deleteButton.setEnabled(False)      
 
   def _onTvDoubleClicked(self, modelIndex):
     utils.verifyType(modelIndex, QtCore.QModelIndex)
@@ -230,7 +260,17 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     seasonHelper.SeasonHelper.setSeasonInfo(data.seasonName, data.seasonNum, data.destination)    
     self._model.setData(self._currentIndex, data, model.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)
+    
+  def _delete(self):
+    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, model.RAW_DATA_ROLE)
+    if isMoveItemCandidate:
+      f = moveItemCandidateData.source.filename
+    else:
+      f = moveItemCandidateData.inputFolder
+    if self._deleteLocation(f):
+      self._model.delete(self._currentIndex)
   
+    
 # --------------------------------------------------------------------------------------------------------------------
 class MovieWorkBenchWidget(BaseWorkBenchWidget):
   def __init__(self, parent=None):
@@ -301,6 +341,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
   def _onMovieClicked(self, index):
     self.launchButton.setEnabled(True)
     self.openButton.setEnabled(True)
+    self.deleteButton.setEnabled(True)
     self._currentIndex = self._currentMovieModelIndex(index)
       
   def _editMovie(self):
@@ -329,5 +370,10 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self._disable()
     self._model.flagDuplicateChanged(flagDuplicate)
     self._enable()
-
+  
+  def _delete(self):
+    movie = self._model.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
+    if self._deleteLocation(movie.filename):
+      self._model.delete(self._currentIndex)
+      self.tvView.expandAll()
   

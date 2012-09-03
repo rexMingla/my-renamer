@@ -57,12 +57,8 @@ class ConfigManager(object):
       if os.path.exists(filename):
         os.remove(filename)
       os.rename(tmpFile, filename)
-      #TEST: raise NotImplementedError("wtf")
     except Exception as e: #json catches Exception so I guess we have to too
-      QtGui.QMessageBox.information(None, "An error occured",
-                                    "Unable to save to settings file:\n{}\n\nError: {}".format(filename, e))
-      #TODO: why you no stay up?      
-      #mb = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
-      #                       "An error occured", "Unable to save to settings file:\n{}".format(filename))
-      #mb.setInformativeText("Error: {}".format(str(e)))
-      #mb.show()
+      mb = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
+                             "An error occured", "Unable to save to settings file:\n{}".format(filename))
+      mb.setDetailedText("Error:\n{}".format(str(e)))
+      mb.exec_()

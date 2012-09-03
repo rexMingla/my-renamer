@@ -51,6 +51,11 @@ class Season:
     utils.verifyType(folder, str)
     self.inputFolder = folder
     
+  def removeSourceFile(self, f):
+    utils.verifyType(f, str)
+    self.source.removeFile(f)
+    self.updateSource(self.source)
+    
   def updateDestination(self, seasonName, seasonNum, newDestination):
     utils.verifyType(seasonName, str)
     utils.verifyType(seasonNum, int)    
