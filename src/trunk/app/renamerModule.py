@@ -80,7 +80,7 @@ class RenamerModule(QtCore.QObject):
     self.inputWidget = inputWidget_
     self.workBenchWidget = workBenchWidget_
     self.outputWidget = outputWidget_
-    self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)     
+    self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
     
     self.inputWidget = inputWidget_
     self.outputWidget = outputWidget_
@@ -249,11 +249,10 @@ class MovieRenamerModule(RenamerModule):
     return filenames   
   
   def _getExploreItems(self):
-    data = self.inputWidget.getConfig() 
-    return movieHelper.MovieHelper.getFiles(data["folder"], 
-                                            extension.FileExtensions(data["extensions"].split()), 
-                                            data["recursive"],
-                                            data["minFileSizeBytes"])
+    data = self.inputWidget.getConfig()
+    ext = ["*"] if data["allExtensions"] else extension.FileExtensions(data["extensions"].split())
+    minSize = 0 if data["allFileSizes"] else data["minFileSizeBytes"]
+    return movieHelper.MovieHelper.getFiles(data["folder"], ext, data["recursive"], minSize)
     
   def _transformExploreItem(self, item):
     item = movieHelper.MovieHelper.processFile(item)

@@ -31,6 +31,9 @@ class InputWidget(interfaces.LoadWidgetInterface):
     self.folderEdit.returnPressed.connect(self.exploreSignal)
     self.fileExtensionEdit.returnPressed.connect(self.exploreSignal)
     self.stopButton.clicked.connect(self.stopSignal)
+    self.restrictedExtRadioButton.toggled.connect(self.fileExtensionEdit.setEnabled)
+    self.restrictedSizeRadioButton.toggled.connect(self.sizeSpinBox.setEnabled)
+    self.restrictedSizeRadioButton.toggled.connect(self.sizeComboBox.setEnabled)
     
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)
@@ -73,14 +76,24 @@ class InputWidget(interfaces.LoadWidgetInterface):
   def getConfig(self):
     data = {"folder" : utils.toString(self.folderEdit.text()),
             "recursive" : self.isRecursiveCheckBox.isChecked(),
+            "allExtensions" : self.anyExtRadioButton.isChecked(),
             "extensions" : utils.toString(self.fileExtensionEdit.text()),
-            "minFileSizeBytes" : 
+            "allFileSizes" : self.anySizeRadioButton.isChecked(),
+            "minFileSizeBytes" :
               utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText()))}
     return data
   
   def setConfig(self, data):
     self.folderEdit.setText(data.get("folder", ""))
     self.isRecursiveCheckBox.setChecked(data.get("recursive", True))
+    if data.get("allExtensions", False):
+      self.anyExtRadioButton.setChecked(True)
+    else:
+      self.restrictedExtRadioButton.setChecked(True)
+    if data.get("allFileSizes", False):
+      self.anySizeRadioButton.setChecked(True)
+    else:
+      self.restrictedSizeRadioButton.setChecked(True)
     self.fileExtensionEdit.setText(data.get("extensions", extension.DEFAULT_VIDEO_EXTENSIONS.extensionString()))
     fileSize, fileDenom = utils.bytesToString(data.get("minFileSizeBytes", utils.MIN_VIDEO_SIZE_BYTES)).split()
     self.sizeSpinBox.setValue(int(float(fileSize)))
