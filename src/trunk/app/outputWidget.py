@@ -35,6 +35,8 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self.useSpecificDirectoryRadio.toggled.connect(self.specificDirectoryEdit.setEnabled)
     self.useSpecificDirectoryRadio.toggled.connect(self.specificDirectoryButton.setEnabled)
     self.formatEdit.textChanged.connect(self._updatePreviewText)
+    self.showHelpLabel.linkActivated.connect(self._showHelp)
+    self.hideHelpLabel.linkActivated.connect(self._hideHelp)
     
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)
@@ -44,6 +46,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     
     self.stopActioning()
     self.stopExploring()
+    self._showHelp()
       
   def startExploring(self):
     self.renameButton.setEnabled(False)
@@ -65,17 +68,21 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self.renameButton.setEnabled(True)
     
   def _setOutputFormat(self, fmt):
+    def escapeHtml(text):
+      return text.replace("<", "&lt;").replace(">", "&gt;")
+    
     self._fmt = fmt
     if self.formatEdit.text().isEmpty():
       self.formatEdit.setText(self._fmt.defaultFormatStr())
     #tooltip
-    toolTipText = ["Available options:"]
+    
+    helpText = ["Available options:"]
     for key, value in self._fmt.exampleInputMap().data.items():
-      toolTipText.append("%s -> %s" % (key, value))
+      helpText.append("<b>{}</b>: {}".format(escapeHtml(key), value))
     if self._fmt.defaultFormatStr().find("%(") != -1:
-      toolTipText.append("Enclose text within %( )% to optionally include text is a value is present.")
-      toolTipText.append("Eg. %( Disc <part> )%")
-    self.formatEdit.setToolTip("\n".join(toolTipText))
+      helpText += ["", "Enclose text within <b>%( )%</b> to optionally include text is a value is present.",
+                   "Eg. <b>%(</b> Disc <b>{}</b> <b>)%</b>".format(escapeHtml("<part>"))]
+    self.helpEdit.setText("<html><body>{}</body></html>".format("<br/>".join(helpText)))
     
     self._updatePreviewText()
     
@@ -117,3 +124,14 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       self.useSpecificDirectoryRadio.setChecked(True)      
     self.moveRadio.setChecked(data.get("move", True))
     self.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))
+    
+  def _showHelp(self):
+    self.helpGroupBox.setVisible(True)
+    self.hideHelpLabel.setVisible(True)
+    self.showHelpLabel.setVisible(False)
+  
+  def _hideHelp(self):
+    self.helpGroupBox.setVisible(False)
+    self.hideHelpLabel.setVisible(False)
+    self.showHelpLabel.setVisible(True)
+    

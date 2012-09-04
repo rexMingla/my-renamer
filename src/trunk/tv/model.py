@@ -67,7 +67,6 @@ class SeriesDelegate(QtGui.QStyledItemDelegate):
       editor.setCurrentIndex(editor.findData(ep.source.epNum))
  
   def setModelData(self, editor, model, index):
-    print "::setModelData"
     model = index.model()
     item, isMoveCandidate = model.data(index, RAW_DATA_ROLE)
     if not isMoveCandidate:
@@ -179,10 +178,7 @@ class TreeItem(object):
     if self.isMoveItemCandidate():
       return self.raw.canMove
     else:
-      for c in self.childItems:
-        if c.canCheck():
-          return True
-      return False
+      return any(c.canCheck() for c in self.childItems)
 
   def checkState(self):
     cs = QtCore.Qt.Checked
@@ -190,17 +186,10 @@ class TreeItem(object):
       if not self.raw.performMove:
         cs = QtCore.Qt.Unchecked
     elif self.isSeason():
-      checkCount = 0
-      uncheckCount = 0
-      for c in self.childItems:
-        if c.canCheck():
-          if c.checkState() == QtCore.Qt.Unchecked:
-            uncheckCount += 1
-          else:
-            checkCount += 1
-      if not checkCount:
+      checkedItems = [c.checkState() == QtCore.Qt.Checked for c in self.childItems if c.canCheck()]
+      if not checkedItems or all(not c for c in checkedItems):
         cs = QtCore.Qt.Unchecked
-      elif checkCount and not uncheckCount:
+      elif all(checkedItems):
         cs = QtCore.Qt.Checked
       else:
         cs = QtCore.Qt.PartiallyChecked
@@ -426,7 +415,6 @@ class TvModel(QtCore.QAbstractItemModel):
     return ret
 
   def setOverallCheckedState(self, isChecked):
-    print "setOverallCheckedState"
     utils.verifyType(isChecked, bool)
     self.beginUpdate()
     cs = QtCore.Qt.Checked if isChecked else QtCore.Qt.Unchecked
@@ -444,12 +432,10 @@ class TvModel(QtCore.QAbstractItemModel):
     self.workBenchChangedSignal.emit(hasItems)
 
   def beginUpdate(self):
-    print "beginUpdate"
     self._bulkProcessing = True
     self.beginUpdateSignal.emit()
     
   def endUpdate(self):
-    print "endUpdate"
     self._bulkProcessing = False
     self.endUpdateSignal.emit()
     

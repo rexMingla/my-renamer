@@ -81,7 +81,7 @@ class SeasonHelper:
       sanitizedShowName = utils.sanitizeString(tv[showName]["seriesname"], "") or showName
       for i in season:
         ep = season[i]
-        show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"]))
+        show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
         eps.addItem(show)
     except tvdb_exceptions.tvdb_exception as e:
       utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(showName, seasonNum, e))

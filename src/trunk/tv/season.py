@@ -99,7 +99,7 @@ class Season:
       #this should never really happen. TV show should always be resolved
       self.moveItemCandidates.append(moveItemCandidate.MoveItemCandidate(sourceEp, item))
     
-    self.moveItemCandidates = sorted(self.moveItemCandidates, key=lambda item: item.source.epNum)
+    self.moveItemCandidates = sorted(self.moveItemCandidates, key=lambda item: max(item.destination.epNum, item.source.epNum))
           
   def _resolveStatus(self):
     if not self.destination.matches:
