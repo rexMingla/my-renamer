@@ -94,47 +94,26 @@ class EpisodeMap(object):
   def setKeyForFilename(self, newKey, filename):
     """ Set a new key for a given filename, performing required sanitization in the event of key collisions. """
     utils.verifyType(newKey, int)
-    utils.verifyType(filename, str)
+    utils.verifyType(filename, str)    
     
-    sourceEp = None
-    for key, source in self.matches.items():
-      if source.filename == filename:
-        sourceEp = source
-        break
-    if not sourceEp:
-      for ep in self.unresolved:
-        if ep.filename == filename:
-          sourceEp = ep
-          break
-        
+    sourceEp = next( (source for key, source in self.matches.items() if source.filename == filename), None)
+    sourceEp = sourceEp or next( (ep for ep in self.unresolved if ep.filename == filename), None)
     if not sourceEp or sourceEp.epNum == newKey:
       return
-
-    #todo: filthy. clean me!!
-    oldEpNum = sourceEp.epNum
+    
+    oldEp = None
+    newKeyStr = str(newKey)
+    if newKeyStr in self.matches:
+      oldEp = self.matches[newKeyStr]
+      del self.matches[newKeyStr]
+      
+    self.removeSoureFile(sourceEp.filename)
     sourceEp.epNum = newKey
-    if oldEpNum == episode.UNRESOLVED_KEY:
-      utils.verify(not newKey == episode.UNRESOLVED_KEY, "old key <> new key")
-      self.unresolved.remove(sourceEp)
-      newKeyStr = str(newKey)
-      if newKeyStr in self.matches:
-        oldEp = copy.copy(self.matches[newKeyStr])
-        oldEp.epNum = episode.UNRESOLVED_KEY
-        self.unresolved.append(oldEp)
-      self.matches[str(sourceEp.epNum)] = sourceEp
-    else: #oldEpNum in matches
-      del self.matches[str(oldEpNum)]
-      if newKey == episode.UNRESOLVED_KEY:
-        self.unresolved.append(sourceEp)
-      else: #newEp in matches
-        newKeyStr = str(newKey)
-        if newKeyStr in self.matches:
-          oldEp = copy.copy(self.matches[newKeyStr])
-          oldEp.epNum = episode.UNRESOLVED_KEY          
-          self.unresolved.append(oldEp)
-        self.matches[str(sourceEp.epNum)] = sourceEp
+    self.addItem(sourceEp)
+    if oldEp:
+      self.addItem(oldEp)
         
-  def removeFile(self, filename):
+  def removeSoureFile(self, filename):
     utils.verifyType(filename, str)
     self.matches = dict( (k, v) for k, v in self.matches.items() if filename != v.filename)
     self.unresolved = [v for v in self.unresolved if filename != v.filename]

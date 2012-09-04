@@ -22,7 +22,7 @@ from tv import seasonHelper
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
   def test_seasonFromFolderName(self):
-    name, num = seasonHelper.SeasonHelper.seasonFromFolderName("c:/folder/Show - Season 1/")
+    name, num = seasonHelper.SeasonHelper.seasonFromFolderName("c:/folder/Show - Season 1")
     self.assertEqual(name, "Show")
     self.assertEqual(num, 1)
 
