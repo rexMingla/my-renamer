@@ -43,18 +43,6 @@ class MoveItemActioner:
   def setMessageCallback(self, cb):
     """ Set callback triggered after performing each move/copy. """
     self.messageCallback_ = cb
-          
-  @staticmethod
-  def summaryText(results):
-    """ Returns pretty print summary of results. """
-    utils.verifyType(results, dict)
-    ret = ""
-    count = 0
-    for key in results.keys():
-      ret += "{} ({}) ".format(MoveItemActioner.resultStr(key), results[key])
-      count += results[key]
-    ret += "Total ({})".format(count)
-    return ret
 
   def performActions(self, items):    
     """ Move/Copy multiple files from source to destination. """

@@ -36,8 +36,6 @@ class GetSeasonThread(thread.WorkerThread):
 class ChangeSeasonWidget(QtGui.QDialog):
   """
   The widget allows the user to select an show name and season number for a given folder containing files.
-  Unfortunately these is currently no way for the user to preview whether the show name and seaon number 
-  are resovled by the web service.
   """
   def __init__(self, parent=None):
     super(QtGui.QDialog, self).__init__(parent)
@@ -53,11 +51,21 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.downButton.clicked.connect(self._moveDown)
     self.episodeTable.cellClicked.connect(self._onSelectionChanged)
     self.indexSpinBox.valueChanged.connect(self._updateColumnHeaders)
+    self.seasonEdit.installEventFilter(self)
+    self.seasonSpin.installEventFilter(self)
     self._onThreadFinished()
     
   def __del__(self):
     self._isShuttingDown = True
     self._stopThread()
+    
+  def eventFilter(self, o, e):
+    if o in (self.seasonSpin, self.seasonEdit) and \
+      e.type() == QtCore.QEvent.KeyPress and e.key() == QtCore.Qt.Key_Return:
+      e.ignore()
+      self._search()
+      return False
+    return super(ChangeSeasonWidget, self).eventFilter(o, e)  
     
   def _search(self):
     if self._workerThread and self._workerThread.isRunning():
@@ -91,13 +99,9 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.useCacheCheckBox.setEnabled(True)
     self._onSelectionChanged()
     
-  def _onDataFound(self, ret):
-    seasonName, epMap = ret
-    if epMap.matches:
-      self.seasonEdit.setText(seasonName)
-      self._setEpisodeMap(epMap)
-    else:
-      self._setEpisodeMap(episode.EpisodeMap())
+  def _onDataFound(self, epMap):
+    self._setEpisodeMap(epMap)
+    if not epMap.hasData():
       QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
 
   def _onSelectionChanged(self):
@@ -154,13 +158,13 @@ class ChangeSeasonWidget(QtGui.QDialog):
     utils.verifyType(s, season.Season)
     self._data = s
     self.folderEdit.setText(fileHelper.FileHelper.basename(s.inputFolder))    
-    self.folderEdit.setToolTip(s.inputFolder)
-    self.seasonEdit.setText(s.seasonName)
-    self.seasonSpin.setValue(s.seasonNum)
+    self.folderEdit.setToolTip(s.inputFolder)    
     self._setEpisodeMap(s.destination)
       
   def _setEpisodeMap(self, episodeMap):
-    utils.verifyType(episodeMap, episode.EpisodeMap)
+    utils.verifyType(episodeMap, episode.DestinationEpisodeMap)
+    self.seasonEdit.setText(episodeMap.showName)
+    self.seasonSpin.setValue(episodeMap.seasonNum)    
     self.episodeTable.clearContents()
     
     minValue = min(map(int, episodeMap.matches) or [0])
@@ -176,13 +180,13 @@ class ChangeSeasonWidget(QtGui.QDialog):
       self.episodeTable.setItem(i, _TITLE_COLUMN, item)
     self._onSelectionChanged()
     
-  def data(self):    
-    destMap = episode.EpisodeMap() 
+  def data(self):   
+    destMap = episode.DestinationEpisodeMap(utils.toString(self.seasonEdit.text()), self.seasonSpin.value()) 
     startIndex = self.indexSpinBox.value()
     for i in range(self.episodeTable.rowCount()):
       epName = self.episodeTable.item(i, _TITLE_COLUMN)
       destMap.addItem(episode.DestinationEpisode(i + startIndex, utils.toString(epName.text())))
-    self._data.updateDestination(utils.toString(self.seasonEdit.text()), self.seasonSpin.value(), destMap)
+    self._data.updateDestination(destMap)
     return copy.copy(self._data)
 
   

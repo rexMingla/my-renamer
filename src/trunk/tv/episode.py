@@ -69,17 +69,22 @@ class DestinationEpisode(object):
     return DestinationEpisode(self.epNum, self.epName)
   
 # --------------------------------------------------------------------------------------------------------------------
-class EpisodeMap(object):
+class BaseEpisodeMap(object):
   """ 
   Collection of input or output files mapped by key. In the case of duplicate keys, the first is accepted 
   and all duplicates thereafter are considered unresolved.
   """
   def __init__(self):
-    super(EpisodeMap, self).__init__()
+    super(BaseEpisodeMap, self).__init__()
     self.matches = {}
     self.unresolved = []
   
+  def hasData(self):
+    return bool(len(self.matches) or len(self.unresolved))
+  
   def addItem(self, item):
+    utils.verify((isinstance(item, SourceEpisode) and isinstance(self, SourceEpisodeMap)) or 
+                 (isinstance(item, DestinationEpisode) and isinstance(self, DestinationEpisodeMap)), "wrong type!")
     epNumStr = str(item.epNum)
     if item.epNum == UNRESOLVED_KEY:
       self.unresolved.append(item)
@@ -119,16 +124,36 @@ class EpisodeMap(object):
     self.unresolved = [v for v in self.unresolved if filename != v.filename]
 
   def __eq__(self, other):
-    utils.verifyType(other, EpisodeMap)
+    utils.verifyType(other, BaseEpisodeMap)
     return other and utils.listCompare(self.unresolved, other.unresolved) and utils.dictCompare(self.matches, other.matches)
   
   def __str__(self):
-    return "<EpisodeMap: #matches:{} #unresolved:{}>".format(len(self.matches), len(self.unresolved))
+    return "<BaseEpisodeMap: #matches:{} #unresolved:{}>".format(len(self.matches), len(self.unresolved))
   
   def __copy__(self):
-    ret = EpisodeMap()
+    raise NotImplementedError("Base.__copy__ not implemented")
+  
+class SourceEpisodeMap(BaseEpisodeMap):
+  def __copy__(self):
+    ret = SourceEpisodeMap()
     for key, value in self.matches.items():
       ret.matches[key] = copy.copy(value)
     ret.unresolved = map(copy.copy, self.unresolved)
     return ret
+
+class DestinationEpisodeMap(BaseEpisodeMap):
+  def __init__(self, showName="", seasonNum=""):
+    super(DestinationEpisodeMap, self).__init__()
+    self.showName = showName
+    self.seasonNum = seasonNum 
+    
+  def __copy__(self):
+    ret = DestinationEpisodeMap(self.showName, self.seasonNum)
+    for key, value in self.matches.items():
+      ret.matches[key] = copy.copy(value)
+    ret.unresolved = map(copy.copy, self.unresolved)
+    return ret
+    
+  def __str__(self):
+    return "{} season {} - # episodes: {}".format(self.showName, self.seasonNum, len(self.matches))
       

@@ -11,17 +11,13 @@ import itertools
 import os
 import re
 
-import tvdb_api
-import tvdb_exceptions
-
 from common import extension
 from common import fileHelper
 from common import utils
 
 import episode
 import season
-
-_CACHE = {}
+import tvInfoClient
 
 _RE_FOLDER_MATCH_1 = re.compile(r"^.*{0}(?P<name>.*){0}(?:season|series)\s+(?P<num>\d+)[^{0}]*$".format(re.escape(os.sep)), 
                                 flags=re.IGNORECASE) #/show/season
@@ -31,6 +27,9 @@ _RE_EPISODE_MATCH = re.compile(r"^.*?(?P<epNum>\d\d?)\D*\.[^\.]*$")
 
 class SeasonHelper:
   """ Collection of tv series functions. """
+  _cache = {}
+  _store = tvInfoClient.getStore()
+    
   @staticmethod
   def seasonFromFolderName(folder):
     utils.verifyType(folder, str)
@@ -52,46 +51,22 @@ class SeasonHelper:
       return [int(m[-2:]) for m in re.findall("\d+", fileHelper.FileHelper.basename(filename))] or [episode.UNRESOLVED_KEY]
 
     if not filenames:
-      return episode.EpisodeMap()
+      return episode.SourceEpisodeMap()
     
     eps = [(f, getCandidateEpisodeNumsFromFilename(f)) for f in filenames]
     maxIndexes = max(len(ep[1]) for ep in eps)
     epMaps = []
     for i in range(maxIndexes):
-      epMap = episode.EpisodeMap()
+      epMap = episode.SourceEpisodeMap()
       for f, indexes in eps:
         epMap.addItem(episode.SourceEpisode(indexes[i] if i < len(indexes) else episode.UNRESOLVED_KEY, f))
       epMaps.append(epMap)
     for i in range(maxIndexes):
-      epMap = episode.EpisodeMap()
+      epMap = episode.SourceEpisodeMap()
       for f, indexes in eps:
         epMap.addItem(episode.SourceEpisode(indexes[- i - 1] if i < len(indexes) else episode.UNRESOLVED_KEY, f))
       epMaps.append(epMap)
     return max(epMaps, key=lambda epMap: len(epMap.matches))
-  
-  @staticmethod
-  def getSeasonInfoFromTVDB(showName, seasonNum):
-    utils.verifyType(showName, str)
-    utils.verifyType(seasonNum, int)
-    sanitizedShowName = showName
-    eps = episode.EpisodeMap()
-    try:
-      tv = tvdb_api.Tvdb()
-      season = tv[showName][seasonNum]
-      sanitizedShowName = utils.sanitizeString(tv[showName]["seriesname"], "") or showName
-      for i in season:
-        ep = season[i]
-        show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
-        eps.addItem(show)
-    except tvdb_exceptions.tvdb_exception as e:
-      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(showName, seasonNum, e))
-    return sanitizedShowName, eps  
-  
-  @staticmethod
-  def getDestinationEpisodeMapFromTVDB(showName, seasonNum):
-    utils.verifyType(showName, str)
-    utils.verifyType(seasonNum, int)
-    return SeasonHelper.getSeasonInfoFromTVDB(showName, seasonNum)[1]
   
   @staticmethod
   def getFolders(rootFolder, isRecursive):
@@ -125,44 +100,44 @@ class SeasonHelper:
     s = None
     if not seasonName == episode.UNRESOLVED_NAME or len(files):
       sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
-      destMap = episode.EpisodeMap()
+      destMap = episode.DestinationEpisodeMap(seasonName, seriesNum)
       if seasonName != episode.UNRESOLVED_NAME:
-        seasonName, destMap = SeasonHelper.getSeasonInfo(seasonName, seriesNum)
+        destMap = SeasonHelper.getSeasonInfo(seasonName, seriesNum)
       s = season.Season(seasonName, seriesNum, sourceMap, destMap, folder)
       s.inputFolder = folder
     return s
     
-  @staticmethod
-  def setCache(data):
+  @classmethod
+  def setCache(cls, data):
     utils.verifyType(data, dict)
-    global _CACHE
-    _CACHE = data
+    cls._cache = data
 
-  @staticmethod
-  def cache():
-    global _CACHE
-    return _CACHE
+  @classmethod
+  def cache(cls):
+    return cls._cache
   
   @staticmethod
-  def getSeasonInfo(seasonName, seriesNum, useCache=True):
+  def _getKey(seasonName, seriesNum):
+    return utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
+  
+  @classmethod
+  def getSeasonInfo(cls, seasonName, seriesNum, useCache=True):
     """ retrieves season from cache or tvdb if not present """
-    global _CACHE
     epMap = None
     
-    cacheKey = utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
-    if useCache and cacheKey in _CACHE:
-      epMap = _CACHE[cacheKey]
+    cacheKey = SeasonHelper._getKey(seasonName, seriesNum)
+    if useCache and cacheKey in cls._cache:
+      epMap = cls._cache[cacheKey]
     else:
-      seasonName, epMap = SeasonHelper.getSeasonInfoFromTVDB(seasonName, seriesNum)
-      if epMap != episode.EpisodeMap():
-        newKey = utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
+      epMap = cls._store.getInfo(seasonName, seriesNum, episode.DestinationEpisodeMap(seasonName, seriesNum))
+      if epMap.hasData():
+        newKey = SeasonHelper._getKey(epMap.showName, epMap.seasonNum)
         cachedEpMap = copy.copy(epMap)
-        _CACHE[newKey] = cachedEpMap
-        _CACHE[cacheKey] = cachedEpMap
-    return seasonName, epMap    
+        cls._cache[newKey] = cachedEpMap
+        cls._cache[cacheKey] = cachedEpMap
+    return epMap    
   
-  @staticmethod
-  def setSeasonInfo(seasonName, seriesNum, item): 
-    utils.verifyType(item, episode.EpisodeMap)
-    global _CACHE
-    _CACHE[utils.sanitizeString("{} ({})".format(seasonName, seriesNum))] = item  
+  @classmethod
+  def setSeasonInfo(cls, item): 
+    utils.verifyType(item, episode.DestinationEpisodeMap)
+    cls._cache[SeasonHelper._getKey(item.showName, item.seasonNum)] = item  

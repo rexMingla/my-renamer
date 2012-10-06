@@ -27,12 +27,12 @@ import interfaces
 # --------------------------------------------------------------------------------------------------------------------
 class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
-  modeChangedSignal = QtCore.pyqtSignal(object)  
+  modeChangedSignal = QtCore.pyqtSignal(object)
+  showEditSourcesSignal = QtCore.pyqtSignal()
   
   def __init__(self, mode, parent=None):
     super(BaseWorkBenchWidget, self).__init__("workBench/{}".format(mode), parent)
     uic.loadUi("ui/ui_WorkBench.ui", self)
-    
     self._model = None
     self.selectAllCheckBox.clicked.connect(self._setOverallCheckedState)
     self.launchButton.clicked.connect(self._launch)
@@ -151,6 +151,7 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     
     self._changeSeasonWidget = changeSeasonWidget.ChangeSeasonWidget(self)
     self._changeSeasonWidget.accepted.connect(self._onChangeSeasonFinished)
+    #self._changeSeasonWidget.sourceButton.clicked(self.showEditSourcesSignal.emit)
         
     self.tvView.setModel(self._model)
     self.tvView.header().setResizeMode(model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
@@ -257,7 +258,7 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
   def _onChangeSeasonFinished(self):
     data = self._changeSeasonWidget.data()
     utils.verifyType(data, season.Season)
-    seasonHelper.SeasonHelper.setSeasonInfo(data.seasonName, data.seasonNum, data.destination)    
+    seasonHelper.SeasonHelper.setSeasonInfo(data.destination)    
     self._model.setData(self._currentIndex, data, model.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)
     
@@ -278,7 +279,8 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self._setModel(movieModel.MovieModel(self.movieView))
     
     self._changeMovieWidget = changeMovieWidget.ChangeMovieWidget(self)
-    self._changeMovieWidget.accepted.connect(self._onChangeMovieFinished)    
+    self._changeMovieWidget.accepted.connect(self._onChangeMovieFinished)
+    self._changeMovieWidget.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)    
     
     self._sortModel = movieModel.SortFilterModel(self)
     self._sortModel.setSourceModel(self._model)  

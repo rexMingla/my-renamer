@@ -42,19 +42,19 @@ def initLogging(logfile):
 
 def logNotSet(msg, longMsg="", title=""):
   log(logging.NOTSET, msg, longMsg, title)
-  
+
 def logDebug(msg, longMsg="", title=""):
   log(logging.DEBUG, msg, longMsg, title)
-  
+
 def logInfo(msg, longMsg="", title=""):
   log(logging.INFO, msg, longMsg, title)
 
 def logWarning(msg, longMsg="", title=""):
   log(logging.WARNING, msg, longMsg, title)
-  
+
 def logError(msg, longMsg="", title=""):
   log(logging.ERROR, msg, longMsg, title)
-  
+
 def log(level, msg, longMsg="", title=""):
   logging.getLogger("renamer").log(level, msg or longMsg, extra={"title":title}) 
 
@@ -65,7 +65,7 @@ def verify(test, message):
     text = "assertion failed: {} stack: {}".format(message, stackFunctionName(2))
     logNotSet(text, title="utils.verify")
     raise AssertionError(text)      
-      
+
 # --------------------------------------------------------------------------------------------------------------------
 def verifyType(obj, class_or_type_or_tuple, msg=""):
   """ Compare type and object are of the same class. If not true print and throw. """
@@ -86,7 +86,7 @@ def listCompare(left, right):
   verifyType(right, list)
   isSame = len(left) == len(right) and all(l == r for l, r in zip(left, right))
   return isSame
-  
+
 # --------------------------------------------------------------------------------------------------------------------
 def dictCompare(left, right):
   """ Compare two dictionaries. 
@@ -105,7 +105,7 @@ def toString(value, defaultIfError=""):
     v = str(value)
   except ValueError:
     pass
-  
+
   return v
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -124,11 +124,11 @@ def sanitizeString(value, defaultIfError=UNDECODABLE_ERROR_MESSAGE):
 # --------------------------------------------------------------------------------------------------------------------
 def printTiming(func):
   def wrapper(*arg):
-      t1 = time.time()
-      res = func(*arg)
-      t2 = time.time()
-      logDebug("{}({}) took {:.2} ms".format(func.func_name, ",".join(map(str, arg)), (t2-t1) * 1000.0))
-      return res
+    t1 = time.time()
+    res = func(*arg)
+    t2 = time.time()
+    logDebug("{}({}) took {:.2} ms".format(func.func_name, ",".join(map(str, arg)), (t2-t1) * 1000.0))
+    return res
   return wrapper
 
 # --------------------------------------------------------------------------------------------------------------------
