@@ -84,7 +84,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
             "allFileSizes" : self.anySizeRadioButton.isChecked(),
             "minFileSizeBytes" :
               utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText())),
-            "sources" : self._store.getAllActiveNames()}
+            "sources" : self._store.getConfig()}
     return data
   
   def setConfig(self, data):
@@ -102,9 +102,8 @@ class InputWidget(interfaces.LoadWidgetInterface):
     fileSize, fileDenom = utils.bytesToString(data.get("minFileSizeBytes", utils.MIN_VIDEO_SIZE_BYTES)).split()
     self.sizeSpinBox.setValue(int(float(fileSize)))
     self.sizeComboBox.setCurrentIndex(self.sizeComboBox.findText(fileDenom))
-    sources = data.get("sources", "")
-    if sources:
-      self._store.setAllActive(sources)
+    sources = data.get("sources", {})
+    self._store.setConfig(sources)
     self.onSourcesWidgetFinished()
     
   def onSourcesWidgetFinished(self):

@@ -28,11 +28,12 @@ class GetMovieThread(thread.WorkerThread):
   def run(self):
     for info in self._store.getInfos(self._title):
       self._onData(info)
-      if info and self._isLucky:
+      if self._userStopped or (info and self._isLucky):
         break
 
 # --------------------------------------------------------------------------------------------------------------------
 class ChangeMovieWidget(QtGui.QDialog):
+  showEditSourcesSignal = QtCore.pyqtSignal()
   """
   The widget allows the user to select a movie info. Needs interactive search...
   """
@@ -56,6 +57,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.showLabel.linkActivated.connect(self._showResults)    
     self.stopButton.clicked.connect(self._stopThread)    
     self.partCheckBox.toggled.connect(self.partSpinBox.setEnabled)
+    self.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)    
     
     self._isLucky = False
     self._foundData = True
@@ -73,11 +75,6 @@ class ChangeMovieWidget(QtGui.QDialog):
   def __del__(self):
     self._isShuttingDown = True
     self._stopThread()
-    
-  def showEvent(self, event):
-    """ protected Qt function """
-    self.setMaximumHeight(self.sizeHint().height())
-    self.setMinimumHeight(self.sizeHint().height()) 
     
   def _search(self):
     if self._workerThread and self._workerThread.isRunning():

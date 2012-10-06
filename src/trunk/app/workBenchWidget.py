@@ -151,7 +151,7 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     
     self._changeSeasonWidget = changeSeasonWidget.ChangeSeasonWidget(self)
     self._changeSeasonWidget.accepted.connect(self._onChangeSeasonFinished)
-    #self._changeSeasonWidget.sourceButton.clicked(self.showEditSourcesSignal.emit)
+    self._changeSeasonWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)
         
     self.tvView.setModel(self._model)
     self.tvView.header().setResizeMode(model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
@@ -186,13 +186,11 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     
   def getConfig(self):
     return {"cache" : seasonHelper.SeasonHelper.cache(),
-            "state" : utils.toString(self.tvView.header().saveState().toBase64()),
-            "use_cache" : self._changeSeasonWidget.useCacheCheckBox.isChecked() }
+            "state" : utils.toString(self.tvView.header().saveState().toBase64()) }
   
   def setConfig(self, data, mode=None):
     utils.verifyType(data, dict)
     seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
-    self._changeSeasonWidget.useCacheCheckBox.setChecked(data.get("use_cache", True))
     self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
     
   def stopExploring(self):
@@ -280,7 +278,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     
     self._changeMovieWidget = changeMovieWidget.ChangeMovieWidget(self)
     self._changeMovieWidget.accepted.connect(self._onChangeMovieFinished)
-    self._changeMovieWidget.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)    
+    self._changeMovieWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)    
     
     self._sortModel = movieModel.SortFilterModel(self)
     self._sortModel.setSourceModel(self._model)  

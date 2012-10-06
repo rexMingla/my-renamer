@@ -16,24 +16,29 @@ from common import thread
 from common import utils
 from tv import episode
 from tv import season
-from tv import seasonHelper
+from tv import tvInfoClient
 
+import searchResultsWidget
 _TITLE_COLUMN = 0
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetSeasonThread(thread.WorkerThread):
-  def __init__(self, seasonName, seasonNum, useCacheValue):
+  def __init__(self, seasonName, seasonNum, store, isLucky):
     super(GetSeasonThread, self).__init__("tv search")
     self._seasonName = seasonName
     self._seaonsonNum = seasonNum
-    self._useCacheValue = useCacheValue
+    self._store = store
+    self._isLucky = isLucky
 
   def run(self):
-    ret = seasonHelper.SeasonHelper.getSeasonInfo(self._seasonName, self._seaonsonNum, self._useCacheValue)
-    self._onData(ret)
-
+    for info in self._store.getInfos(self._seasonName, self._seaonsonNum):
+      self._onData(info)
+      if self._userStopped or (info and self._isLucky):
+        break
+    
 # --------------------------------------------------------------------------------------------------------------------
 class ChangeSeasonWidget(QtGui.QDialog):
+  showEditSourcesSignal = QtCore.pyqtSignal()
   """
   The widget allows the user to select an show name and season number for a given folder containing files.
   """
@@ -42,6 +47,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     uic.loadUi("ui/ui_ChangeSeason.ui", self)
     self.setWindowModality(True)
     self._workerThread = None
+    self._data = season.Season("", 1, episode.SourceEpisodeMap(), episode.DestinationEpisodeMap(), "")
     
     self.searchButton.clicked.connect(self._search)
     self.stopButton.clicked.connect(self._stopThread)
@@ -51,9 +57,25 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.downButton.clicked.connect(self._moveDown)
     self.episodeTable.cellClicked.connect(self._onSelectionChanged)
     self.indexSpinBox.valueChanged.connect(self._updateColumnHeaders)
+    self.hideLabel.linkActivated.connect(self._hideResults)    
+    self.showLabel.linkActivated.connect(self._showResults)    
+    self.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)    
+
     self.seasonEdit.installEventFilter(self)
     self.seasonSpin.installEventFilter(self)
+
+    self._searchResults = searchResultsWidget.SearchResultsWidget(self)
+    self._searchResults.itemSelectedSignal.connect(self._setEpisodeMap)
+    lo = QtGui.QVBoxLayout()
+    lo.setContentsMargins(0, 0, 0, 0)
+    self.placeholderWidget.setLayout(lo)
+    lo.addWidget(self._searchResults)
+    
+    self._isLucky = False
+    self._foundData = True    
     self._onThreadFinished()
+    self._hideResults()    
+    self.showLabel.setVisible(False)
     
   def __del__(self):
     self._isShuttingDown = True
@@ -70,16 +92,19 @@ class ChangeSeasonWidget(QtGui.QDialog):
   def _search(self):
     if self._workerThread and self._workerThread.isRunning():
       return
+    self._isLucky = self.luckyCheckBox.isChecked()
+    self._foundData = False
+
     self.searchButton.setVisible(False)
     self.stopButton.setEnabled(True)
     self.stopButton.setVisible(True)
     self.episodesGroupBox.setEnabled(False)
     self.buttonBox.setEnabled(False)
-    self.useCacheCheckBox.setEnabled(False)
     
     self._workerThread = GetSeasonThread(utils.toString(self.seasonEdit.text()), 
                                          self.seasonSpin.value(),
-                                         self.useCacheCheckBox.isChecked())
+                                         tvInfoClient.getStore(),
+                                         self._isLucky)
     self._workerThread.newDataSignal.connect(self._onDataFound)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
@@ -96,14 +121,25 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.searchButton.setEnabled(True)
     self.episodesGroupBox.setEnabled(True)
     self.buttonBox.setEnabled(True)
-    self.useCacheCheckBox.setEnabled(True)
     self._onSelectionChanged()
+    if not self._foundData:
+      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")    
     
-  def _onDataFound(self, epMap):
-    self._setEpisodeMap(epMap)
-    if not epMap.hasData():
-      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
-
+  def _onDataFound(self, data):
+    if not data:
+      return
+    
+    epMap, sourceName = data
+    if self._isLucky:
+      self._setEpisodeMap(info)
+    else:
+      if not self._foundData:
+        self._searchResults.clear()
+        self._searchResults.addItem(self.data().destination, "current")
+      self._searchResults.addItem(epMap, sourceName)
+      self._showResults()
+    self._foundData = True
+    
   def _onSelectionChanged(self):
     currentIndex = self.episodeTable.currentItem().row() if self.episodeTable.currentItem() else -1
     self.removeButton.setEnabled(currentIndex != -1)
@@ -160,7 +196,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.folderEdit.setText(fileHelper.FileHelper.basename(s.inputFolder))    
     self.folderEdit.setToolTip(s.inputFolder)    
     self._setEpisodeMap(s.destination)
-      
+    
   def _setEpisodeMap(self, episodeMap):
     utils.verifyType(episodeMap, episode.DestinationEpisodeMap)
     self.seasonEdit.setText(episodeMap.showName)
@@ -188,5 +224,15 @@ class ChangeSeasonWidget(QtGui.QDialog):
       destMap.addItem(episode.DestinationEpisode(i + startIndex, utils.toString(epName.text())))
     self._data.updateDestination(destMap)
     return copy.copy(self._data)
+  
+  def _showResults(self):
+    self.placeholderWidget.setVisible(True)
+    self.hideLabel.setVisible(True)
+    self.showLabel.setVisible(False)
+  
+  def _hideResults(self):
+    self.placeholderWidget.setVisible(False)
+    self.hideLabel.setVisible(False)
+    self.showLabel.setVisible(True)  
 
   

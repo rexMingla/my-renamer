@@ -52,7 +52,20 @@ class BaseInfoStore(object):
         s.isEnabled = True
     
   def getAllActiveNames(self):
-    return [store.prettyName() for store in self.stores if store.isActive()]
+    return [store.prettyName() for store in self.stores if store.isActive()]  
+  
+  def getConfig(self):
+    ret = {}
+    for s in self.stores:
+      ret[s.prettyName()] = {"isEnabled": s.isEnabled, "key":s.key}
+    return ret
+  
+  def setConfig(self, data):
+    for name, values in data.items():
+      s = self.getStore(name)
+      if s:
+        s.isEnabled = values["isEnabled"]
+        s.key = values["key"]
   
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClient(object):
