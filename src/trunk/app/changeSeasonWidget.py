@@ -100,6 +100,8 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.stopButton.setVisible(True)
     self.episodesGroupBox.setEnabled(False)
     self.buttonBox.setEnabled(False)
+    self.placeholderWidget.setEnabled(False)    
+    self.progressBar.setRange(0, 0) #spin    
     
     self._workerThread = GetSeasonThread(utils.toString(self.seasonEdit.text()), 
                                          self.seasonSpin.value(),
@@ -121,6 +123,9 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.searchButton.setEnabled(True)
     self.episodesGroupBox.setEnabled(True)
     self.buttonBox.setEnabled(True)
+    self.placeholderWidget.setEnabled(True)
+    self.progressBar.setRange(-1, -1)
+
     self._onSelectionChanged()
     if not self._foundData:
       QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")    
@@ -196,6 +201,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.folderEdit.setText(fileHelper.FileHelper.basename(s.inputFolder))    
     self.folderEdit.setToolTip(s.inputFolder)    
     self._setEpisodeMap(s.destination)
+    self.seasonEdit.selectAll()    
     
   def _setEpisodeMap(self, episodeMap):
     utils.verifyType(episodeMap, episode.DestinationEpisodeMap)

@@ -87,6 +87,8 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.stopButton.setVisible(True)
     self.dataGroupBox.setEnabled(False)
     self.buttonBox.setEnabled(False)
+    self.placeholderWidget.setEnabled(False)    
+    self.progressBar.setRange(0, 0) #spin
     
     self._workerThread = GetMovieThread(utils.toString(self.searchEdit.text()), movieInfoClient.getStore(), self._isLucky)
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
@@ -105,6 +107,9 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.searchButton.setEnabled(True)
     self.dataGroupBox.setEnabled(True)
     self.buttonBox.setEnabled(True)
+    self.placeholderWidget.setEnabled(True)    
+    self.progressBar.setRange(-1, -1)   
+    
     if not self._foundData:
       QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
     
@@ -142,10 +147,10 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.filenameEdit.setText(fileHelper.FileHelper.basename(item.filename))
     self.filenameEdit.setToolTip(item.filename)
     self.titleEdit.setText(item.title)
+    self.searchEdit.setText(item.title)
+    self.searchEdit.selectAll()
     self.yearEdit.setText(item.year or "")
     self.genreEdit.setText(item.genre())
-    self.searchEdit.clear()
-    self.searchEdit.setFocus()
     if item.part:
       self.partSpinBox.setValue(int(item.part))
     self.partCheckBox.setChecked(bool(item.part))
