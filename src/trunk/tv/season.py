@@ -29,13 +29,13 @@ class Season:
     else:                                    assert(false); return "Unknown"
   
   def __str__(self):
-    return "season: {} season #: {} status: {}".format(self.seasonName, self.seasonNum, Season.resultStr(self.status))
+    return "season: {} season #: {} # eps: {}".format(self.seasonName, self.seasonNum, Season.resultStr(self.status))
   
   def __init__(self, seasonName, seasonNum, source, destination, inputFolder):
     utils.verifyType(seasonName, str)
     utils.verifyType(seasonNum, int)
-    utils.verifyType(source, episode.EpisodeMap)
-    utils.verifyType(destination, episode.EpisodeMap)
+    utils.verifyType(source, episode.SourceEpisodeMap)
+    utils.verifyType(destination, episode.DestinationEpisodeMap)
     utils.verifyType(inputFolder, str)
     
     self.seasonName = seasonName
@@ -47,6 +47,9 @@ class Season:
     self._resolveMoveItemCandidates()
     self._resolveStatus() 
     
+  def __str__(self):
+    return 
+    
   def setInputFolder(self, folder):
     utils.verifyType(folder, str)
     self.inputFolder = folder
@@ -56,18 +59,16 @@ class Season:
     self.source.removeFile(f)
     self.updateSource(self.source)
     
-  def updateDestination(self, seasonName, seasonNum, newDestination):
-    utils.verifyType(seasonName, str)
-    utils.verifyType(seasonNum, int)    
-    utils.verifyType(newDestination, episode.EpisodeMap)
-    self.seasonName = seasonName
-    self.seasonNum = seasonNum
+  def updateDestination(self, newDestination):
+    utils.verifyType(newDestination, episode.DestinationEpisodeMap)
+    self.seasonName = newDestination.showName
+    self.seasonNum = newDestination.seasonNum
     self.destination = newDestination
     self._resolveMoveItemCandidates()
     self._resolveStatus()    
     
   def updateSource(self, newSource):
-    utils.verifyType(newSource, episode.EpisodeMap)
+    utils.verifyType(newSource, episode.SourceEpisodeMap)
     self.source = newSource
     self._resolveMoveItemCandidates()
     self._resolveStatus()    

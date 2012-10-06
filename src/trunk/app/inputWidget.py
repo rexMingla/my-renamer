@@ -22,11 +22,13 @@ class InputWidget(interfaces.LoadWidgetInterface):
   """ Widget allowing for the configuration of source folders """
   exploreSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
+  showEditSourcesSignal = QtCore.pyqtSignal()
   
-  def __init__(self, mode, parent=None):
+  def __init__(self, mode, store, parent=None):
     super(InputWidget, self).__init__("input/{}".format(mode), parent)
     uic.loadUi("ui/ui_InputWidget.ui", self)
-    self.folderButton_.clicked.connect(self._showFolderSelectionDialog)
+    self._store = store
+    self.folderButton.clicked.connect(self._showFolderSelectionDialog)
     self.findButton.clicked.connect(self.exploreSignal)
     self.folderEdit.returnPressed.connect(self.exploreSignal)
     self.fileExtensionEdit.returnPressed.connect(self.exploreSignal)
@@ -34,6 +36,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
     self.restrictedExtRadioButton.toggled.connect(self.fileExtensionEdit.setEnabled)
     self.restrictedSizeRadioButton.toggled.connect(self.sizeSpinBox.setEnabled)
     self.restrictedSizeRadioButton.toggled.connect(self.sizeComboBox.setEnabled)
+    self.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)
     
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)
@@ -80,11 +83,12 @@ class InputWidget(interfaces.LoadWidgetInterface):
             "extensions" : utils.toString(self.fileExtensionEdit.text()),
             "allFileSizes" : self.anySizeRadioButton.isChecked(),
             "minFileSizeBytes" :
-              utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText()))}
+              utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText())),
+            "sources" : self._store.getAllActiveNames()}
     return data
   
   def setConfig(self, data):
-    self.folderEdit.setText(data.get("folder", ""))
+    self.folderEdit.setText(data.get("folder", "") or os.path.abspath(os.path.curdir))
     self.isRecursiveCheckBox.setChecked(data.get("recursive", True))
     if data.get("allExtensions", False):
       self.anyExtRadioButton.setChecked(True)
@@ -98,6 +102,14 @@ class InputWidget(interfaces.LoadWidgetInterface):
     fileSize, fileDenom = utils.bytesToString(data.get("minFileSizeBytes", utils.MIN_VIDEO_SIZE_BYTES)).split()
     self.sizeSpinBox.setValue(int(float(fileSize)))
     self.sizeComboBox.setCurrentIndex(self.sizeComboBox.findText(fileDenom))
+    sources = data.get("sources", "")
+    if sources:
+      self._store.setAllActive(sources)
+    self.onSourcesWidgetFinished()
     
+  def onSourcesWidgetFinished(self):
+    sources = self._store.getAllActiveNames()
+    self.sourcesEdit.setText(", ".join(sources))
+    #todo: act if == None
   
   

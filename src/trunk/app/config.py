@@ -5,9 +5,10 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Config singleton
 # --------------------------------------------------------------------------------------------------------------------
-import os
 import jsonpickle
-jsonpickle.set_encoder_options("simplejson", indent=2)
+import os
+import sys
+import traceback
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -15,44 +16,40 @@ from PyQt4 import QtGui
 from common import fileHelper
 from common import utils
 
-# --------------------------------------------------------------------------------------------------------------------
-#globals
-_CONFIG = {} #filthy static
-
-USE_SOURCE_DIRECTORY = ""
+jsonpickle.set_encoder_options("simplejson", indent=2)
+USE_SOURCE_DIRECTORY = "" #TODO: why is this here?
 
 # --------------------------------------------------------------------------------------------------------------------
 class ConfigManager(object):
-  @staticmethod
-  def getData(key, default=""):
-    global _CONFIG
-    return _CONFIG.get(key, default)
+  _data = {}
+    
+  @classmethod
+  def getData(cls, key, default=""):
+    return cls._data.get(key, default)
   
-  @staticmethod
-  def setData(key, value):
-    global _CONFIG
-    _CONFIG[key] = value
+  @classmethod
+  def setData(cls, key, value):
+    cls._data[key] = value
 
-  @staticmethod    
-  def loadConfig(filename):
-    global _CONFIG    
-    _CONFIG = {}
+  @classmethod
+  def loadConfig(cls, filename):
+    cls._data = {}
     if fileHelper.FileHelper.fileExists(filename):
       f = open(filename, "r")
       try:
-        _CONFIG = jsonpickle.decode(f.read())
+        cls._data = jsonpickle.decode(f.read())
       except (ValueError, TypeError, KeyError) as e:
         utils.logWarning("loadConfig error: {}".format(e))
-    if not isinstance(_CONFIG, dict):
-      _CONFIG = {}
+    if not isinstance(cls._data, dict):
+      cls._data = {}
   
-  @staticmethod
-  def saveConfig(filename):
-    global _CONFIG
+  @classmethod
+  def saveConfig(cls, filename):
     tmpFile = "{}.bak".format(filename)
     try:
+      #write a temp file and swap on success
       f = open(tmpFile, "w")
-      f.write(jsonpickle.encode(_CONFIG))
+      f.write(jsonpickle.encode(cls._data))
       f.close()
       if os.path.exists(filename):
         os.remove(filename)
@@ -60,5 +57,9 @@ class ConfigManager(object):
     except Exception as e: #json catches Exception so I guess we have to too
       mb = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
                              "An error occured", "Unable to save to settings file:\n{}".format(filename))
-      mb.setDetailedText("Error:\n{}".format(str(e)))
+      errorText = ["Error:\n{}\n\n".format(str(e)),
+                   "Exception:\n",
+                   "".join(traceback.format_exception(*sys.exc_info()))]
+      mb.setDetailedText("".join(errorText))
       mb.exec_()
+      #raise #for debugging

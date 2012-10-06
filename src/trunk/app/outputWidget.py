@@ -77,7 +77,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     #tooltip
     
     helpText = ["Available options:"]
-    for key, value in self._fmt.exampleInputMap().data.items():
+    for key, value in self._fmt.helpInputMap().data.items():
       helpText.append("<b>{}</b>: {}".format(escapeHtml(key), value))
     if self._fmt.defaultFormatStr().find("%(") != -1:
       helpText += ["", "Enclose text within <b>%( )%</b> to optionally include text is a value is present.",
@@ -109,7 +109,8 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     data = {"format" : utils.toString(self.formatEdit.text()),
             "folder" : outputDir,
             "move" : self.moveRadio.isChecked(),
-            "dontOverwrite" : self.doNotOverwriteCheckBox.isChecked()}
+            "dontOverwrite" : self.doNotOverwriteCheckBox.isChecked(),
+            "showHelp" : self.helpGroupBox.isVisible()}
     return data
   
   def setConfig(self, data):
@@ -124,6 +125,10 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       self.useSpecificDirectoryRadio.setChecked(True)      
     self.moveRadio.setChecked(data.get("move", True))
     self.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))
+    if data.get("showHelp", True):
+      self._showHelp()
+    else:
+      self._hideHelp()
     
   def _showHelp(self):
     self.helpGroupBox.setVisible(True)

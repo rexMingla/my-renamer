@@ -10,18 +10,16 @@ import glob
 import os
 import re
 
-from pymdb import pymdb
-
 from common import extension
 from common import fileHelper
 from common import utils
+
+import movieInfoClient
 
 #_SUBTITLE_EXTENSIONS = (".sub", ".srt", ".rar", ".sfv")
 _PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
 _MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
 _MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
-
-_CACHE = {}
 
 # --------------------------------------------------------------------------------------------------------------------
 class Result:
@@ -67,23 +65,18 @@ class Movie(object):
     ret.result = self.result
     ret.genres = list(self.genres)
     return ret
+  
+  def __str__(self):
+    return self.title if not self.year else "{} ({})".format(self.title, self.year)
     
   def itemToInfo(self):
     return MovieInfo(self.title, self.year, list(self.genres))
     
 # --------------------------------------------------------------------------------------------------------------------
-class MovieInfo(object):
-  def __init__(self, title="", year=None, genres=None):
-    super(MovieInfo, self).__init__()
-    self.title = title
-    self.year = year
-    self.genres = genres or []
-    
-  def __copy__(self):
-    return MovieInfo(self.title, self.year, list(self.genres))
-    
-# --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
+  _cache = {}
+  _store = movieInfoClient.getStore()
+  
   @staticmethod
   def getFiles(folder, extensionFilter, isRecursive, minFileSizeBytes):
     files = []
@@ -142,49 +135,41 @@ class MovieHelper:
     movie = Movie(filename, title, part, year)
     movie.result = result
     return movie
-    
-  @staticmethod
-  def getInfoFromTvdb(title, year=""):
-    info = MovieInfo(title, year)
-    try:
-      m = pymdb.Movie(title)
-      info.title = utils.sanitizeString(m.title or title)
-      info.year = utils.sanitizeString(m.year or year)
-      info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
-    except (AttributeError, pymdb.MovieError) as e:
-      utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TVDB lookup")
-    return info
   
-  @staticmethod
-  def setCache(data):
+  @classmethod
+  def setCache(cls, data):
     utils.verifyType(data, dict)
-    global _CACHE
-    _CACHE = data
+    cls._cache = data
+
+  @classmethod
+  def cache(cls):
+    return cls._cache
 
   @staticmethod
-  def cache():
-    global _CACHE
-    return _CACHE
+  def _getKey(title, year):
+    return title if not year else utils.sanitizeString("{} ({})".format(title, year))
 
-  @staticmethod
-  def getItem(title, year, useCache=True):
+  @classmethod
+  def getItem(cls, title, year="", useCache=True):
     """ retrieves season from cache or tvdb if not present """
-    cacheKey = utils.sanitizeString("{} ({})".format(title, year))
-    global _CACHE
+    cacheKey = cls._getKey(title, year)
     ret = None
-    if useCache and cacheKey in _CACHE:
-      ret = _CACHE[cacheKey]
+    if useCache and cacheKey in cls._cache:
+      ret = cls._cache[cacheKey]
     else:
-      ret = MovieHelper.getInfoFromTvdb(title, year)
+      ret = cls._store.getInfo(title, year, default=movieInfoClient.MovieInfo(title, year))
       if ret:
-        _CACHE[cacheKey] = copy.copy(ret)
-        newKey = utils.sanitizeString("{} ({})".format(title, year))        
+        cls._cache[cacheKey] = copy.copy(ret)
+        newKey = cls._getKey(title, year)        
         if cacheKey != newKey:
-          _CACHE[cacheKey] = copy.copy(ret)
+          cls._cache[cacheKey] = copy.copy(ret)
     return ret 
   
-  @staticmethod
-  def setItem(item): 
+  @classmethod
+  def getItems(cls, title, year=""):
+    pass
+  
+  @classmethod  
+  def setItem(cls, item): 
     utils.verifyType(item, MovieInfo)
-    global _CACHE
-    _CACHE[utils.sanitizeString("{} ({})".format(item.title, item.year))] = item
+    cls._cache[cls._getKey(item.title, item.year)] = item
