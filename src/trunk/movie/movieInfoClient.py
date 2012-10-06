@@ -47,7 +47,7 @@ class MovieInfoStore(infoClient.BaseInfoStore):
     for store in self.stores:
       if store.isActive():
         for info in store.getInfos(title, year):
-          yield (info, store.prettyName())
+          yield (info, store.sourceName)
           
 _STORE = None
 # --------------------------------------------------------------------------------------------------------------------
@@ -134,7 +134,9 @@ class ImdbPyClient(BaseMovieInfoClient):
 # --------------------------------------------------------------------------------------------------------------------
 class TheMovieDbClient(BaseMovieInfoClient):
   def __init__(self):
-    super(TheMovieDbClient, self).__init__("tmdb", "themoviedb.org", "https://github.com/dbr/themoviedb", _hasTmdb, False)
+    super(TheMovieDbClient, self).__init__("tmdb", "themoviedb.org", "https://github.com/dbr/themoviedb", 
+                                           hasLib=_hasTmdb, 
+                                           requiresKey=False)
     
   def _getInfos(self, title, year=""):
     ret = []
@@ -173,6 +175,6 @@ class RottenTomatoesClient(BaseMovieInfoClient):
         info = MovieInfo(title, year)
         #no genre without more effort
         ret.append(info)
-    except tmdb.TmdBaseError as e:
+    except Exception as e: #bad need to find a better exception
       utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TheMovieDB lookup")
     return ret
