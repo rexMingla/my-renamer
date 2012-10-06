@@ -22,13 +22,14 @@ except ImportError:
 class TvInfoStore(infoClient.BaseInfoStore):
   
   def getInfo(self, showName, seasonNum, default=None):
-    ret = None
+    return next(self.getInfos(showName, seasonNum), (default, ""))[0]
+  
+  def getInfos(self, showName, seasonNum):
+    """ returns an iterator """
     for store in self.stores:
       if store.isActive():
-        ret = store.getInfo(showName, seasonNum)
-        if ret:
-          break
-    return ret or default 
+        for info in store.getInfos(showName, seasonNum):
+          yield (info, store.prettyName())  
     
 _STORE = None
 # --------------------------------------------------------------------------------------------------------------------
@@ -44,31 +45,38 @@ class BaseTvInfoClient(infoClient.BaseInfoClient):
   
   def getInfo(self, showName, seasonNum):
     return self._getInfo(showName, seasonNum) if self.isActive() else None
+  
+  def getInfos(self, showName, seasonNum=""):
+    return self._getInfos(showName, seasonNum) if self.hasLib else None    
 
-  def _getInfo(self, showName, seasonNum):
-    raise NotImplementedError("BaseTvInfoClient.getInfo not implemented")
+  def _getInfo(self, showName, seasonNum=""):
+    infos = self._getInfos(showName, seasonNum)
+    return infos[0] if infos else None
+  
+  def _getInfos(self, showName, seasonNum=""):
+    raise NotImplementedError("BaseTvInfoClient.getInfos not implemented")
   
 # --------------------------------------------------------------------------------------------------------------------
 class TvdbClient(BaseTvInfoClient):
   def __init__(self):
     super(TvdbClient, self).__init__("tvdb_api", "thetvdb.com", "https://github.com/dbr/tvdb_api/", hasTvdb, False)
     
-  def _getInfo(self, showName, seasonNum):
+  def _getInfos(self, showName, seasonNum):
     utils.verifyType(showName, str)
     utils.verifyType(seasonNum, int)
-    eps = None
+    ret = []
     try:
       tv = tvdb_api.Tvdb()
       season = tv[showName][seasonNum]
-      eps = episode.DestinationEpisodeMap(showName, seasonNum)
       eps = episode.DestinationEpisodeMap(utils.sanitizeString(tv[showName]["seriesname"], "") or showName, seasonNum)
+      ret.append(eps)
       for i in season:
         ep = season[i]
         show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
         eps.addItem(show)
     except tvdb_exceptions.tvdb_exception as e:
       utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(showName, seasonNum, e))
-    return eps  
+    return ret
 
   
   

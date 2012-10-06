@@ -262,7 +262,7 @@
         <bool>false</bool>
        </property>
        <property name="toolTip">
-        <string>Only include listed extensions, forms can be either of the following: .mpg *.mpg mpg</string>
+        <string>Where is the information being looked up</string>
        </property>
       </widget>
      </item>

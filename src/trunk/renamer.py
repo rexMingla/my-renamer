@@ -26,6 +26,28 @@ def _runGUI(cl):
   mw = mainWindow.MainWindow()
   mw.show()
   
+  # --------------------------------------------------------------------------------------------------------------------
+  """from app import changeMovieWidget
+  from app import editSourcesWidget
+  from movie import movieInfoClient
+
+  cm = changeMovieWidget.ChangeMovieWidget(None)
+  cm.show()
+  
+  es = editSourcesWidget.EditSourcesWidget(movieInfoClient.getStore(), cm)
+  cm.showEditSourcesSignal.connect(es.show)
+  
+  # --------------------------------------------------------------------------------------------------------------------
+  from app import changeSeasonWidget
+  from app import editSourcesWidget
+  from tv import tvInfoClient
+
+  cs = changeSeasonWidget.ChangeSeasonWidget(None)
+  cs.show()
+  
+  es = editSourcesWidget.EditSourcesWidget(tvInfoClient.getStore(), cs)
+  cs.showEditSourcesSignal.connect(es.show)"""
+
   app.exec_()
 
 # --------------------------------------------------------------------------------------------------------------------
