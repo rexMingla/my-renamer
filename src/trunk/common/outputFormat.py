@@ -77,27 +77,29 @@ class MovieInputMap(InputMap):
   KEY_YEAR   = _wrapReplaceStr("year")
   KEY_GENRE  = _wrapReplaceStr("genre")  
   KEY_DISC   = _wrapReplaceStr("part")  
+  KEY_SERIES = _wrapReplaceStr("series")  
 
-  def __init__(self, title, year, genre, disc):
+  def __init__(self, title, year, genre, disc, series):
     super(MovieInputMap, self).__init__()
     utils.verifyType(title, str)
     utils.verifyType(genre, str)
     self.data = {MovieInputMap.KEY_TITLE: title,
                  MovieInputMap.KEY_YEAR:  str(year),
                  MovieInputMap.KEY_GENRE: genre,
-                 MovieInputMap.KEY_DISC: str(disc or "")}
+                 MovieInputMap.KEY_DISC: str(disc or ""),
+                 MovieInputMap.KEY_SERIES: series}
 
   @staticmethod
   def helpInputMap():
-    return MovieInputMap("Title", "Year", "Genre", "Part")
+    return MovieInputMap("Title", "Year", "Genre", "Part", "Series")
 
   @staticmethod
   def exampleInputMap():
-    return MovieInputMap("Anchorman", 2004, "comedy", 1)
+    return MovieInputMap("The Twin Towers", 2002, "action", 1, "LOTR")
   
   @staticmethod
   def defaultFormatStr():
-    return "<genre>/<title> (<year>)%( - Disc <part>)%"
+    return "<genre>/%(<series> - )%<title> (<year>)%( - Disc <part>)%"
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:

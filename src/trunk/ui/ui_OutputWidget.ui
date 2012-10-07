@@ -43,7 +43,7 @@
      <property name="childrenCollapsible">
       <bool>false</bool>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout">
        <property name="spacing">
         <number>4</number>
@@ -337,6 +337,9 @@ p, li { white-space: pre-wrap; }
             <number>0</number>
            </property>
            <property name="textVisible">
+            <bool>true</bool>
+           </property>
+           <property name="invertedAppearance">
             <bool>false</bool>
            </property>
           </widget>

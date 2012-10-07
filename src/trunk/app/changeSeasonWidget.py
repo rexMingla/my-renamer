@@ -81,6 +81,13 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self._isShuttingDown = True
     self._stopThread()
     
+  def showEvent(self, e):
+    self._foundData = True    
+    self._onThreadFinished()
+    self._hideResults()    
+    self.showLabel.setVisible(False)    
+    super(ChangeSeasonWidget, self).showEvent(e)
+    
   def eventFilter(self, o, e):
     if o in (self.seasonSpin, self.seasonEdit) and \
       e.type() == QtCore.QEvent.KeyPress and e.key() == QtCore.Qt.Key_Return:
@@ -101,7 +108,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.episodesGroupBox.setEnabled(False)
     self.buttonBox.setEnabled(False)
     self.placeholderWidget.setEnabled(False)    
-    self.progressBar.setRange(0, 0) #spin    
+    self.progressBar.setVisible(True)
     
     self._workerThread = GetSeasonThread(utils.toString(self.seasonEdit.text()), 
                                          self.seasonSpin.value(),
@@ -124,7 +131,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self.episodesGroupBox.setEnabled(True)
     self.buttonBox.setEnabled(True)
     self.placeholderWidget.setEnabled(True)
-    self.progressBar.setRange(-1, -1)
+    self.progressBar.setVisible(False)
 
     self._onSelectionChanged()
     if not self._foundData:

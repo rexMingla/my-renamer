@@ -43,7 +43,7 @@ class BaseInfoStore(object):
     return next( (i for i, s in enumerate(self.stores) if name == s.prettyName() ), -1)
   
   def getStore(self, name):
-    return next( (s for s in self.stores if name == s.prettyName() ), -1)
+    return next( (s for s in self.stores if name == s.prettyName() ), None)
   
   def setAllActive(self, stores):
     for key in stores:
@@ -57,7 +57,7 @@ class BaseInfoStore(object):
   def getConfig(self):
     ret = {}
     for s in self.stores:
-      ret[s.prettyName()] = {"isEnabled": s.isEnabled, "key":s.key}
+      ret[s.prettyName()] = {"isEnabled": s.isEnabled, "key": s.key}
     return ret
   
   def setConfig(self, data):
