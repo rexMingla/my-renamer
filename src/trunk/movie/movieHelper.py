@@ -42,7 +42,7 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
 
 # --------------------------------------------------------------------------------------------------------------------
 class Movie(object):
-  def __init__(self, filename, title, part="", year="", subsFiles=None):
+  def __init__(self, filename, title, part="", year="", subsFiles=None, series=""):
     super(Movie, self).__init__()
     self.filename = filename #utils.toString(filename)
     self.fileSize = fileHelper.FileHelper.getFileSize(filename)
@@ -52,16 +52,15 @@ class Movie(object):
     #dynamic properties
     self.year = utils.toString(year)
     self.genres = []
-    self.collision_number = None #marked if multiple entries have the same name
     self.part = part #disc number
+    self.series = series
     self.result = None #Filthy, just temporary   
     
   def genre(self, valueIfNull=""):
     return self.genres[0] if self.genres else valueIfNull
    
   def __copy__(self):
-    ret = Movie(self.filename, self.title, self.part, self.year)
-    ret.collision_number = self.collision_number
+    ret = Movie(self.filename, self.title, self.part, self.year, series=self.series)
     ret.result = self.result
     ret.genres = list(self.genres)
     return ret
@@ -70,7 +69,7 @@ class Movie(object):
     return self.title if not self.year else "{} ({})".format(self.title, self.year)
     
   def itemToInfo(self):
-    return MovieInfo(self.title, self.year, list(self.genres))
+    return movieInfoClient.MovieInfo(self.title, self.year, list(self.genres), self.series)
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
@@ -171,5 +170,5 @@ class MovieHelper:
   
   @classmethod  
   def setItem(cls, item): 
-    utils.verifyType(item, MovieInfo)
+    #utils.verifyType(item, MovieInfo)
     cls._cache[cls._getKey(item.title, item.year)] = item

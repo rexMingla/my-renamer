@@ -64,18 +64,33 @@ class ChangeMovieWidget(QtGui.QDialog):
     self._onThreadFinished()
     self._hideResults()    
     self.showLabel.setVisible(False)
+    self._seriesList = []
     
+  def __del__(self):
+    self._isShuttingDown = True
+    self._stopThread()
+        
+  def accept(self):
+    series = utils.toString(self.seriesEdit.text())
+    if series and not series in self._seriesList:
+      self._seriesList.append(series)
+      self.setSeriesList(self._seriesList)    
+    return super(ChangeMovieWidget, self).accept()
+        
   def eventFilter(self, o, e):
     if o == self.searchEdit and e.type() == QtCore.QEvent.KeyPress and e.key() == QtCore.Qt.Key_Return:
       e.ignore()
       self._search()
       return False
     return super(ChangeMovieWidget, self).eventFilter(o, e)
-  
-  def __del__(self):
-    self._isShuttingDown = True
-    self._stopThread()
     
+  def showEvent(self, e):
+    self._foundData = True    
+    self._onThreadFinished()
+    self._hideResults()    
+    self.showLabel.setVisible(False)    
+    super(ChangeMovieWidget, self).showEvent(e)  
+
   def _search(self):
     if self._workerThread and self._workerThread.isRunning():
       return
@@ -88,7 +103,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.dataGroupBox.setEnabled(False)
     self.buttonBox.setEnabled(False)
     self.placeholderWidget.setEnabled(False)    
-    self.progressBar.setRange(0, 0) #spin
+    self.progressBar.setVisible(True)
     
     self._workerThread = GetMovieThread(utils.toString(self.searchEdit.text()), movieInfoClient.getStore(), self._isLucky)
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
@@ -108,7 +123,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.dataGroupBox.setEnabled(True)
     self.buttonBox.setEnabled(True)
     self.placeholderWidget.setEnabled(True)    
-    self.progressBar.setRange(-1, -1)   
+    self.progressBar.setVisible(False)   
     
     if not self._foundData:
       QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
@@ -138,12 +153,23 @@ class ChangeMovieWidget(QtGui.QDialog):
     utils.verifyType(info, movieInfoClient.MovieInfo)
     self.titleEdit.setText(info.title)
     self.yearEdit.setText(info.year or "")
-    self.genreEdit.setText(info.genres[0] if info.genres else "")    
+    self.genreEdit.setText(info.genres[0] if info.genres else "")  
+    
+  def setSeriesList(self, l):
+    utils.verifyType(l, list)
+    self._seriesList = l
+    completer = QtGui.QCompleter(self._seriesList, self)
+    completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+    completer.setCompletionMode(QtGui.QCompleter.UnfilteredPopupCompletion)    
+    self.seriesEdit.setCompleter(completer)        
+    
+  def getSeriesList(self):
+    return self._seriesList
   
   def setData(self, item):
     """ Fill the dialog with the data prior to being shown """
     utils.verifyType(item, movieHelper.Movie)
-    self.item = item  
+    self._item = item  
     self.filenameEdit.setText(fileHelper.FileHelper.basename(item.filename))
     self.filenameEdit.setToolTip(item.filename)
     self.titleEdit.setText(item.title)
@@ -151,23 +177,25 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.searchEdit.selectAll()
     self.yearEdit.setText(item.year or "")
     self.genreEdit.setText(item.genre())
+    self.seriesEdit.setText(item.series)
     if item.part:
       self.partSpinBox.setValue(int(item.part))
     self.partCheckBox.setChecked(bool(item.part))
     
   def data(self):
-    self.item.title = utils.toString(self.titleEdit.text())
-    self.item.year = utils.toString(self.yearEdit.text())
+    self._item.title = utils.toString(self.titleEdit.text())
+    self._item.year = utils.toString(self.yearEdit.text())
     genre = utils.toString(self.genreEdit.text()).strip()
     if genre:
       genre = [genre]
     else:
       genre = []
-    self.item.genres = genre
-    self.item.part = None
+    self._item.genres = genre
+    self._item.part = None
     if self.partCheckBox.isChecked():
-      self.item.part = self.partSpinBox.value()
-    return self.item
+      self._item.part = self.partSpinBox.value()
+    self._item.series = utils.toString(self.seriesEdit.text()).strip()
+    return self._item
   
   def _showResults(self):
     self.placeholderWidget.setVisible(True)
@@ -178,6 +206,4 @@ class ChangeMovieWidget(QtGui.QDialog):
     self.placeholderWidget.setVisible(False)
     self.hideLabel.setVisible(False)
     self.showLabel.setVisible(True)
-
-
   

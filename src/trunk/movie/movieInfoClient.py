@@ -63,14 +63,15 @@ def getStore():
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInfo(object):
-  def __init__(self, title="", year=None, genres=None):
+  def __init__(self, title="", year=None, genres=None, series=""):
     super(MovieInfo, self).__init__()
     self.title = title
     self.year = year
     self.genres = genres or []
+    self.series = series
     
   def __copy__(self):
-    return MovieInfo(self.title, self.year, list(self.genres))
+    return MovieInfo(self.title, self.year, list(self.genres), self.series)
   
   def __str__(self):
     return self.title if not self.year else "{} ({})".format(self.title, self.year)
@@ -148,10 +149,10 @@ class TheMovieDbClient(BaseMovieInfoClient):
         title = utils.sanitizeString(r.get("name", title))
         year = str(r.get("released", year))[:4]
         info = MovieInfo(title, year)
-        #don't worry about genre for now
-        #i = r.info()
-        #info.genres = map(utils.sanitizeString, i["categories"]["genre"].keys())
         ret.append(info)
+        i = r.info()
+        genres = i["categories"]["genre"].keys() if ("categories" in i and "genre" in i["categories"]) else []
+        info.genres = map(utils.sanitizeString, genres)
     except tmdb.TmdBaseError as e:
       utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TheMovieDB lookup")
     return ret
@@ -159,7 +160,7 @@ class TheMovieDbClient(BaseMovieInfoClient):
 # --------------------------------------------------------------------------------------------------------------------
 class RottenTomatoesClient(BaseMovieInfoClient):
   def __init__(self):
-    super(RottenTomatoesClient, self).__init__("rottentomatoes", "RottenTomatoes.com",
+    super(RottenTomatoesClient, self).__init__("rottentomatoes", "rottentomatoes.com",
                                                "https://github.com/zachwill/rottentomatoes", 
                                                _hasRottenTomatoes, True)
     

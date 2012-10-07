@@ -72,7 +72,7 @@ class SeriesTest(unittest.TestCase):
     #self.assertEqual(act, exp) # take out for now
     
   def test_getDestinationEpisodeMapFromTVDBInvalid(self):
-    exp = episode.DestinationEpisodeMap("Not real, Really", 1)
+    exp = None
     act = tvInfoClient.TvdbClient().getInfo("Not real, Really", 1)
     self.assertEqual(act, exp)  
     
@@ -296,13 +296,13 @@ class OutputFormatTest(unittest.TestCase):
 class AdvancedOutputFormat(unittest.TestCase):
     
   def test_omit(self):
-    ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "")    
+    ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "", "")    
     fmt = outputFormat.OutputFormat("<genre> - <title> (<year>)%( - Disc <part>)%")
     out = fmt.outputToString(ip)
     self.assertEqual(out, "Comedy - Anchorman (2004)")
 
   def test_include(self):
-    ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "2")
+    ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "2", "")
     fmt = outputFormat.OutputFormat("<genre> - <title> (<year>)%( - Disc <part>)%")
     out = fmt.outputToString(ip)
     self.assertEqual(out, "Comedy - Anchorman (2004) - Disc 2")

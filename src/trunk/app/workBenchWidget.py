@@ -325,7 +325,8 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
             "no_year_as_error" : self.yearCheckBox.isChecked(),
             "no_genre_as_error" : self.genreCheckBox.isChecked(),
             "duplicate_as_error" : self.duplicateCheckBox.isChecked(),
-            "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()) }
+            "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()),
+            "series_list" : self._changeMovieWidget.getSeriesList()  }
   
   def setConfig(self, data, mode=None):
     utils.verifyType(data, dict)
@@ -334,6 +335,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
     self.duplicateCheckBox.setChecked(data.get("duplicate_as_error", True)),
     self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
+    self._changeMovieWidget.setSeriesList(data.get("series_list", []))
 
   def _currentMovieModelIndex(self, index):
     return self._sortModel.mapToSource(index)
@@ -353,7 +355,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
   def _onChangeMovieFinished(self):
     data = self._changeMovieWidget.data()    
     utils.verifyType(data, movieHelper.Movie)
-    movieHelper.MovieHelper.setItem(data)
+    movieHelper.MovieHelper.setItem(data.itemToInfo())
     self._model.setData(self._currentIndex, data, model.RAW_DATA_ROLE)
     
   def _requireYearChanged(self, requireYear):

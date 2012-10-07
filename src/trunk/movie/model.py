@@ -38,7 +38,8 @@ class Columns:
   COL_STATUS    = 5
   COL_DISC      = 6
   COL_FILE_SIZE = 7
-  NUM_COLS      = 8
+  COL_SERIES    = 8
+  NUM_COLS      = 9
 
 RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
 
@@ -128,6 +129,8 @@ class MovieModel(QtCore.QAbstractTableModel):
       return movie.genre()
     elif col == Columns.COL_FILE_SIZE:
       return utils.bytesToString(movie.fileSize) if movie.result == movieHelper.Result.FOUND else ""
+    elif col == Columns.COL_SERIES:
+      return movie.series
        
   def setData(self, index, value, role):
     if not index.isValid() or role not in (QtCore.Qt.CheckStateRole, RAW_DATA_ROLE):
@@ -186,6 +189,8 @@ class MovieModel(QtCore.QAbstractTableModel):
       return "Genre"
     elif section == Columns.COL_FILE_SIZE:
       return "File Size"
+    elif section == Columns.COL_SERIES:
+      return "Series"
 
   def rowCount(self, parent=None):
     return len(self._movies)
