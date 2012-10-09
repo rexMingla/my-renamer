@@ -20,7 +20,8 @@ setup(
     console = [{"script":"renamer.py"}],
     options = {
       "py2exe":{
-        "includes":["sip", "PyQt4.uic", "PyQt4.QtCore", "pymdb", "tvdb_api", "jsonpickle"],
+        "includes":["sip", "PyQt4.uic", "PyQt4.QtCore", "jsonpickle", 
+                    "pymdb", "tvdb_api", "tmdb"],
         "dll_excludes": ["MSVCP90.dll"]
       } 
     },

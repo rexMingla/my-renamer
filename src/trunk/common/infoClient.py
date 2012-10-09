@@ -55,17 +55,19 @@ class BaseInfoStore(object):
     return [store.prettyName() for store in self.stores if store.isActive()]  
   
   def getConfig(self):
-    ret = {}
-    for s in self.stores:
-      ret[s.prettyName()] = {"isEnabled": s.isEnabled, "key": s.key}
+    ret = []
+    for i, s in enumerate(self.stores):
+      ret.append({"name": s.prettyName(), "isEnabled": s.isEnabled, "key": s.key, "index": i})
     return ret
   
   def setConfig(self, data):
-    for name, values in data.items():
-      s = self.getStore(name)
-      if s:
-        s.isEnabled = values["isEnabled"]
-        s.key = values["key"]
+    for i, values in enumerate(data):
+      index = self.getStoreIndex(values["name"])
+      if index != -1 and index != i:
+        store = self.stores.pop(index)
+        self.stores.insert(values["index"], store)
+        store.isEnabled = values["isEnabled"]
+        store.key = values["key"]
   
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClient(object):

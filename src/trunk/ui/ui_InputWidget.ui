@@ -50,7 +50,7 @@
      <item>
       <widget class="QLineEdit" name="folderEdit">
        <property name="toolTip">
-        <string>Folder location to show.</string>
+        <string>Folder location to explore</string>
        </property>
       </widget>
      </item>

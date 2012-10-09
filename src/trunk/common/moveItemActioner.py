@@ -43,27 +43,15 @@ class MoveItemActioner:
   def setMessageCallback(self, cb):
     """ Set callback triggered after performing each move/copy. """
     self.messageCallback_ = cb
-
-  def performActions(self, items):    
-    """ Move/Copy multiple files from source to destination. """
-    results = {}
-    utils.verifyType(items, list)
-    count = len(items)
-    for i, item in enumerate(items):
-      res = self.performAction(item[0], item[1])
-      if not results.has_key(res):
-        results[res] = 0  
-      results[res] += 1
-    return results
   
   @staticmethod
   def resultToLogItem(res, source, dest):
     longText = "{} -> {}".format(source, dest) 
     shortText = "{} -> {}".format(fileHelper.FileHelper.basename(source), fileHelper.FileHelper.basename(dest))
     level = logModel.LogLevel.INFO
-    if res <> MoveItemActioner.SUCCESS:
+    if res != MoveItemActioner.resultStr(MoveItemActioner.SUCCESS):
       level = logModel.LogLevel.ERROR
-    return logModel.LogItem(level, MoveItemActioner.resultStr(res), shortText, longText)
+    return logModel.LogItem(level, res, shortText, longText)
   
   def performAction(self, source, dest):
     """ Move/Copy a file from source to destination. """
@@ -83,7 +71,6 @@ class MoveItemActioner:
       return self._copyFile(source, dest)
     else:
       return self._moveFile(source, dest)    
-    return ret
   
   def _moveFile(self, source, dest):
     utils.verifyType(source, str)

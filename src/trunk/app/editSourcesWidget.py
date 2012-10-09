@@ -34,15 +34,12 @@ class SourceModel(QtCore.QAbstractTableModel):
   """ SourceItems """
   def __init__(self, store, parent):
     super(QtCore.QAbstractTableModel, self).__init__(parent)
-    self.store = store
-    self._items = []
-    self.beginInsertRows(QtCore.QModelIndex(), 0, len(self.store.stores) - 1)
-    for s in self.store.stores:
-      self._items.append(s) 
+    self._store = store
+    self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._store.stores) - 1)
     self.endInsertRows()
       
   def rowCount(self, parent=None):
-    return len(self.store.stores)
+    return len(self._store.stores)
 
   def columnCount(self, parent):
     return SourceModel.NUM_COLS
@@ -55,7 +52,7 @@ class SourceModel(QtCore.QAbstractTableModel):
                     QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole):
       return None
     
-    item = self._items[index.row()]
+    item = self._store.stores[index.row()]
     if role == SourceModel.RAW_ITEM_ROLE:
       return item
     if role == QtCore.Qt.ForegroundRole and index.column() == SourceModel.COL_STATUS:
@@ -88,14 +85,14 @@ class SourceModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return    
     row = index.row()
-    self._items[row], self._items[row - 1] = self._items[row - 1], self._items[row]
+    self._store.stores[row], self._store.stores[row - 1] = self._store.stores[row - 1], self._store.stores[row]
     self.dataChanged.emit(self.index(row - 1, 0), self.index(row, SourceModel.NUM_COLS))
       
   def moveDown(self, index):
     if not index.isValid():
       return    
     row = index.row()
-    self._items[row], self._items[row + 1] = self._items[row + 1], self._items[row]
+    self._store.stores[row], self._store.stores[row + 1] = self._store.stores[row + 1], self._store.stores[row]
     self.dataChanged.emit(self.index(row, 0), self.index(row + 1, SourceModel.NUM_COLS))
     
   def updateItem(self, index, item):
@@ -103,7 +100,7 @@ class SourceModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return    
     row = index.row()
-    self._items[row] = item
+    self._store.stores[row] = item
     self.dataChanged.emit(self.index(row, 0), self.index(row, SourceModel.NUM_COLS))
           
 # --------------------------------------------------------------------------------------------------------------------
@@ -160,9 +157,10 @@ class EditSourcesWidget(QtGui.QDialog):
     if self.keyGroupBox.isVisible():
       keyLabel = "No key required"
       if item.requiresKey:
-        keyLabel = ("<html><body>Enter the key for <a href='{0}'>{0}</a><br/><br/>"
+        """keyLabel = ("<html><body>Enter the key for <a href='{0}'>{0}</a><br/><br/>"
                     "If you need to get one go to:<br/>"
-                     "<a href='{1}'>{1}</a>.</body></html>").format(item.sourceName, item.url)      
+                     "<a href='{1}'>{1}</a>.</body></html>").format(item.sourceName, item.url)"""     
+        keyLabel = ("<html><body>Enter the key for <a href='{0}'>{0}</a></body></html>").format(item.sourceName, item.url)      
       self.keyEdit.setText(item.key)
       self.keyLabel.setText(keyLabel)
     self.activeCheckBox.setEnabled(bool(item) and item.isAvailable())
@@ -178,4 +176,3 @@ class EditSourcesWidget(QtGui.QDialog):
     item = self._model.data(self._currentIndex, SourceModel.RAW_ITEM_ROLE)
     item.isEnabled = self.activeCheckBox.isChecked()
     self._model.updateItem(self._currentIndex, item)
-  

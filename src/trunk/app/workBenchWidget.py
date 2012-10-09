@@ -85,10 +85,12 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   
   def stopExploring(self):
     self._enable()
+    self.editEpisodeButton.setEnabled(False)    
     self.editSeasonButton.setEnabled(False)
+    self.editMovieButton.setEnabled(False)    
     self.launchButton.setEnabled(False)
     self.openButton.setEnabled(False)
-    self.deleteButton.setEnabled(False)        
+    self.deleteButton.setEnabled(False)    
     self._model.endUpdate()
     self._onWorkBenchChanged(bool(self._model.items())) #HACK: TODO: 
     
@@ -344,6 +346,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self.launchButton.setEnabled(True)
     self.openButton.setEnabled(True)
     self.deleteButton.setEnabled(True)
+    self.editMovieButton.setEnabled(True)
     self._currentIndex = self._currentMovieModelIndex(index)
       
   def _editMovie(self):

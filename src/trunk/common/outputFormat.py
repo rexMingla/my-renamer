@@ -42,8 +42,8 @@ class InputMap(object):
 # --------------------------------------------------------------------------------------------------------------------
 class TvInputMap(InputMap):
   """ Configurable attributes for output. """
-  KEY_SHOW_NAME  = _wrapReplaceStr("show_name")
-  KEY_SERIES_NUM = _wrapReplaceStr("season_num")
+  KEY_SHOW_NAME  = _wrapReplaceStr("show")
+  KEY_SERIES_NUM = _wrapReplaceStr("s_num")
   KEY_EP_NUM     = _wrapReplaceStr("ep_num") 
   KEY_EP_NAME    = _wrapReplaceStr("ep_name")  
 
@@ -68,16 +68,16 @@ class TvInputMap(InputMap):
   
   @staticmethod
   def defaultFormatStr():
-    return "<show_name> - S<season_num>E<ep_num> - <ep_name>"
+    return "<show> - S<s_num>E<ep_num> - <ep_name>"
   
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInputMap(InputMap):
   """ Configurable attributes for output. """
-  KEY_TITLE  = _wrapReplaceStr("title")
-  KEY_YEAR   = _wrapReplaceStr("year")
-  KEY_GENRE  = _wrapReplaceStr("genre")  
-  KEY_DISC   = _wrapReplaceStr("part")  
-  KEY_SERIES = _wrapReplaceStr("series")  
+  KEY_TITLE  = _wrapReplaceStr("t")
+  KEY_YEAR   = _wrapReplaceStr("y")
+  KEY_GENRE  = _wrapReplaceStr("g")  
+  KEY_DISC   = _wrapReplaceStr("p")  
+  KEY_SERIES = _wrapReplaceStr("s")  
 
   def __init__(self, title, year, genre, disc, series):
     super(MovieInputMap, self).__init__()
@@ -99,7 +99,7 @@ class MovieInputMap(InputMap):
   
   @staticmethod
   def defaultFormatStr():
-    return "<genre>/%(<series> - )%<title> (<year>)%( - Disc <part>)%"
+    return "<g>/%(<s> - )%<t> (<y>)%( - Disc <p>)%"
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormat:
