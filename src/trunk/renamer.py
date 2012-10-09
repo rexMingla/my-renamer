@@ -35,10 +35,10 @@ def _runGUI(cl):
   cm.show()
   
   es = editSourcesWidget.EditSourcesWidget(movieInfoClient.getStore(), cm)
-  cm.showEditSourcesSignal.connect(es.show)
+  cm.showEditSourcesSignal.connect(es.show)"""
   
   # --------------------------------------------------------------------------------------------------------------------
-  from app import changeSeasonWidget
+  """from app import changeSeasonWidget
   from app import editSourcesWidget
   from tv import tvInfoClient
 
@@ -67,12 +67,12 @@ def _runTests():
   
 # --------------------------------------------------------------------------------------------------------------------
 def main(argv):
-  cl = commandLine.CommandLineParser(argv, "config.p")
-  if cl.showHelp_:
+  cl = commandLine.CommandLineParser(argv)
+  if cl.showHelp:
     utils.logError(cl.usageMessage())
     return
   
-  if cl.runUnitTests_:
+  if cl.testOnly:
     _runTests()
   else:
     _runGUI(cl)

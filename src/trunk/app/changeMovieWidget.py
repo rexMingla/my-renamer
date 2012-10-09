@@ -160,7 +160,7 @@ class ChangeMovieWidget(QtGui.QDialog):
     self._seriesList = l
     completer = QtGui.QCompleter(self._seriesList, self)
     completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-    completer.setCompletionMode(QtGui.QCompleter.UnfilteredPopupCompletion)    
+    completer.setCompletionMode(QtGui.QCompleter.InlineCompletion)    
     self.seriesEdit.setCompleter(completer)        
     
   def getSeriesList(self):

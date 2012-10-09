@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Change Movie</string>
+   <string>Edit Movie</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -274,7 +274,7 @@
           <item row="3" column="2">
            <widget class="QLineEdit" name="seriesEdit">
             <property name="toolTip">
-             <string>Set a tag so intended for use as a prefix to keep series together</string>
+             <string>Set a tag intended for use as a prefix to keep series together</string>
             </property>
            </widget>
           </item>

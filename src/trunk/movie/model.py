@@ -36,8 +36,8 @@ class Columns:
   COL_YEAR      = 3
   COL_GENRE     = 4
   COL_STATUS    = 5
-  COL_DISC      = 6
-  COL_FILE_SIZE = 7
+  COL_FILE_SIZE = 6
+  COL_DISC      = 7
   COL_SERIES    = 8
   NUM_COLS      = 9
 
@@ -317,11 +317,12 @@ class MovieModel(QtCore.QAbstractTableModel):
     row = index.row()
     self.beginRemoveRows(QtCore.QModelIndex(), row, row)
     item = self._movies[row]
-    dups = [i - 1 if i > row else i for i in item.duplicates]
     self._movies.pop(row)
     for item in self._movies[row:]:
       item.index -= 1
-    self.endRemoveRows()
     
-    for i in dups:
-      self._updateItemStatus(self._movies[i])
+    #update all duplicates as they may be pointing at the wrong rows
+    for item in self._movies:
+      if item.duplicates:
+        self._updateItemStatus(item)
+    self.endRemoveRows()

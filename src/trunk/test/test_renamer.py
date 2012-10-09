@@ -283,12 +283,12 @@ class OutputFormatTest(unittest.TestCase):
     self.ip = outputFormat.TvInputMap("Entourage", 1, 3, "Talk Show")
     
   def test_normal(self):
-    fmt = outputFormat.OutputFormat("<show_name> - S<season_num>E<ep_num> - <ep_name>")
+    fmt = outputFormat.OutputFormat("<show> - S<s_num>E<ep_num> - <ep_name>")
     out = fmt.outputToString(self.ip)
     self.assertEqual(out, "Entourage - S01E03 - Talk Show")
  
   def test_missing(self):
-    fmt = outputFormat.OutputFormat("<show_name> - S<season_num>E<ep_num> - <ep_name >")
+    fmt = outputFormat.OutputFormat("<show> - S<s_num>E<ep_num> - <ep_name >")
     out = fmt.outputToString(self.ip)
     self.assertEqual(out, "Entourage - S01E03 - <ep_name >")
 
@@ -297,13 +297,13 @@ class AdvancedOutputFormat(unittest.TestCase):
     
   def test_omit(self):
     ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "", "")    
-    fmt = outputFormat.OutputFormat("<genre> - <title> (<year>)%( - Disc <part>)%")
+    fmt = outputFormat.OutputFormat("<g> - <t> (<y>)%( - Disc <p>)%")
     out = fmt.outputToString(ip)
     self.assertEqual(out, "Comedy - Anchorman (2004)")
 
   def test_include(self):
     ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "2", "")
-    fmt = outputFormat.OutputFormat("<genre> - <title> (<year>)%( - Disc <part>)%")
+    fmt = outputFormat.OutputFormat("<g> - <t> (<y>)%( - Disc <p>)%")
     out = fmt.outputToString(ip)
     self.assertEqual(out, "Comedy - Anchorman (2004) - Disc 2")
 

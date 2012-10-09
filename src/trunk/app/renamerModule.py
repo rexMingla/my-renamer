@@ -59,7 +59,7 @@ class RenameThread(thread.AdvancedWorkerThread):
   def _applyToItem(self, item):
     source, dest = item
     ret = self._actioner.performAction(source, dest)
-    return item, ret
+    return item, self._actioner.resultStr(ret)
     
   def _formatLogItem(self, item, result):
     source, dest = item
@@ -145,8 +145,8 @@ class RenamerModule(QtCore.QObject):
       w.startActioning()
 
     formatSettings = self.outputWidget.getConfig()
-    actioner = moveItemActioner.MoveItemActioner(canOverwrite=not formatSettings["move"], 
-                                                 keepSource=not formatSettings["dontOverwrite"])    
+    actioner = moveItemActioner.MoveItemActioner(canOverwrite=not formatSettings["dontOverwrite"], 
+                                                 keepSource=not formatSettings["move"])    
     self._workerThread = RenameThread("rename {}".format(self.mode), actioner, self._getRenameItems())
     self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
     self._workerThread.logSignal.connect(self.logSignal)
@@ -258,7 +258,7 @@ class MovieRenamerModule(RenamerModule):
       genre = movie.genre("unknown")
       im = outputFormat.MovieInputMap(fileHelper.FileHelper.replaceSeparators(movie.title), 
                                       movie.year, 
-                                      fileHelper.FileHelper.replaceSeparators(genre), movie.part)
+                                      fileHelper.FileHelper.replaceSeparators(genre), movie.part, movie.series)
       newName = oFormat.outputToString(im, movie.ext, outputFolder)
       newName = fileHelper.FileHelper.sanitizeFilename(newName)
       filenames.append((movie.filename, newName))

@@ -82,6 +82,7 @@ class AdvancedWorkerThread(WorkerThread):
       return None#return logModel.LogItem(logModel.LogLevel.INFO, self._name, shortLog, fullLog) 
     
   def run(self):
+    """ obfuscation for the win!! wow. this is madness. sorry """
     items = self._getAllItems()
     itemCount = 0
     numItems = len(items)
