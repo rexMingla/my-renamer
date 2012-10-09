@@ -1,0 +1,56 @@
+#summary Description of the applications widgets
+
+== Introduction ==
+Following from the [http://code.google.com/p/my-renamer/ introduction] this page attempts to describe the various widgets of the application.
+
+  * Primary widgets:
+    * Input Settings - Used to set where to search for media files
+    * Workbench - Used to modify media metadata
+    * Output Settings - Used to configure output format and location
+    * Message Log - Used to display an important application messages
+  * Secondary widgets:
+    * Edit Sources - Used to configure which 3rd party library are used to search for media content
+    * Edit Season - Used to edit a TV season either manually or using the 3rd party library search
+    * Edit Episode - Used to assign a media file to a TV episode
+    * Edit Movie - Used to edit a movie either manually or using the 3rd party library search
+    
+== Primary Widgets ==
+
+=== Input Settings ===
+Allows you to set your source folder and filters for file type and extensions. To edit which information sources are used click the "..." in the Sources row to show the Edit Sources widget. 
+  
+[http://code.google.com/p/my-renamer/svn/wiki/screenshots/inputSettings.jpg]
+
+To start searching for media files within your defined folder press the "Find" button. The Workbench widget will (hopefully) start populating.
+
+=== Workbench ===
+This widget is different depending on if you are in TV or movie mode.
+
+==== Movie Mode ====
+todo
+
+==== TV Mode ====
+todo
+
+=== Output Settings ===
+When you are happy with the properties you have set for your media files in the Workbench widget you are ready to perform the rename. Use the format edit to define how your new files using the information in the Workbench widget. 
+
+[http://code.google.com/p/my-renamer/svn/wiki/screenshots/outputSettings.jpg]
+
+Clicking "Rename" will rename all checked items in the Workbench widget table / list. File by file status messages are written to the Message Log.
+
+=== Message Log ===
+Just a simple message log...
+
+== Secondary Widgets ==
+=== Edit Sources ===
+todo
+
+=== Edit Season ===
+todo
+
+=== Edit Episode ===
+todo
+
+=== Edit Movie ===
+todo
