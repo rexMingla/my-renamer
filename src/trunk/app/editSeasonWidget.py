@@ -37,7 +37,7 @@ class GetSeasonThread(thread.WorkerThread):
         break
     
 # --------------------------------------------------------------------------------------------------------------------
-class ChangeSeasonWidget(QtGui.QDialog):
+class EditSeasonWidget(QtGui.QDialog):
   showEditSourcesSignal = QtCore.pyqtSignal()
   """
   The widget allows the user to select an show name and season number for a given folder containing files.
@@ -86,7 +86,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
     self._onThreadFinished()
     self._hideResults()    
     self.showLabel.setVisible(False)    
-    super(ChangeSeasonWidget, self).showEvent(e)
+    super(EditSeasonWidget, self).showEvent(e)
     
   def eventFilter(self, o, e):
     if o in (self.seasonSpin, self.seasonEdit) and \
@@ -94,7 +94,7 @@ class ChangeSeasonWidget(QtGui.QDialog):
       e.ignore()
       self._search()
       return False
-    return super(ChangeSeasonWidget, self).eventFilter(o, e)  
+    return super(EditSeasonWidget, self).eventFilter(o, e)  
     
   def _search(self):
     if self._workerThread and self._workerThread.isRunning():

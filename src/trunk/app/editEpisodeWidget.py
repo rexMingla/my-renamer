@@ -18,7 +18,7 @@ from tv import moveItemCandidate
 from tv import season
 
 # --------------------------------------------------------------------------------------------------------------------
-class ChangeEpisodeWidget(QtGui.QDialog):
+class EditEpisodeWidget(QtGui.QDialog):
   """ Allows the user to select the episode name for a given file """
   def __init__(self, parent=None):
     super(QtGui.QDialog, self).__init__(parent)

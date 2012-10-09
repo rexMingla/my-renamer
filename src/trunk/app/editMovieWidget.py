@@ -32,13 +32,13 @@ class GetMovieThread(thread.WorkerThread):
         break
 
 # --------------------------------------------------------------------------------------------------------------------
-class ChangeMovieWidget(QtGui.QDialog):
+class EditMovieWidget(QtGui.QDialog):
   showEditSourcesSignal = QtCore.pyqtSignal()
   """
   The widget allows the user to select a movie info. Needs interactive search...
   """
   def __init__(self, parent=None):
-    super(ChangeMovieWidget, self).__init__(parent)
+    super(EditMovieWidget, self).__init__(parent)
     uic.loadUi("ui/ui_ChangeMovie.ui", self)
     self._workerThread = None
     self.setWindowModality(True)
@@ -75,21 +75,21 @@ class ChangeMovieWidget(QtGui.QDialog):
     if series and not series in self._seriesList:
       self._seriesList.append(series)
       self.setSeriesList(self._seriesList)    
-    return super(ChangeMovieWidget, self).accept()
+    return super(EditMovieWidget, self).accept()
         
   def eventFilter(self, o, e):
     if o == self.searchEdit and e.type() == QtCore.QEvent.KeyPress and e.key() == QtCore.Qt.Key_Return:
       e.ignore()
       self._search()
       return False
-    return super(ChangeMovieWidget, self).eventFilter(o, e)
+    return super(EditMovieWidget, self).eventFilter(o, e)
     
   def showEvent(self, e):
     self._foundData = True    
     self._onThreadFinished()
     self._hideResults()    
     self.showLabel.setVisible(False)    
-    super(ChangeMovieWidget, self).showEvent(e)  
+    super(EditMovieWidget, self).showEvent(e)  
 
   def _search(self):
     if self._workerThread and self._workerThread.isRunning():

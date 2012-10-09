@@ -18,9 +18,9 @@ from tv import model
 from tv import season
 from tv import seasonHelper
 
-import changeEpisodeWidget
-import changeMovieWidget
-import changeSeasonWidget
+import editEpisodeWidget
+import editMovieWidget
+import editSeasonWidget
 import config
 import interfaces
 
@@ -148,10 +148,10 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     super(TvWorkBenchWidget, self).__init__(interfaces.Mode.TV_MODE, parent)
     self._setModel(model.TvModel(self.tvView))
 
-    self._changeEpisodeWidget = changeEpisodeWidget.ChangeEpisodeWidget(self)
+    self._changeEpisodeWidget = editEpisodeWidget.EditEpisodeWidget(self)
     self._changeEpisodeWidget.accepted.connect(self._onChangeEpisodeFinished)
     
-    self._changeSeasonWidget = changeSeasonWidget.ChangeSeasonWidget(self)
+    self._changeSeasonWidget = editSeasonWidget.EditSeasonWidget(self)
     self._changeSeasonWidget.accepted.connect(self._onChangeSeasonFinished)
     self._changeSeasonWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)
         
@@ -278,7 +278,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     super(MovieWorkBenchWidget, self).__init__(interfaces.Mode.MOVIE_MODE, parent)
     self._setModel(movieModel.MovieModel(self.movieView))
     
-    self._changeMovieWidget = changeMovieWidget.ChangeMovieWidget(self)
+    self._changeMovieWidget = editMovieWidget.EditMovieWidget(self)
     self._changeMovieWidget.accepted.connect(self._onChangeMovieFinished)
     self._changeMovieWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)    
     
