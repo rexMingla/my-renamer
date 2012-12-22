@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>519</width>
-    <height>355</height>
+    <height>357</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -231,32 +231,6 @@
        </property>
        <property name="tristate">
         <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="movieButton">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="toolTip">
-        <string>Change to movie mode</string>
-       </property>
-       <property name="text">
-        <string>Switch to Movies</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="tvButton">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="toolTip">
-        <string>Change to TV mode</string>
-       </property>
-       <property name="text">
-        <string>Switch to TV Series</string>
        </property>
       </widget>
      </item>

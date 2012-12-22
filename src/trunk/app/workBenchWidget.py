@@ -27,7 +27,6 @@ import interfaces
 # --------------------------------------------------------------------------------------------------------------------
 class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
-  modeChangedSignal = QtCore.pyqtSignal(object)
   showEditSourcesSignal = QtCore.pyqtSignal()
   
   def __init__(self, mode, parent=None):
@@ -38,8 +37,6 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self.launchButton.clicked.connect(self._launch)
     self.openButton.clicked.connect(self._open)    
     self.deleteButton.clicked.connect(self._delete)
-    self.movieButton.clicked.connect(self._setMovieMode)
-    self.tvButton.clicked.connect(self._setTvMode)
     
   def _setModel(self, m):
     self._model = m
@@ -47,12 +44,6 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self._onWorkBenchChanged(False)
     self._model.beginUpdateSignal.connect(self.startWorkBenching)
     self._model.endUpdateSignal.connect(self.stopWorkBenching)      
-    
-  def _setMovieMode(self):
-    self.modeChangedSignal.emit(interfaces.Mode.MOVIE_MODE)
-
-  def _setTvMode(self):
-    self.modeChangedSignal.emit(interfaces.Mode.TV_MODE)
     
   def _launchLocation(self, location):
     path = QtCore.QDir.toNativeSeparators(location)
@@ -104,7 +95,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   def getConfig(self):
     raise NotImplementedError("BaseWorkBenchWidget.getConfig not implemented")
   
-  def setConfig(self, data, mode=None):
+  def setConfig(self, data):
     raise NotImplementedError("BaseWorkBenchWidget.getConfig not implemented")
 
   def _setOverallCheckedState(self, state):
@@ -169,7 +160,6 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     self.editSeasonButton.clicked.connect(self._editSeason)
     
     self.movieView.setVisible(False)
-    self.tvButton.setVisible(False)  
     self.editMovieButton.setVisible(False)
     self.movieGroupBox.setVisible(False)
     
@@ -190,7 +180,7 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
     return {"cache" : seasonHelper.SeasonHelper.cache(),
             "state" : utils.toString(self.tvView.header().saveState().toBase64()) }
   
-  def setConfig(self, data, mode=None):
+  def setConfig(self, data):
     utils.verifyType(data, dict)
     seasonHelper.SeasonHelper.setCache(data.get("cache", {}))
     self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
@@ -309,7 +299,6 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
     self._flagDuplicateChanged(self.duplicateCheckBox.isChecked())
     
     self.tvView.setVisible(False)
-    self.movieButton.setVisible(False)  
     self.editSeasonButton.setVisible(False)
     self.editEpisodeButton.setVisible(False)    
      
@@ -330,7 +319,7 @@ class MovieWorkBenchWidget(BaseWorkBenchWidget):
             "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()),
             "series_list" : self._changeMovieWidget.getSeriesList()  }
   
-  def setConfig(self, data, mode=None):
+  def setConfig(self, data):
     utils.verifyType(data, dict)
     movieHelper.MovieHelper.setCache(data.get("cache", {}))
     self.yearCheckBox.setChecked(data.get("no_year_as_error", True))

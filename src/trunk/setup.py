@@ -21,7 +21,9 @@ setup(
     options = {
       "py2exe":{
         "includes":["sip", "PyQt4.uic", "PyQt4.QtCore", "jsonpickle", 
-                    "pymdb", "tvdb_api", "tmdb"],
+                    "pymdb", "tmdb", "rottentomatoes", #movies
+                    "tvdb_api", "tvrage", #tv
+                    ],
         "dll_excludes": ["MSVCP90.dll"]
       } 
     },

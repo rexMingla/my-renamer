@@ -17,6 +17,7 @@ import config
 import logWidget
 import interfaces
 import renamerModule
+import welcomeWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
@@ -28,12 +29,20 @@ class MainWindow(QtGui.QMainWindow):
     utils.initLogging(logFile)
     utils.logInfo("Starting app")    
     
-    uic.loadUi("ui/ui_MainWindow.ui", self)        
+    self._ui = uic.loadUi("ui/ui_MainWindow.ui", self)
+    
     self._inputStackWidget = QtGui.QStackedWidget(parent)
     self._workBenchStackWidget = QtGui.QStackedWidget(parent)
     self._outputStackWidget = QtGui.QStackedWidget(parent)
     self._logWidget = logWidget.LogWidget(parent)
     self.setCentralWidget(self._workBenchStackWidget)
+    
+    #menu actions
+    self._ui.actionMovieMode.triggered.connect(self._setMovieMode)
+    self._ui.actionTvMode.triggered.connect(self._setTvMode)
+    self._ui.actionExit.triggered.connect(self.close)
+    self._modeToAction = {interfaces.Mode.MOVIE_MODE : self._ui.actionMovieMode,
+                          interfaces.Mode.TV_MODE: self._ui.actionTvMode}
                 
     #dock widgets
     dockAreas = QtCore.Qt.AllDockWidgetAreas
@@ -45,6 +54,7 @@ class MainWindow(QtGui.QMainWindow):
     self._addModule(renamerModule.ModuleFactory.createModule(interfaces.Mode.MOVIE_MODE, self))
     self._addModule(renamerModule.ModuleFactory.createModule(interfaces.Mode.TV_MODE, self))
     self._mode = None
+    self._autoStart = False
     
     self.loadConfig()
     
@@ -53,8 +63,17 @@ class MainWindow(QtGui.QMainWindow):
     self._inputStackWidget.addWidget(module.inputWidget)
     self._workBenchStackWidget.addWidget(module.workBenchWidget)
     self._outputStackWidget.addWidget(module.outputWidget) 
-    module.workBenchWidget.modeChangedSignal.connect(self._setMode)    
+    #module.workBenchWidget.modeChangedSignal.connect(self._setMode)    
     module.logSignal.connect(self._logWidget.appendMessage)
+    
+  def showEvent(self, event):
+    super(MainWindow, self).showEvent(event)
+    if not self._autoStart:
+      ww = welcomeWidget.WelcomeWidget(self._mode, self)
+      ww.exec_()
+      self._setMode(ww.mode())
+      self._autoStart = ww.isAutoStart()
+    event.accept()
     
   def closeEvent(self, event):
     self.saveConfig()
@@ -79,7 +98,9 @@ class MainWindow(QtGui.QMainWindow):
     self._setMode(interfaces.Mode.TV_MODE)
 
   def _setMode(self, mode):
-    assert(mode in interfaces.VALID_MODES)    
+    assert(mode in interfaces.VALID_MODES)
+    for m, action in self._modeToAction.items():
+      action.setChecked(m == mode)
     
     if self._mode:
       self._modeToModule[self._mode].setInactive()
@@ -96,6 +117,7 @@ class MainWindow(QtGui.QMainWindow):
     config.ConfigManager.setData("mw/geometry", utils.toString(self.saveGeometry().toBase64()))
     config.ConfigManager.setData("mw/windowState", utils.toString(self.saveState().toBase64()))
     config.ConfigManager.setData("mw/mode", self._mode)
+    config.ConfigManager.setData("mw/autoStart", self._autoStart)
     
     for m in self._modeToModule.values():
       for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
@@ -113,6 +135,7 @@ class MainWindow(QtGui.QMainWindow):
     if not mode in interfaces.VALID_MODES:
       mode = interfaces.Mode.TV_MODE
     self._setMode(mode)
+    self._autoStart = bool(config.ConfigManager.getData("mw/autoStart", False))
     
     for m in self._modeToModule.values():
       for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:

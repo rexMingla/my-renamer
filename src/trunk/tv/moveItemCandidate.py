@@ -27,8 +27,7 @@ class MoveItemCandidate:
   
   def __init__(self, source, destination):
     utils.verifyType(source, episode.SourceEpisode)
-    utils.verify(source, episode.SourceEpisode)
-    utils.verify(destination, episode.DestinationEpisode)
+    utils.verifyType(destination, episode.DestinationEpisode)
     self.source = source
     self.destination = destination
     mt = self.matchType()
