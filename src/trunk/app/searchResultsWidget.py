@@ -24,9 +24,6 @@ class _ResultHolder:
     self.obj = obj
     self.source = source
     
-  def __str__(self):
-    return "{} ({})".format(str(self.obj), self.source)
-
 # --------------------------------------------------------------------------------------------------------------------
 class SearchResultsWidget(QtGui.QDialog):
   itemSelectedSignal = QtCore.pyqtSignal(object)

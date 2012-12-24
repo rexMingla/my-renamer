@@ -12,6 +12,7 @@ import re
 
 from common import extension
 from common import fileHelper
+from common import manager
 from common import utils
 
 import movieInfoClient
@@ -46,7 +47,6 @@ class Movie(object):
     super(Movie, self).__init__()
     self.filename = filename #utils.toString(filename)
     self.fileSize = fileHelper.FileHelper.getFileSize(filename)
-    self.ext = os.path.splitext(self.filename)[1].lower()
     self.title = utils.toString(title)
     #self.subsFiles = subsFiles # not used atm
     #dynamic properties
@@ -73,9 +73,6 @@ class Movie(object):
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
-  _cache = {}
-  _store = movieInfoClient.getStore()
-  
   @staticmethod
   def getFiles(folder, extensionFilter, isRecursive, minFileSizeBytes):
     files = []
@@ -87,16 +84,6 @@ class MovieHelper:
       if not isRecursive:
         break
     return files
-  
-  @staticmethod
-  def processFile(filename):
-    movie = MovieHelper.extractMovieFromFile(filename)
-    if movie.result == Result.FOUND:
-      info = MovieHelper.getItem(movie.title, movie.year)
-      movie.year = info.year or movie.year
-      movie.genres = info.genres or movie.genres
-      movie.title = info.title or movie.title      
-    return movie
   
   @staticmethod
   def extractMovieFromFile(filename):
@@ -133,42 +120,28 @@ class MovieHelper:
       #              if os.path.exists(change_ext(filename, e)) ]
     movie = Movie(filename, title, part, year)
     movie.result = result
+    return movie  
+    
+# --------------------------------------------------------------------------------------------------------------------
+class MovieManager(manager.BaseManager):
+  helper = MovieHelper
+  
+  def __init__(self):
+    super(MovieManager, self).__init__(movieInfoClient.getStore())
+  
+  def processFile(self, filename):
+    movie = MovieHelper.extractMovieFromFile(filename)
+    if movie.result == Result.FOUND:
+      info = self.getItem(movieInfoClient.MovieSearchParams(movie.title, movie.year))
+      movie.year = info.year or movie.year
+      movie.genres = info.genres or movie.genres
+      movie.title = info.title or movie.title      
     return movie
-  
-  @classmethod
-  def setCache(cls, data):
-    utils.verifyType(data, dict)
-    cls._cache = data
 
-  @classmethod
-  def cache(cls):
-    return cls._cache
+_MANAGER = None  
 
-  @staticmethod
-  def _getKey(title, year):
-    return title if not year else utils.sanitizeString("{} ({})".format(title, year))
-
-  @classmethod
-  def getItem(cls, title, year="", useCache=True):
-    """ retrieves season from cache or tvdb if not present """
-    cacheKey = cls._getKey(title, year)
-    ret = None
-    if useCache and cacheKey in cls._cache:
-      ret = cls._cache[cacheKey]
-    else:
-      ret = cls._store.getInfo(title, year, default=movieInfoClient.MovieInfo(title, year))
-      if ret:
-        cls._cache[cacheKey] = copy.copy(ret)
-        newKey = cls._getKey(title, year)        
-        if cacheKey != newKey:
-          cls._cache[cacheKey] = copy.copy(ret)
-    return ret 
-  
-  @classmethod
-  def getItems(cls, title, year=""):
-    pass
-  
-  @classmethod  
-  def setItem(cls, item): 
-    #utils.verifyType(item, MovieInfo)
-    cls._cache[cls._getKey(item.title, item.year)] = item
+def getManager():
+  global _MANAGER
+  if not _MANAGER:
+    _MANAGER = MovieManager()
+  return _MANAGER

@@ -13,7 +13,7 @@ from PyQt4 import QtGui
 from common import fileHelper
 from common import utils
 
-import movieHelper
+import movieManager
 
 # --------------------------------------------------------------------------------------------------------------------
 class SortFilterModel(QtGui.QSortFilterProxyModel):
@@ -52,7 +52,7 @@ _OK = "Ok"
 class MovieItem(object):
   def __init__(self, movie, index):
     super(MovieItem, self).__init__()
-    utils.verifyType(movie, movieHelper.Movie)
+    utils.verifyType(movie, movieManager.Movie)
     self.movie = movie
     self.index = index
     self.wantToMove = True
@@ -61,11 +61,10 @@ class MovieItem(object):
     
   def isMatch(self, other):
     utils.verifyType(other, MovieItem)
-    return (self.movie.result == movieHelper.Result.FOUND and self.movie.result == other.movie.result and
+    return (self.movie.result == movieManager.Result.FOUND and self.movie.result == other.movie.result and
             self.movie.title == other.movie.title and self.movie.year == other.movie.year and 
-            self.movie.part == other.movie.part and self.movie.ext == other.movie.ext and 
-            self.movie.genre() == other.movie.genre())
-          
+            self.movie.part == other.movie.part and self.movie.genre() == other.movie.genre())
+  
 # --------------------------------------------------------------------------------------------------------------------
 class MovieModel(QtCore.QAbstractTableModel):
   """ 
@@ -73,7 +72,7 @@ class MovieModel(QtCore.QAbstractTableModel):
   """
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
   beginUpdateSignal = QtCore.pyqtSignal()
-  endUpdateSignal = QtCore.pyqtSignal()  
+  endUpdateSignal = QtCore.pyqtSignal() 
   
   def __init__(self, parent=None):
     super(MovieModel, self).__init__(parent)
@@ -128,7 +127,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     elif col == Columns.COL_GENRE:
       return movie.genre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesToString(movie.fileSize) if movie.result == movieHelper.Result.FOUND else ""
+      return utils.bytesToString(movie.fileSize) if movie.result == movieManager.Result.FOUND else ""
     elif col == Columns.COL_SERIES:
       return movie.series
        
@@ -137,7 +136,7 @@ class MovieModel(QtCore.QAbstractTableModel):
       return False
     
     if role == RAW_DATA_ROLE:
-      utils.verifyType(value, movieHelper.Movie)
+      utils.verifyType(value, movieManager.Movie)
       item = self._movies[index.row()]
       newMovie = copy.copy(value)
       if item.movie != newMovie:
@@ -156,7 +155,7 @@ class MovieModel(QtCore.QAbstractTableModel):
     if not self._bulkProcessing:
       self._emitWorkBenchChanged()
     return True
-    
+  
   def flags(self, index):
     if not index.isValid():
       return QtCore.Qt.NoItemFlags
@@ -203,7 +202,7 @@ class MovieModel(QtCore.QAbstractTableModel):
       self._emitWorkBenchChanged()    
   
   def addItem(self, m):
-    utils.verifyType(m, movieHelper.Movie)
+    utils.verifyType(m, movieManager.Movie)
     #check if already in list
     count = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
@@ -229,8 +228,8 @@ class MovieModel(QtCore.QAbstractTableModel):
       
   def _updateItemStatusText(self, item):
     ret = ""
-    if item.movie.result != movieHelper.Result.FOUND:
-      ret = movieHelper.Result.resultStr(self.movie.result)
+    if item.movie.result != movieManager.Result.FOUND:
+      ret = movieManager.Result.resultStr(self.movie.result)
     elif item.duplicates:
       ret = _DUPLICATE
     elif self._requireYear and not item.movie.year:
@@ -247,7 +246,7 @@ class MovieModel(QtCore.QAbstractTableModel):
   
   def _updateDuplicatesForItem(self, item):
     item.duplicates = []
-    if item.movie.result == movieHelper.Result.FOUND:
+    if item.movie.result == movieManager.Result.FOUND:
       item.duplicates = [m.index for m in self._movies if m.index != item.index and m.isMatch(item)]
   
   def overallCheckedState(self):

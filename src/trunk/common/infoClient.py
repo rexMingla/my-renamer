@@ -7,27 +7,23 @@
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
 
-hasPymdb = False
-try:
-  from pymdb import pymdb
-  hasPymdb = True
-except ImportError:
-  pass
+# --------------------------------------------------------------------------------------------------------------------
+class BaseInfo(object):  
+  def toSearchParams(self):
+    raise NotImplementedError("BaseInfo.toSearchParams not implemented")
+  
+  def hasData(self):
+    return True
 
-hasTmdb = False
-try:
-  import tmdb
-  hasTmdb = True
-except ImportError:
-  pass
+# --------------------------------------------------------------------------------------------------------------------
+class BaseInfoClientSearchParams(object):
+  def getKey(self):
+    raise NotImplementedError("BaseInfoClientSearchParams.getKey not implemented")
+  
+  def toInfo(self):
+    raise NotImplementedError("BaseInfoClientSearchParams.toInfo not implemented")
 
-hasImdbPy = False
-try:
-  from imdb import IMDb
-  hasImdbPy = True
-except ImportError:
-  pass
-
+# --------------------------------------------------------------------------------------------------------------------
 class BaseInfoStore(object):
   def __init__(self):
     self.stores = []
@@ -68,6 +64,24 @@ class BaseInfoStore(object):
         self.stores.insert(values["index"], store)
         store.isEnabled = values["isEnabled"]
         store.key = values["key"]
+        
+  """ get info api  """
+  def getInfo(self, searchParams, default=None):
+    return next(self.getInfos(searchParams), (default, ""))[0]
+  
+  def getInfos(self, searchParams):
+    """ returns an iterator """
+    for store in self.stores:
+      if store.isActive():
+        for info in store.getInfos(searchParams):
+          yield (info, store.sourceName)  
+
+  def _getInfo(self, searchParams):
+    infos = self._getInfos(searchParams)
+    return infos[0] if infos else None
+  
+  def _getInfos(self, searchParams):
+    raise NotImplementedError("BaseMovieInfoClient._getInfos not implemented")  
   
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClient(object):
@@ -89,4 +103,18 @@ class BaseInfoClient(object):
     
   def isActive(self):
     return self.isAvailable() and self.isEnabled
+  
+  #api stuff
+  def getInfo(self, searchParams):
+    return self._getInfo(searchParams) if self.hasLib else None
+
+  def getInfos(self, searchParams):
+    return self._getInfos(searchParams) if self.hasLib else None    
+
+  def _getInfo(self, searchParams):
+    infos = self._getInfos(searchParams)
+    return infos[0] if infos else None
+  
+  def _getInfos(self, searchParams):
+    raise NotImplementedError("BaseMovieInfoClient.getInfos not implemented")
   

@@ -31,18 +31,8 @@ class MoveItemActioner:
   def __init__(self, canOverwrite, keepSource):
     utils.verifyType(canOverwrite, bool)
     utils.verifyType(keepSource, bool)
-    self.canOverwrite_ = canOverwrite
-    self.keepSource_ = keepSource
-    self.percentageCompleteCallback_ = None
-    self.messageCallback_ = None
-  
-  def setPercentageCompleteCallback(self, cb):
-    """ Set callback notifying of the overall progress. """
-    self.percentageCompleteCallback_ = cb
-    
-  def setMessageCallback(self, cb):
-    """ Set callback triggered after performing each move/copy. """
-    self.messageCallback_ = cb
+    self.canOverwrite = canOverwrite
+    self.keepSource = keepSource
   
   @staticmethod
   def resultToLogItem(res, source, dest):
@@ -64,10 +54,10 @@ class MoveItemActioner:
       return MoveItemActioner.INVALID_FILENAME
     elif source == dest:
       return MoveItemActioner.SUCCESS
-    elif fileHelper.FileHelper.fileExists(dest) and not self.canOverwrite_:
+    elif fileHelper.FileHelper.fileExists(dest) and not self.canOverwrite:
       return MoveItemActioner.COULD_NOT_OVERWRITE    
 
-    if self.keepSource_:
+    if self.keepSource:
       return self._copyFile(source, dest)
     else:
       return self._moveFile(source, dest)    
@@ -87,4 +77,6 @@ class MoveItemActioner:
       return MoveItemActioner.SUCCESS
     else:
       return MoveItemActioner.FAILED
+    
+
     

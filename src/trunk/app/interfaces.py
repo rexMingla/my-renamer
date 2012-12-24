@@ -7,20 +7,22 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtGui
 
-from common import extension
-from common import fileHelper
-from common import logModel
-from common import moveItemActioner
-from common import utils
-
-import config
-
 # --------------------------------------------------------------------------------------------------------------------
 class Mode:
   MOVIE_MODE = "movie"
   TV_MODE = "tv"
   
 VALID_MODES = (Mode.MOVIE_MODE, Mode.TV_MODE)
+
+# --------------------------------------------------------------------------------------------------------------------
+class WorkBenchActions:
+  """ not used at the moment """
+  OPEN_LOCATION = "Open location"
+  LAUNCH = "Launch"
+  DELETE = "Delete"
+  EDIT_MOVIE = "Edit Movie"
+  EDIT_SEASON = "Edit Season"
+  EDIT_EPISODE = "Edit Episode"
 
 # --------------------------------------------------------------------------------------------------------------------
 class LoadWidgetInterface(QtGui.QWidget):
@@ -41,8 +43,8 @@ class LoadWidgetInterface(QtGui.QWidget):
   def stopActioning(self):
     raise NotImplementedError("LoadInterface.stopActioning")
   
-  def getConfig(self, mode):
+  def getConfig(self):
     raise NotImplementedError("LoadInterface.getConfig")
   
-  def setConfig(self, mode):
+  def setConfig(self, data):
     raise NotImplementedError("LoadInterface.setConfig")

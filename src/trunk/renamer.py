@@ -8,6 +8,7 @@
 import sys
 
 from app import commandLine
+from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runGUI(cl):  
@@ -69,10 +70,12 @@ def _runTests():
 def main(argv):
   cl = commandLine.CommandLineParser(argv)
   if cl.showHelp:
+    utils.initLogging("log.txt")
     utils.logError(cl.usageMessage())
     return
   
   if cl.testOnly:
+    #utils.initLogging("log_unit_test.txt")
     _runTests()
   else:
     _runGUI(cl)

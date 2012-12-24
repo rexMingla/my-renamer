@@ -11,12 +11,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-#from common import fileHelper
-#from common import thread
 from common import utils
-#from tv import episode
-#from tv import season
-#from tv import seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class SourceModel(QtCore.QAbstractTableModel):

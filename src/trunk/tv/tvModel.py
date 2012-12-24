@@ -16,9 +16,7 @@ from common import utils
 import episode
 import moveItemCandidate
 import season
-import seasonHelper
-
-from PyQt4 import QtCore, QtGui
+import tvManager
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesDelegate(QtGui.QStyledItemDelegate):
@@ -236,7 +234,7 @@ class TvModel(QtCore.QAbstractItemModel):
       return None
     else:
       return item.data(index.column(), role)
-
+ 
   def setData(self, index, value, role):
     if not index.isValid():
       return False
