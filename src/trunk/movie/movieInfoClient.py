@@ -37,32 +37,7 @@ except ImportError:
   pass
 
 # --------------------------------------------------------------------------------------------------------------------
-class MovieInfoStore(infoClient.BaseInfoStore):
-    
-  def getInfo(self, title, year="", default=None):
-    return next(self.getInfos(title, year), (default, ""))[0]
-  
-  def getInfos(self, title, year=""):
-    """ returns an iterator """
-    for store in self.stores:
-      if store.isActive():
-        for info in store.getInfos(title, year):
-          yield (info, store.sourceName)
-          
-_STORE = None
-# --------------------------------------------------------------------------------------------------------------------
-def getStore():
-  global _STORE
-  if not _STORE:
-    _STORE = MovieInfoStore()
-    _STORE.addStore(ImdbClient())  
-    #_STORE.addStore(ImdbPyClient())  # does not seem to work at the moment.
-    _STORE.addStore(TheMovieDbClient()) 
-    _STORE.addStore(RottenTomatoesClient()) 
-  return _STORE
-
-# --------------------------------------------------------------------------------------------------------------------
-class MovieInfo(object):
+class MovieInfo(infoClient.BaseInfo):
   def __init__(self, title="", year=None, genres=None, series=""):
     super(MovieInfo, self).__init__()
     self.title = title
@@ -76,20 +51,41 @@ class MovieInfo(object):
   def __str__(self):
     return self.title if not self.year else "{} ({})".format(self.title, self.year)
   
+  def toSearchParams(self):
+    return MovieSearchParams(self.title, self.year)
+
+# --------------------------------------------------------------------------------------------------------------------
+class MovieSearchParams(infoClient.BaseInfoClientSearchParams):
+  def __init__(self, title, year=""):
+    self.title = title
+    self.year = year
+    
+  def getKey(self):
+    return self.title if not self.year else utils.sanitizeString("{} ({})".format(self.title, self.year))
+  
+  def toInfo(self):
+    return MovieInfo(self.title, self.year)
+
+# --------------------------------------------------------------------------------------------------------------------
+class MovieInfoStore(infoClient.BaseInfoStore):
+  pass
+
+_STORE = None
+
+# --------------------------------------------------------------------------------------------------------------------
+def getStore():
+  global _STORE
+  if not _STORE:
+    _STORE = MovieInfoStore()
+    _STORE.addStore(ImdbClient())  
+    #_STORE.addStore(ImdbPyClient())  # does not seem to work at the moment.
+    _STORE.addStore(TheMovieDbClient()) 
+    _STORE.addStore(RottenTomatoesClient()) 
+  return _STORE
+  
 # --------------------------------------------------------------------------------------------------------------------
 class BaseMovieInfoClient(infoClient.BaseInfoClient):
-  def getInfo(self, title, year=""):
-    return self._getInfo(title, year) if self.hasLib else None
-
-  def getInfos(self, title, year=""):
-    return self._getInfos(title, year) if self.hasLib else None    
-
-  def _getInfo(self, title, year=""):
-    infos = self._getInfos(title, year)
-    return infos[0] if infos else None
-  
-  def _getInfos(self, title, year=""):
-    raise NotImplementedError("BaseMovieInfoClient.getInfos not implemented")
+  pass
   
 # --------------------------------------------------------------------------------------------------------------------
 class ImdbClient(BaseMovieInfoClient):
@@ -98,18 +94,18 @@ class ImdbClient(BaseMovieInfoClient):
                                      hasLib=_hasPymdb,
                                      requiresKey=False)
     
-  def _getInfos(self, title, year=""):
+  def _getInfos(self, searchParams):
     ret  = []
     info = None
     try:
-      m = pymdb.Movie("{} {}".format(title, year))
-      title = utils.sanitizeString(m.title or title)
-      info = MovieInfo(title, year)
+      m = pymdb.Movie("{} {}".format(searchParams.title, searchParams.year))
+      title = utils.sanitizeString(m.title or searchParams.title)
+      info = MovieInfo(title, searchParams.year)
       ret.append(info)
-      info.year = utils.sanitizeString(m.year or year)
+      info.year = utils.sanitizeString(m.year or searchParams.year)
       info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
     except (AttributeError, pymdb.MovieError) as e:
-      utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TVDB lookup")
+      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TVDB lookup")
     return ret
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -119,17 +115,17 @@ class ImdbPyClient(BaseMovieInfoClient):
                                        hasLib=_hasImdbPy,
                                        requiresKey=False)
     
-  def _getInfos(self, title, year=""):
+  def _getInfos(self, searchParams):
     ret = []
     try:
       db = IMDb("http")
-      m = db.search_movie("{} {}".format(title, year))
-      info = MovieInfo(utils.sanitizeString(m.title or title), year)
+      m = db.search_movie("{} {}".format(searchParams.title, searchParams.year))
+      info = MovieInfo(utils.sanitizeString(m.title or searchParams.title), searchParams.year)
       ret.append(info)
-      info.year = utils.sanitizeString(m.year or year)
+      info.year = utils.sanitizeString(m.year or searchParams.year)
       info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
     except (AttributeError, pymdb.MovieError) as e:
-      utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TVDB lookup")
+      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TVDB lookup")
     return ret
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -139,22 +135,22 @@ class TheMovieDbClient(BaseMovieInfoClient):
                                            hasLib=_hasTmdb, 
                                            requiresKey=False)
     
-  def _getInfos(self, title, year=""):
+  def _getInfos(self, searchParams):
     ret = []
     try:
-      prettyTitle = title if not year else "{} ({})".format(title, year)
+      prettyTitle = searchParams.title if not searchParams.year else "{} ({})".format(searchParams.title, searchParams.year)
       db = tmdb.MovieDb()
       results = db.search(prettyTitle)
       for r in results:
-        title = utils.sanitizeString(r.get("name", title))
-        year = str(r.get("released", year))[:4]
+        title = utils.sanitizeString(r.get("name", searchParams.title))
+        year = str(r.get("released", searchParams.year))[:4]
         info = MovieInfo(title, year)
         ret.append(info)
         i = r.info()
         genres = i["categories"]["genre"].keys() if ("categories" in i and "genre" in i["categories"]) else []
         info.genres = map(utils.sanitizeString, genres)
     except tmdb.TmdBaseError as e:
-      utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TheMovieDB lookup")
+      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TheMovieDB lookup")
     return ret
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -164,18 +160,18 @@ class RottenTomatoesClient(BaseMovieInfoClient):
                                                "https://github.com/zachwill/rottentomatoes", 
                                                _hasRottenTomatoes, True)
     
-  def _getInfos(self, title, year=""):
+  def _getInfos(self, searchParams):
     ret = []
     try:
-      prettyTitle = title if not year else "{} ({})".format(title, year)
+      prettyTitle = title if not year else "{} ({})".format(searchParams.title, searchParams.year)
       rt = RT(self.key)
       results = rt.search(prettyTitle)
       for r in results:
-        title = utils.sanitizeString(r.get("title", title))
-        year = str(r.get("year", year))
+        title = utils.sanitizeString(r.get("title", searchParams.title))
+        year = str(r.get("year", searchParams.year))
         info = MovieInfo(title, year)
         #no genre without more effort
         ret.append(info)
     except Exception as e: #bad need to find a better exception
-      utils.logWarning("Title: {} Error {}: {}".format(title, type(e), e), title="TheMovieDB lookup")
+      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TheMovieDB lookup")
     return ret

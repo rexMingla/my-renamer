@@ -12,6 +12,7 @@ from common import utils
 from common import fileHelper
 
 import episode
+import tvInfoClient
 
 UNRESOLVED_KEY = -1
 UNRESOLVED_NAME = "" 
@@ -141,9 +142,12 @@ class SourceEpisodeMap(BaseEpisodeMap):
     ret.unresolved = map(copy.copy, self.unresolved)
     return ret
 
-class DestinationEpisodeMap(BaseEpisodeMap):
+from common import infoClient
+
+class DestinationEpisodeMap(BaseEpisodeMap, infoClient.BaseInfo):
   def __init__(self, showName="", seasonNum=""):
     super(DestinationEpisodeMap, self).__init__()
+    super(infoClient.BaseInfo, self).__init__()
     self.showName = showName
     self.seasonNum = seasonNum 
     
@@ -156,4 +160,7 @@ class DestinationEpisodeMap(BaseEpisodeMap):
     
   def __str__(self):
     return "{} season {} - # episodes: {}".format(self.showName, self.seasonNum, len(self.matches))
-      
+  
+  def toSearchParams(self):
+    return tvInfoClient.TvSearchParams(self.showName, self.seasonNum)
+  

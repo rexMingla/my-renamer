@@ -5,6 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Helper functions associated with tv series 
 # --------------------------------------------------------------------------------------------------------------------
+
 import copy
 import collections
 import itertools
@@ -13,6 +14,7 @@ import re
 
 from common import extension
 from common import fileHelper
+from common import manager
 from common import utils
 
 import episode
@@ -25,11 +27,8 @@ _RE_FOLDER_MATCH_2 = re.compile(r"^.*{0}(?P<name>.*)\s+\-\s+(?:season|series)\s+
                                 flags=re.IGNORECASE) #/show - season
 _RE_EPISODE_MATCH = re.compile(r"^.*?(?P<epNum>\d\d?)\D*\.[^\.]*$")
 
-class SeasonHelper:
-  """ Collection of tv series functions. """
-  _cache = {}
-  _store = tvInfoClient.getStore()
-    
+# --------------------------------------------------------------------------------------------------------------------
+class TvHelper:
   @staticmethod
   def seasonFromFolderName(folder):
     utils.verifyType(folder, str)
@@ -42,7 +41,7 @@ class SeasonHelper:
         show = m.group("name")
         seriesNum = int(m.group("num"))
         break
-    return show, seriesNum
+    return tvInfoClient.TvSearchParams(show, seriesNum)
   
   @staticmethod
   def getSourceEpisodeMapFromFilenames(filenames):
@@ -77,67 +76,46 @@ class SeasonHelper:
       folders.append(root)      
       if not isRecursive:
         break
-    return folders 
+    return folders  
 
-  @staticmethod
-  def getSeasonsForFolders(rootFolder, isRecursive, extensionFilter):
+# --------------------------------------------------------------------------------------------------------------------
+class TvManager(manager.BaseManager):
+  """ Collection of tv series functions. """
+  helper = TvHelper
+  
+  def __init__(self):
+    super(TvManager, self).__init__(tvInfoClient.getStore())
+
+  def getSeasonsForFolders(self, rootFolder, isRecursive, extensionFilter):
     utils.verifyType(rootFolder, str)
     utils.verifyType(isRecursive, bool)
     utils.verifyType(extensionFilter, extension.FileExtensions)
     seasons = []
-    dirs = SeasonHelper.getFolders(rootFolder, isRecursive)
+    dirs = TvHelper.getFolders(rootFolder, isRecursive)
     for d in enumerate(dirs):
-      s= SeasonHelper.getSeasonForFolder(d.rstrip(os.sep) or os.sep, extensionFilter)
+      s= self.getSeasonForFolder(d.rstrip(os.sep) or os.sep, extensionFilter)
       seasons.append(s)
     return seasons
 
-  @staticmethod
-  def getSeasonForFolder(folder, extensionFilter, minFileSizeBytes):
+  def getSeasonForFolder(self, folder, extensionFilter, minFileSizeBytes):
     utils.verifyType(minFileSizeBytes, int)    
-    seasonName, seriesNum = SeasonHelper.seasonFromFolderName(folder)
+    searchParams = TvHelper.seasonFromFolderName(folder)
     tempFiles = [fileHelper.FileHelper.joinPath(folder, f) for f in extensionFilter.filterFiles(os.listdir(folder))]
     files = [f for f in tempFiles if fileHelper.FileHelper.isFile(f) and fileHelper.FileHelper.getFileSize(f) > minFileSizeBytes]
     s = None
-    if not seasonName == episode.UNRESOLVED_NAME or len(files):
-      sourceMap = SeasonHelper.getSourceEpisodeMapFromFilenames(files)
-      destMap = episode.DestinationEpisodeMap(seasonName, seriesNum)
-      if seasonName != episode.UNRESOLVED_NAME:
-        destMap = SeasonHelper.getSeasonInfo(seasonName, seriesNum)
-      s = season.Season(seasonName, seriesNum, sourceMap, destMap, folder)
+    if not searchParams.showName == episode.UNRESOLVED_NAME or len(files):
+      sourceMap = TvHelper.getSourceEpisodeMapFromFilenames(files)
+      destMap = episode.DestinationEpisodeMap(searchParams.showName, searchParams.seasonNum)
+      if searchParams.showName != episode.UNRESOLVED_NAME:
+        destMap = self.getItem(searchParams)
+      s = season.Season(searchParams.showName, searchParams.seasonNum, sourceMap, destMap, folder)
       s.inputFolder = folder
-    return s
-    
-  @classmethod
-  def setCache(cls, data):
-    utils.verifyType(data, dict)
-    cls._cache = data
+    return s 
 
-  @classmethod
-  def cache(cls):
-    return cls._cache
-  
-  @staticmethod
-  def _getKey(seasonName, seriesNum):
-    return utils.sanitizeString("{} ({})".format(seasonName, seriesNum))
-  
-  @classmethod
-  def getSeasonInfo(cls, seasonName, seriesNum, useCache=True):
-    """ retrieves season from cache or tvdb if not present """
-    epMap = None
-    
-    cacheKey = SeasonHelper._getKey(seasonName, seriesNum)
-    if useCache and cacheKey in cls._cache:
-      epMap = cls._cache[cacheKey]
-    else:
-      epMap = cls._store.getInfo(seasonName, seriesNum, episode.DestinationEpisodeMap(seasonName, seriesNum))
-      if epMap.hasData():
-        newKey = SeasonHelper._getKey(epMap.showName, epMap.seasonNum)
-        cachedEpMap = copy.copy(epMap)
-        cls._cache[newKey] = cachedEpMap
-        cls._cache[cacheKey] = cachedEpMap
-    return epMap    
-  
-  @classmethod
-  def setSeasonInfo(cls, item): 
-    utils.verifyType(item, episode.DestinationEpisodeMap)
-    cls._cache[SeasonHelper._getKey(item.showName, item.seasonNum)] = item  
+_MANAGER = None  
+
+def getManager():
+  global _MANAGER
+  if not _MANAGER:
+    _MANAGER = TvManager()
+  return _MANAGER

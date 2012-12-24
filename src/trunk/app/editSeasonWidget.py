@@ -23,15 +23,14 @@ _TITLE_COLUMN = 0
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetSeasonThread(thread.WorkerThread):
-  def __init__(self, seasonName, seasonNum, store, isLucky):
+  def __init__(self, searchParams, store, isLucky):
     super(GetSeasonThread, self).__init__("tv search")
-    self._seasonName = seasonName
-    self._seaonsonNum = seasonNum
+    self._searchParams = searchParams
     self._store = store
     self._isLucky = isLucky
 
   def run(self):
-    for info in self._store.getInfos(self._seasonName, self._seaonsonNum):
+    for info in self._store.getInfos(self._searchParams):
       self._onData(info)
       if self._userStopped or (info and self._isLucky):
         break
@@ -110,8 +109,8 @@ class EditSeasonWidget(QtGui.QDialog):
     self.placeholderWidget.setEnabled(False)    
     self.progressBar.setVisible(True)
     
-    self._workerThread = GetSeasonThread(utils.toString(self.seasonEdit.text()), 
-                                         self.seasonSpin.value(),
+    self._workerThread = GetSeasonThread(tvInfoClient.TvSearchParams(utils.toString(self.seasonEdit.text()), 
+                                                                     self.seasonSpin.value()),
                                          tvInfoClient.getStore(),
                                          self._isLucky)
     self._workerThread.newDataSignal.connect(self._onDataFound)

@@ -9,7 +9,6 @@ from common import utils
 
 import episode
 import moveItemCandidate
-import seasonHelper
 
 # --------------------------------------------------------------------------------------------------------------------
 class Season:

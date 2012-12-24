@@ -29,7 +29,7 @@ class MainWindow(QtGui.QMainWindow):
     utils.initLogging(logFile)
     utils.logInfo("Starting app")    
     
-    self._ui = uic.loadUi("ui/ui_MainWindow.ui", self)
+    uic.loadUi("ui/ui_MainWindow.ui", self)
     
     self._inputStackWidget = QtGui.QStackedWidget(parent)
     self._workBenchStackWidget = QtGui.QStackedWidget(parent)
@@ -38,11 +38,10 @@ class MainWindow(QtGui.QMainWindow):
     self.setCentralWidget(self._workBenchStackWidget)
     
     #menu actions
-    self._ui.actionMovieMode.triggered.connect(self._setMovieMode)
-    self._ui.actionTvMode.triggered.connect(self._setTvMode)
-    self._ui.actionExit.triggered.connect(self.close)
-    self._modeToAction = {interfaces.Mode.MOVIE_MODE : self._ui.actionMovieMode,
-                          interfaces.Mode.TV_MODE: self._ui.actionTvMode}
+    self.actionMovieMode.triggered.connect(self._setMovieMode)
+    self.actionTvMode.triggered.connect(self._setTvMode)
+    self.actionExit.triggered.connect(self.close)
+    self._modeToAction = {interfaces.Mode.MOVIE_MODE : self.actionMovieMode, interfaces.Mode.TV_MODE: self.actionTvMode}
                 
     #dock widgets
     dockAreas = QtCore.Qt.AllDockWidgetAreas

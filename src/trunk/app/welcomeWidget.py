@@ -17,17 +17,17 @@ class WelcomeWidget(QtGui.QDialog):
   def __init__(self, mode, parent=None):
     utils.verify(mode in interfaces.VALID_MODES, "mode must be valid")
     super(WelcomeWidget, self).__init__(parent)
-    self._ui = uic.loadUi("ui/ui_Welcome.ui", self)
+    uic.loadUi("ui/ui_Welcome.ui", self)
     self.setWindowModality(True)
     
     if mode == interfaces.Mode.MOVIE_MODE:
-      self._ui.movieRadio.setChecked(True)
+      self.movieRadio.setChecked(True)
     else:
-      self._ui.tvRadio.setChecked(True)
+      self.tvRadio.setChecked(True)
   
   def mode(self):
-    return interfaces.Mode.MOVIE_MODE if self._ui.movieRadio.isChecked() else interfaces.Mode.TV_MODE
+    return interfaces.Mode.MOVIE_MODE if self.movieRadio.isChecked() else interfaces.Mode.TV_MODE
   
   def isAutoStart(self):
-    return self._ui.autoStartCheckBox.isChecked()
+    return self.autoStartCheckBox.isChecked()
   

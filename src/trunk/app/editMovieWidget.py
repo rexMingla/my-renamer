@@ -12,21 +12,21 @@ from PyQt4 import uic
 from common import fileHelper
 from common import thread 
 from common import utils
-from movie import movieHelper
+from movie import movieManager
 from movie import movieInfoClient
 
 import searchResultsWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetMovieThread(thread.WorkerThread):
-  def __init__(self, title, store, isLucky):
+  def __init__(self, searchParams, store, isLucky):
     super(GetMovieThread, self).__init__("movie search")
-    self._title = title
+    self._searchParams = searchParams
     self._store = store
     self._isLucky = isLucky
 
   def run(self):
-    for info in self._store.getInfos(self._title):
+    for info in self._store.getInfos(self._searchParams):
       self._onData(info)
       if self._userStopped or (info and self._isLucky):
         break
@@ -105,7 +105,8 @@ class EditMovieWidget(QtGui.QDialog):
     self.placeholderWidget.setEnabled(False)    
     self.progressBar.setVisible(True)
     
-    self._workerThread = GetMovieThread(utils.toString(self.searchEdit.text()), movieInfoClient.getStore(), self._isLucky)
+    self._workerThread = GetMovieThread(movieInfoClient.MovieSearchParams(utils.toString(self.searchEdit.text())),
+                                        movieInfoClient.getStore(), self._isLucky)
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
@@ -168,7 +169,7 @@ class EditMovieWidget(QtGui.QDialog):
   
   def setData(self, item):
     """ Fill the dialog with the data prior to being shown """
-    utils.verifyType(item, movieHelper.Movie)
+    utils.verifyType(item, movieManager.Movie)
     self._item = item  
     self.filenameEdit.setText(fileHelper.FileHelper.basename(item.filename))
     self.filenameEdit.setToolTip(item.filename)

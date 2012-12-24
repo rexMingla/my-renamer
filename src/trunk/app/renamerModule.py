@@ -14,12 +14,14 @@ from common import extension
 from common import fileHelper
 from common import logModel
 from common import moveItemActioner
+from common import manager
 from common import utils
 from common import thread
 
-from tv import seasonHelper
+from tv import tvManager
 from tv import tvInfoClient
-from movie import movieHelper
+
+from movie import movieManager
 from movie import movieInfoClient
 
 import config
@@ -34,16 +36,20 @@ class ModuleFactory:
   def createModule(mode, mw):
     if mode == Mode.MOVIE_MODE:
       store = movieInfoClient.getStore()
+      manager = movieManager.getManager()
       return MovieRenamerModule(editSourcesWidget.EditSourcesWidget(store, mw),
                                 inputWidget.InputWidget(mode, store, mw), 
                                 outputWidget.OutputWidget(mode, outputFormat.MovieInputMap, mw),
-                                workBenchWidget.MovieWorkBenchWidget(mw))
+                                workBenchWidget.MovieWorkBenchWidget(manager, mw),
+                                manager)
     else:
       store = tvInfoClient.getStore()
+      manager = tvManager.getManager()
       return TvRenamerModule(editSourcesWidget.EditSourcesWidget(store, mw),
                              inputWidget.InputWidget(mode, store, mw), 
                              outputWidget.OutputWidget(mode, outputFormat.TvInputMap, mw),
-                             workBenchWidget.TvWorkBenchWidget(mw))
+                             workBenchWidget.TvWorkBenchWidget(manager, mw),
+                             manager)
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenameThread(thread.AdvancedWorkerThread):  
@@ -80,25 +86,21 @@ class RenamerModule(QtCore.QObject):
   """  
   logSignal = QtCore.pyqtSignal(object)
   
-  def __init__(self, mode, editSourcesWidget_, inputWidget_, outputWidget_, workBenchWidget_, parent=None):
+  def __init__(self, mode, editSourcesWidget_, inputWidget_, outputWidget_, workBenchWidget_, manager_, parent=None):
     super(RenamerModule, self).__init__(parent)
     
     self.mode = mode
     self.editSourcesWidget = editSourcesWidget_
-    self.editSourcesWidget.setVisible(False)
-    self.inputWidget = inputWidget_
-    self.workBenchWidget = workBenchWidget_
-    self.outputWidget = outputWidget_
-    self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
-    
+    self.editSourcesWidget.setVisible(False)    
     self.inputWidget = inputWidget_
     self.outputWidget = outputWidget_
     self.workBenchWidget = workBenchWidget_
+    self._manager = manager_
     self._widgets = (self.inputWidget, self.outputWidget, self.workBenchWidget)
     
+    self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
     self.outputWidget.renameSignal.connect(self._rename)
     self.outputWidget.stopSignal.connect(self._stopRename)
-    
     self.workBenchWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
     self.inputWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
     self.editSourcesWidget.accepted.connect(self.inputWidget.onSourcesWidgetFinished)
@@ -187,12 +189,13 @@ class TvRenamerModule(RenamerModule):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, editSourcesWidget_, inputWidget_, outputWidget_, workbenchWidget_, parent=None):
+  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, parent=None):
     super(TvRenamerModule, self).__init__(Mode.TV_MODE, 
-                                          editSourcesWidget_, 
-                                          inputWidget_, 
-                                          outputWidget_, 
-                                          workbenchWidget_, 
+                                          editSourcesWidget, 
+                                          inputWidget, 
+                                          outputWidget, 
+                                          workbenchWidget, 
+                                          manager,
                                           parent)
     
   def _getRenameItems(self):
@@ -219,13 +222,13 @@ class TvRenamerModule(RenamerModule):
     
   def _getExploreItems(self):
     data = self.inputWidget.getConfig()
-    return seasonHelper.SeasonHelper.getFolders(data["folder"], data["recursive"])
+    return self._manager.helper.getFolders(data["folder"], data["recursive"])
     
   def _transformExploreItem(self, item):
     data = self.inputWidget.getConfig()
-    season = seasonHelper.SeasonHelper.getSeasonForFolder(item, 
-                                                          extension.FileExtensions(data["extensions"].split()), 
-                                                          data["minFileSizeBytes"]) 
+    season = self._manager.getSeasonForFolder(item, 
+                                              extension.FileExtensions(data["extensions"].split()), 
+                                              data["minFileSizeBytes"]) 
     if season:
       return season, season.resultStr(season.status)
     else:
@@ -237,12 +240,13 @@ class MovieRenamerModule(RenamerModule):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, parent=None):
+  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, parent=None):
     super(MovieRenamerModule, self).__init__(Mode.MOVIE_MODE, 
                                              editSourcesWidget, 
                                              inputWidget, 
                                              outputWidget, 
                                              workbenchWidget, 
+                                             manager,
                                              parent)
     
   def _getRenameItems(self):
@@ -268,12 +272,12 @@ class MovieRenamerModule(RenamerModule):
     data = self.inputWidget.getConfig()
     ext = extension.FileExtensions(["*"] if data["allExtensions"] else data["extensions"].split())
     minSize = 0 if data["allFileSizes"] else data["minFileSizeBytes"]
-    return movieHelper.MovieHelper.getFiles(data["folder"], ext, data["recursive"], minSize)
+    return self._manager.helper.getFiles(data["folder"], ext, data["recursive"], minSize)
     
   def _transformExploreItem(self, item):
-    item = movieHelper.MovieHelper.processFile(item)
+    item = self._manager.processFile(item)
     if item:
-      return item, movieHelper.Result.resultStr(item.result)
+      return item, movieManager.Result.resultStr(item.result)
     else:
       return None, None
     

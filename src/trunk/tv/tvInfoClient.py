@@ -27,19 +27,38 @@ except ImportError:
   pass
 
 # --------------------------------------------------------------------------------------------------------------------
-class TvInfoStore(infoClient.BaseInfoStore):
-  
-  def getInfo(self, showName, seasonNum, default=None):
-    return next(self.getInfos(showName, seasonNum), (default, ""))[0]
-  
-  def getInfos(self, showName, seasonNum):
-    """ returns an iterator """
-    for store in self.stores:
-      if store.isActive():
-        for info in store.getInfos(showName, seasonNum):
-          yield (info, store.sourceName)  
+class TvSearchParams(infoClient.BaseInfoClientSearchParams):
+  def __init__(self, showName, seasonNum):
+    super(TvSearchParams, self).__init__()
+    self.showName = showName
+    self.seasonNum = seasonNum    
     
+  def getKey(self):
+    return utils.sanitizeString("{} ({})".format(self.showName, self.seasonNum))
+
+  def toInfo(self):
+    return episode.DestinationEpisodeMap(self.showName, self.seasonNum)
+
+# --------------------------------------------------------------------------------------------------------------------
+class TvInfo(infoClient.BaseInfo):
+  def __init__(self, showName, seasonNum):
+    self.showName = showName
+    self.seasonNum = seasonNum
+    self.episodes = {}
+    
+  def toDestEpisodeMap(self):
+    #hack: this should be the same class
+    ret = episode.DestinationEpisodeMap(self.showName, self.seasonNum)
+    for epNum, name in self.episodes.items():
+      ret.matches[key] = copy.copy(value)
+    return ret
+  
+# --------------------------------------------------------------------------------------------------------------------
+class TvInfoStore(infoClient.BaseInfoStore):
+  pass
+
 _STORE = None
+
 # --------------------------------------------------------------------------------------------------------------------
 def getStore():
   global _STORE
@@ -51,19 +70,7 @@ def getStore():
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseTvInfoClient(infoClient.BaseInfoClient):
-  
-  def getInfo(self, showName, seasonNum):
-    return self._getInfo(showName, seasonNum) if self.isActive() else None
-  
-  def getInfos(self, showName, seasonNum=""):
-    return self._getInfos(showName, seasonNum) if self.hasLib else None    
-
-  def _getInfo(self, showName, seasonNum=""):
-    infos = self._getInfos(showName, seasonNum)
-    return infos[0] if infos else None
-  
-  def _getInfos(self, showName, seasonNum=""):
-    raise NotImplementedError("BaseTvInfoClient.getInfos not implemented")
+  pass
   
 # --------------------------------------------------------------------------------------------------------------------
 class TvdbClient(BaseTvInfoClient):
@@ -72,21 +79,21 @@ class TvdbClient(BaseTvInfoClient):
                                      hasLib=hasTvdb, 
                                      requiresKey=False)
     
-  def _getInfos(self, showName, seasonNum):
-    utils.verifyType(showName, str)
-    utils.verifyType(seasonNum, int)
+  def _getInfos(self, searchParams):
     ret = []
     try:
       tv = tvdb_api.Tvdb()
-      season = tv[showName][seasonNum]
-      eps = episode.DestinationEpisodeMap(utils.sanitizeString(tv[showName]["seriesname"], "") or showName, seasonNum)
+      season = tv[searchParams.showName][searchParams.seasonNum]
+      eps = episode.DestinationEpisodeMap(utils.sanitizeString(tv[searchParams.showName]["seriesname"], "") or 
+                                          searchParams.showName, searchParams.seasonNum)
       ret.append(eps)
       for i in season:
         ep = season[i]
         show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
         eps.addItem(show)
     except tvdb_exceptions.tvdb_exception as e:
-      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(showName, seasonNum, e))
+      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(searchParams.showName, 
+                                                                                        searchParams.seasonNum, e))
     return ret
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -96,19 +103,18 @@ class TvRageClient(BaseTvInfoClient):
                                        hasLib=hasTvRage, 
                                        requiresKey=False)
     
-  def _getInfos(self, showName, seasonNum):
-    utils.verifyType(showName, str)
-    utils.verifyType(seasonNum, int)
+  def _getInfos(self, searchParams):
     ret = []
     try:
-      tv = tvrage.api.Show(showName)
-      season = tv.season(seasonNum)
-      eps = episode.DestinationEpisodeMap(utils.sanitizeString(tv.name) or showName, seasonNum)
+      tv = tvrage.api.Show(searchParams.showName)
+      season = tv.season(searchParams.seasonNum)
+      eps = episode.DestinationEpisodeMap(utils.sanitizeString(tv.name) or searchParams.showName, searchParams.seasonNum)
       ret.append(eps)
       for ep in season.values():
         show = episode.DestinationEpisode(int(ep.number), utils.sanitizeString(ep.title))
         eps.addItem(show)
     except tvrage.exceptions.BaseError as e:
-      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(showName, seasonNum, e))
+      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(searchParams.showName, 
+                                                                                        searchParams.seasonNum, e))
     return ret
   
