@@ -5,12 +5,80 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Class responsible for the moving/copying of files
 # --------------------------------------------------------------------------------------------------------------------
+import extension
 import fileHelper
 import logModel
+import outputFormat
 import utils
   
 # --------------------------------------------------------------------------------------------------------------------
-class MoveItemActioner:
+class BaseRenameItem(object):
+  def __init__(self):
+    super(BaseRenameItem, self).__init__()
+    
+  def itemToInfo(self):
+    return NotImplementedError("BaseRenameItem.itemToInfo not implemented")      
+    
+  def visit(self, visitor):
+    raise NotImplementedError("BaseRenameItem.accept not implemented")
+    
+# --------------------------------------------------------------------------------------------------------------------
+class BaseRenameItemGeneratorVisitor(object):
+  """ generates list of item actioner """
+  def __init__(self, config, items):
+    super(BaseRenameItemGeneratorVisitor, self).__init__()
+    self._config = config
+    self._items = items
+    
+  def getRenamerItems(self):
+    ret = []
+    for item in self._items:
+      ret.extend(item.visit(self))
+    return ret
+    
+  def accept(self, obj):
+    return obj.visit(self)
+    
+  def acceptMovie(self, movie):
+    ret = []
+    oFormat = outputFormat.OutputFormat(self._config["format"])
+    outputFolder = self._config["folder"] or fileHelper.FileHelper.dirname(movie.filename)
+    genre = movie.genre("unknown")
+    im = outputFormat.MovieInputMap(fileHelper.FileHelper.replaceSeparators(movie.title), 
+                                    movie.year, 
+                                    fileHelper.FileHelper.replaceSeparators(genre), movie.part, movie.series)
+    newName = oFormat.outputToString(im, movie.ext, outputFolder)
+    newName = fileHelper.FileHelper.sanitizeFilename(newName)
+    ret.append(FileRenamer(movie.filename, newName, canOverwrite=not self._config["dontOverwrite"], 
+                                                    keepSource=not self._config["move"]))
+    return ret   
+  
+  def acceptTv(self, tv):
+    ret = []
+    outputFolder = self._config["folder"] or tv.inputFolder
+    oFormat = outputFormat.OutputFormat(self._config["format"])
+    for ep in tv.moveItemCandidates:
+      if ep.performMove:
+        im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(tv.seasonName), 
+                                     tv.seasonNum, 
+                                     ep.destination.epNum, 
+                                     fileHelper.FileHelper.replaceSeparators(ep.destination.epName))
+        newName = oFormat.outputToString(im, ep.source.ext, outputFolder)
+        newName = fileHelper.FileHelper.sanitizeFilename(newName)
+        ret.append(FileRenamer(ep.source.filename, newName, canOverwrite=not self._config["dontOverwrite"], 
+                                                            keepSource=not self._config["move"]))
+    return ret    
+    
+# --------------------------------------------------------------------------------------------------------------------    
+class BaseRenamer(object):
+  def __init__(self):
+    super(BaseRenamer, self).__init__()
+    
+  def performAction(self):
+    raise NotImplementedError("BaseRenamer.performAction not implemented")
+    
+# --------------------------------------------------------------------------------------------------------------------
+class FileRenamer(BaseRenamer):
   """ Class responsible for the moving/copying of files from source to destination """ 
   SOURCE_DOES_NOT_EXIST = -4
   COULD_NOT_OVERWRITE   = -3
@@ -20,63 +88,55 @@ class MoveItemActioner:
   
   @staticmethod
   def resultStr(res):
-    if res == MoveItemActioner.SOURCE_DOES_NOT_EXIST: return "Source does not exist"
-    elif res == MoveItemActioner.COULD_NOT_OVERWRITE: return "Could not overwrite"
-    elif res == MoveItemActioner.FAILED:              return "Failed"
-    elif res == MoveItemActioner.INVALID_FILENAME:    return "Destination file invalid"
+    if res == FileRenamer.SOURCE_DOES_NOT_EXIST: return "Source does not exist"
+    elif res == FileRenamer.COULD_NOT_OVERWRITE: return "Could not overwrite"
+    elif res == FileRenamer.FAILED:              return "Failed"
+    elif res == FileRenamer.INVALID_FILENAME:    return "Destination file invalid"
     else:
-      utils.verify(res == MoveItemActioner.SUCCESS, "Invalid res")
+      utils.verify(res == FileRenamer.SUCCESS, "Invalid res")
       return "Success"
 
-  def __init__(self, canOverwrite, keepSource):
-    utils.verifyType(canOverwrite, bool)
-    utils.verifyType(keepSource, bool)
+  def __init__(self, source, dest, canOverwrite, keepSource):
+    super(FileRenamer, self).__init__()
+    self.source = source
+    self.dest = dest
     self.canOverwrite = canOverwrite
     self.keepSource = keepSource
-  
-  @staticmethod
-  def resultToLogItem(res, source, dest):
-    longText = "{} -> {}".format(source, dest) 
-    shortText = "{} -> {}".format(fileHelper.FileHelper.basename(source), fileHelper.FileHelper.basename(dest))
+    
+  def resultToLogItem(self, res):
+    longText = "{} -> {}".format(self.source, self.dest) 
+    shortText = "{} -> {}".format(fileHelper.FileHelper.basename(self.source), fileHelper.FileHelper.basename(self.dest))
     level = logModel.LogLevel.INFO
-    if res != MoveItemActioner.resultStr(MoveItemActioner.SUCCESS):
+    if res != FileRenamer.resultStr(FileRenamer.SUCCESS):
       level = logModel.LogLevel.ERROR
     return logModel.LogItem(level, res, shortText, longText)
   
-  def performAction(self, source, dest):
+  def performAction(self):
     """ Move/Copy a file from source to destination. """
-    utils.verifyType(source, str)
-    utils.verifyType(dest, str)
     #sanity checks
-    if not fileHelper.FileHelper.fileExists(source):
-      return MoveItemActioner.SOURCE_DOES_NOT_EXIST
-    if not fileHelper.FileHelper.isValidFilename(dest):
-      return MoveItemActioner.INVALID_FILENAME
-    elif source == dest:
-      return MoveItemActioner.SUCCESS
-    elif fileHelper.FileHelper.fileExists(dest) and not self.canOverwrite:
-      return MoveItemActioner.COULD_NOT_OVERWRITE    
+    if not fileHelper.FileHelper.fileExists(self.source):
+      return FileRenamer.SOURCE_DOES_NOT_EXIST
+    if not fileHelper.FileHelper.isValidFilename(self.dest):
+      return FileRenamer.INVALID_FILENAME
+    elif self.source == self.dest:
+      return FileRenamer.SUCCESS
+    elif fileHelper.FileHelper.fileExists(self.dest) and not self.canOverwrite:
+      return FileRenamer.COULD_NOT_OVERWRITE    
 
     if self.keepSource:
-      return self._copyFile(source, dest)
+      return self._copyFile()
     else:
-      return self._moveFile(source, dest)    
+      return self._moveFile()    
   
-  def _moveFile(self, source, dest):
-    utils.verifyType(source, str)
-    utils.verifyType(dest, str)
-    if fileHelper.FileHelper.moveFile(source, dest):
-      return MoveItemActioner.SUCCESS
+  def _moveFile(self):
+    if fileHelper.FileHelper.moveFile(self.source, self.dest):
+      return FileRenamer.SUCCESS
     else:
-      return MoveItemActioner.FAILED
+      return FileRenamer.FAILED
     
-  def _copyFile(self, source, dest):
-    utils.verifyType(source, str)
-    utils.verifyType(dest, str)
-    if fileHelper.FileHelper.copyFile(source, dest):
-      return MoveItemActioner.SUCCESS
+  def _copyFile(self):
+    if fileHelper.FileHelper.copyFile(self.source, self.dest):
+      return FileRenamer.SUCCESS
     else:
-      return MoveItemActioner.FAILED
-    
-
+      return FileRenamer.FAILED
     

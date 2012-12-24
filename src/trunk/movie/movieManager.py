@@ -13,6 +13,7 @@ import re
 from common import extension
 from common import fileHelper
 from common import manager
+from common import moveItemActioner
 from common import utils
 
 import movieInfoClient
@@ -42,11 +43,12 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
                  Result.FOUND)
 
 # --------------------------------------------------------------------------------------------------------------------
-class Movie(object):
+class Movie(moveItemActioner.BaseRenameItem):
   def __init__(self, filename, title, part="", year="", subsFiles=None, series=""):
     super(Movie, self).__init__()
     self.filename = filename #utils.toString(filename)
     self.fileSize = fileHelper.FileHelper.getFileSize(filename)
+    self.ext = os.path.splitext(filename)[1]
     self.title = utils.toString(title)
     #self.subsFiles = subsFiles # not used atm
     #dynamic properties
@@ -70,6 +72,9 @@ class Movie(object):
     
   def itemToInfo(self):
     return movieInfoClient.MovieInfo(self.title, self.year, list(self.genres), self.series)
+  
+  def visit(self, visitor):
+    return visitor.acceptMovie(self)
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:

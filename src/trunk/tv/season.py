@@ -6,12 +6,13 @@
 # Purpose of document: Main class for working the tv seasons
 # --------------------------------------------------------------------------------------------------------------------
 from common import utils
+from common import moveItemActioner
 
 import episode
 import moveItemCandidate
 
 # --------------------------------------------------------------------------------------------------------------------
-class Season:
+class Season(moveItemActioner.BaseRenameItem):
   """ Creates a list of moveItemCandidates given a source and destination input map. """
   OK                = 1
   UNBALANCED_FILES  = -1
@@ -109,5 +110,12 @@ class Season:
       not self.destination.unresolved and not self.destination.unresolved:
       self.status = Season.OK      
     else:
-      self.status = Season.UNBALANCED_FILES      
+      self.status = Season.UNBALANCED_FILES   
+      
+  def itemToInfo(self):
+    return self.destination
+  
+  def visit(self, visitor):
+    return visitor.acceptTv(self)
+  
  
