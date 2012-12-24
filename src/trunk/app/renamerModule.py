@@ -41,7 +41,8 @@ class ModuleFactory:
                                 inputWidget.InputWidget(mode, store, mw), 
                                 outputWidget.OutputWidget(mode, outputFormat.MovieInputMap, mw),
                                 workBenchWidget.MovieWorkBenchWidget(manager, mw),
-                                manager)
+                                manager,
+                                moveItemActioner.BaseRenameItemGeneratorVisitor)
     else:
       store = tvInfoClient.getStore()
       manager = tvManager.getManager()
@@ -49,27 +50,24 @@ class ModuleFactory:
                              inputWidget.InputWidget(mode, store, mw), 
                              outputWidget.OutputWidget(mode, outputFormat.TvInputMap, mw),
                              workBenchWidget.TvWorkBenchWidget(manager, mw),
-                             manager)
+                             manager,
+                             moveItemActioner.BaseRenameItemGeneratorVisitor)
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenameThread(thread.AdvancedWorkerThread):  
-  def __init__(self, name, actioner, items):
+  def __init__(self, name, renameVisitor):
     super(RenameThread, self).__init__(name)
-    utils.verifyType(items, list)
-    self._actioner = actioner
-    self._items = items
+    self._renameVisitor = renameVisitor
     
   def _getAllItems(self):
-    return self._items
+    return self._renameVisitor.getRenamerItems()
    
   def _applyToItem(self, item):
-    source, dest = item
-    ret = self._actioner.performAction(source, dest)
-    return item, self._actioner.resultStr(ret)
+    ret = item.performAction()
+    return item, item.resultStr(ret)
     
   def _formatLogItem(self, item, result):
-    source, dest = item
-    return moveItemActioner.MoveItemActioner.resultToLogItem(result, source, dest)   
+    return item.resultToLogItem(result)
     
 # --------------------------------------------------------------------------------------------------------------------
 class Mode:
@@ -86,7 +84,8 @@ class RenamerModule(QtCore.QObject):
   """  
   logSignal = QtCore.pyqtSignal(object)
   
-  def __init__(self, mode, editSourcesWidget_, inputWidget_, outputWidget_, workBenchWidget_, manager_, parent=None):
+  def __init__(self, mode, editSourcesWidget_, inputWidget_, outputWidget_, workBenchWidget_, manager_, renameVisitorFn_, 
+               parent=None):
     super(RenamerModule, self).__init__(parent)
     
     self.mode = mode
@@ -96,6 +95,7 @@ class RenamerModule(QtCore.QObject):
     self.outputWidget = outputWidget_
     self.workBenchWidget = workBenchWidget_
     self._manager = manager_
+    self._renameVisitorFn = renameVisitorFn_
     self._widgets = (self.inputWidget, self.outputWidget, self.workBenchWidget)
     
     self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
@@ -138,7 +138,7 @@ class RenamerModule(QtCore.QObject):
     
   def _transformExploreItem(self, item):
     raise NotImplementedError("RenamerModule._transformExploreItem not implemented")
-  
+    
   def _rename(self):
     if self._workerThread and self._workerThread.isRunning():
       return
@@ -146,18 +146,13 @@ class RenamerModule(QtCore.QObject):
     for w in self._widgets:
       w.startActioning()
 
-    formatSettings = self.outputWidget.getConfig()
-    actioner = moveItemActioner.MoveItemActioner(canOverwrite=not formatSettings["dontOverwrite"], 
-                                                 keepSource=not formatSettings["move"])    
-    self._workerThread = RenameThread("rename {}".format(self.mode), actioner, self._getRenameItems())
+    renameVisitor = self._renameVisitorFn(self.outputWidget.getConfig(), self.workBenchWidget.actionableItems())
+    self._workerThread = RenameThread("rename {}".format(self.mode), renameVisitor)
     self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
     self._workerThread.logSignal.connect(self.logSignal)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()
-    
-  def _getRenameItems(self):  
-    raise NotImplementedError("RenamerModule._getRenameItems()")
     
   def setActive(self):
     pass
@@ -189,36 +184,15 @@ class TvRenamerModule(RenamerModule):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, parent=None):
+  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, renameVisitorFn, parent=None):
     super(TvRenamerModule, self).__init__(Mode.TV_MODE, 
                                           editSourcesWidget, 
                                           inputWidget, 
                                           outputWidget, 
                                           workbenchWidget, 
                                           manager,
-                                          parent)
-    
-  def _getRenameItems(self):
-    filenames = []
-    seasons = self.workBenchWidget.actionableItems()
-    utils.verify(seasons, "Must have seasons to have gotten this far")
-    formatSettings = self.outputWidget.getConfig()
-    for season in seasons:
-      outputFolder = formatSettings["folder"]
-      if outputFolder == config.USE_SOURCE_DIRECTORY:
-        outputFolder = season.inputFolder
-      oFormat = outputFormat.OutputFormat(formatSettings["format"])
-      for ep in season.moveItemCandidates:
-        if ep.performMove:
-          im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(season.seasonName), 
-                                       season.seasonNum, 
-                                       ep.destination.epNum, 
-                                       fileHelper.FileHelper.replaceSeparators(ep.destination.epName))
-          newName = oFormat.outputToString(im, ep.source.extension_, outputFolder)
-          newName = fileHelper.FileHelper.sanitizeFilename(newName)
-          filenames.append((ep.source.filename, newName))
-    utils.verify(filenames, "Must have files to have gotten this far")
-    return filenames      
+                                          renameVisitorFn,
+                                          parent)  
     
   def _getExploreItems(self):
     data = self.inputWidget.getConfig()
@@ -240,34 +214,16 @@ class MovieRenamerModule(RenamerModule):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, parent=None):
+  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, renameVisitorFn, parent=None):
     super(MovieRenamerModule, self).__init__(Mode.MOVIE_MODE, 
                                              editSourcesWidget, 
                                              inputWidget, 
                                              outputWidget, 
                                              workbenchWidget, 
                                              manager,
+                                             renameVisitorFn,
                                              parent)
-    
-  def _getRenameItems(self):
-    filenames = []
-    movies = self.workBenchWidget.actionableItems()
-    utils.verify(movies, "Must have movies to have gotten this far")
-    formatSettings = self.outputWidget.getConfig()
-    oFormat = outputFormat.OutputFormat(formatSettings["format"])
-    for movie in movies:
-      outputFolder = formatSettings["folder"]
-      if outputFolder == config.USE_SOURCE_DIRECTORY:
-        outputFolder = fileHelper.FileHelper.dirname(movie.filename)
-      genre = movie.genre("unknown")
-      im = outputFormat.MovieInputMap(fileHelper.FileHelper.replaceSeparators(movie.title), 
-                                      movie.year, 
-                                      fileHelper.FileHelper.replaceSeparators(genre), movie.part, movie.series)
-      newName = oFormat.outputToString(im, movie.ext, outputFolder)
-      newName = fileHelper.FileHelper.sanitizeFilename(newName)
-      filenames.append((movie.filename, newName))
-    return filenames   
-  
+   
   def _getExploreItems(self):
     data = self.inputWidget.getConfig()
     ext = extension.FileExtensions(["*"] if data["allExtensions"] else data["extensions"].split())

@@ -251,7 +251,7 @@ class TvWorkBenchWidget(BaseWorkBenchWidget):
   def _onChangeSeasonFinished(self):
     data = self._changeSeasonWidget.data()
     utils.verifyType(data, season.Season)
-    self._manager.setItem(data.destination)    
+    self._manager.setItem(data.itemToInfo())
     self._model.setData(self._currentIndex, data, tvModel.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)
     
