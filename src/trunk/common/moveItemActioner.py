@@ -38,7 +38,15 @@ class BaseRenameItemGeneratorVisitor(object):
     
   def accept(self, obj):
     return obj.visit(self)
-    
+  
+  def acceptMovie(self, movie):
+    return []
+  
+  def acceptTv(self, tv):
+    return []
+  
+# --------------------------------------------------------------------------------------------------------------------
+class FileRenameItemGeneratorVisitor(BaseRenameItemGeneratorVisitor):  
   def acceptMovie(self, movie):
     ret = []
     oFormat = outputFormat.OutputFormat(self._config["format"])
