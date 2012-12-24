@@ -42,7 +42,7 @@ class ModuleFactory:
                                 outputWidget.OutputWidget(mode, outputFormat.MovieInputMap, mw),
                                 workBenchWidget.MovieWorkBenchWidget(manager, mw),
                                 manager,
-                                moveItemActioner.BaseRenameItemGeneratorVisitor)
+                                moveItemActioner.FileRenameItemGeneratorVisitor)
     else:
       store = tvInfoClient.getStore()
       manager = tvManager.getManager()
@@ -51,7 +51,7 @@ class ModuleFactory:
                              outputWidget.OutputWidget(mode, outputFormat.TvInputMap, mw),
                              workBenchWidget.TvWorkBenchWidget(manager, mw),
                              manager,
-                             moveItemActioner.BaseRenameItemGeneratorVisitor)
+                             moveItemActioner.FileRenameItemGeneratorVisitor)
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenameThread(thread.AdvancedWorkerThread):  
