@@ -132,7 +132,7 @@ class MovieManager(manager.BaseManager):
   helper = MovieHelper
   
   def __init__(self):
-    super(MovieManager, self).__init__(movieInfoClient.getStore())
+    super(MovieManager, self).__init__(movieInfoClient.getStoreHolder())
   
   def processFile(self, filename):
     movie = MovieHelper.extractMovieFromFile(filename)

@@ -67,16 +67,16 @@ class MovieSearchParams(infoClient.BaseInfoClientSearchParams):
     return MovieInfo(self.title, self.year)
 
 # --------------------------------------------------------------------------------------------------------------------
-class MovieInfoStore(infoClient.BaseInfoStore):
+class MovieInfoStoreHolder(infoClient.BaseInfoStoreHolder):
   pass
 
 _STORE = None
 
 # --------------------------------------------------------------------------------------------------------------------
-def getStore():
+def getStoreHolder():
   global _STORE
   if not _STORE:
-    _STORE = MovieInfoStore()
+    _STORE = MovieInfoStoreHolder()
     _STORE.addStore(ImdbClient())  
     #_STORE.addStore(ImdbPyClient())  # does not seem to work at the moment.
     _STORE.addStore(TheMovieDbClient()) 
@@ -104,8 +104,12 @@ class ImdbClient(BaseMovieInfoClient):
       ret.append(info)
       info.year = utils.sanitizeString(m.year or searchParams.year)
       info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
-    except (AttributeError, pymdb.MovieError) as e:
-      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TVDB lookup")
+      
+    except AttributeError as e:
+      pass
+    except pymdb.MovieError as e:
+      utils.logWarning("Lib: {} Title: {} Error {}: {}".format(self.displayName, searchParams.title, type(e), e), 
+                       title="{} lookup".format(self.displayName))
     return ret
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -125,7 +129,8 @@ class ImdbPyClient(BaseMovieInfoClient):
       info.year = utils.sanitizeString(m.year or searchParams.year)
       info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
     except (AttributeError, pymdb.MovieError) as e:
-      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TVDB lookup")
+      utils.logWarning("Lib: {} Title: {} Error {}: {}".format(self.displayName, searchParams.title, type(e), e), 
+                       title="{} lookup".format(self.displayName))
     return ret
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -150,7 +155,8 @@ class TheMovieDbClient(BaseMovieInfoClient):
         genres = i["categories"]["genre"].keys() if ("categories" in i and "genre" in i["categories"]) else []
         info.genres = map(utils.sanitizeString, genres)
     except tmdb.TmdBaseError as e:
-      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TheMovieDB lookup")
+      utils.logWarning("Lib: {} Title: {} Error {}: {}".format(self.displayName, searchParams.title, type(e), e), 
+                       title="{} lookup".format(self.displayName))
     return ret
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -173,5 +179,6 @@ class RottenTomatoesClient(BaseMovieInfoClient):
         #no genre without more effort
         ret.append(info)
     except Exception as e: #bad need to find a better exception
-      utils.logWarning("Title: {} Error {}: {}".format(searchParams.title, type(e), e), title="TheMovieDB lookup")
+      utils.logWarning("Lib: {} Title: {} Error {}: {}".format(self.displayName, searchParams.title, type(e), e), 
+                       title="{} lookup".format(self.displayName))
     return ret

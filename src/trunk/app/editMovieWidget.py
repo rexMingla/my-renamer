@@ -23,7 +23,7 @@ class GetMovieThread(thread.WorkerThread):
   def __init__(self, searchParams, isLucky):
     super(GetMovieThread, self).__init__("movie search")
     self._searchParams = searchParams
-    self._store = movieInfoClient.getStore()
+    self._store = movieInfoClient.getStoreHolder()
     self._isLucky = isLucky
 
   def run(self):

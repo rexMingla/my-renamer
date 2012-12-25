@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Re-Namer</string>
+   <string>MyRenamer</string>
   </property>
   <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
@@ -25,14 +25,26 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionMovieMode"/>
     <addaction name="actionTvMode"/>
     <addaction name="separator"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionRestoreDefaults"/>
+    <addaction name="actionClearCache"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
+    <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="actionTest">
    <property name="text">
@@ -52,7 +64,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Movie mode</string>
+    <string>&amp;Movie mode</string>
    </property>
   </action>
   <action name="actionTvMode">
@@ -60,12 +72,32 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Tv mode</string>
+    <string>&amp;Tv mode</string>
    </property>
   </action>
   <action name="actionExit">
    <property name="text">
-    <string>Exit</string>
+    <string>&amp;Quit</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>&amp;Safe settings</string>
+   </property>
+  </action>
+  <action name="actionRestoreDefaults">
+   <property name="text">
+    <string>&amp;Restore defaults</string>
+   </property>
+  </action>
+  <action name="actionClearCache">
+   <property name="text">
+    <string>&amp;Clear cache</string>
    </property>
   </action>
  </widget>

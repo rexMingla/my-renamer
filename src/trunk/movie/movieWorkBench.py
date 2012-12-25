@@ -56,8 +56,7 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self.tvView.setVisible(False)
      
   def getConfig(self):
-    return {"cache" : self._manager.cache(),
-            "no_year_as_error" : self.yearCheckBox.isChecked(),
+    return {"no_year_as_error" : self.yearCheckBox.isChecked(),
             "no_genre_as_error" : self.genreCheckBox.isChecked(),
             "duplicate_as_error" : self.duplicateCheckBox.isChecked(),
             "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()),
@@ -65,7 +64,6 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
   
   def setConfig(self, data):
     utils.verifyType(data, dict)
-    self._manager.setCache(data.get("cache", {}))
     self.yearCheckBox.setChecked(data.get("no_year_as_error", True))
     self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
     self.duplicateCheckBox.setChecked(data.get("duplicate_as_error", True)),

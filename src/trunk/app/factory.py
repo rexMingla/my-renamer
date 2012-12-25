@@ -35,12 +35,12 @@ class Factory:
   
   @staticmethod
   def getEditSourceWidget(mode, parent=None):
-    store = Factory.getStore(mode)
+    store = Factory.getStoreHolder(mode)
     return editSourcesWidget.EditSourcesWidget(store, parent)
   
   @staticmethod
   def getInputWidget(mode, parent=None):
-    store = Factory.getStore(mode)
+    store = Factory.getStoreHolder(mode)
     return inputWidget.InputWidget(mode, store, parent)
     
   @staticmethod
@@ -64,11 +64,11 @@ class Factory:
       return moveItemActioner.TvRenameItemGenerator()
   
   @staticmethod
-  def getStore(mode):
+  def getStoreHolder(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return movieInfoClient.getStore()
+      return movieInfoClient.getStoreHolder()
     else:
-      return tvInfoClient.getStore()
+      return tvInfoClient.getStoreHolder()
     
   @staticmethod
   def getManager(mode):
