@@ -12,6 +12,7 @@ from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
+from common import workBench
 
 import movieManager
 
@@ -66,7 +67,7 @@ class MovieItem(object):
             self.movie.part == other.movie.part and self.movie.genre() == other.movie.genre())
   
 # --------------------------------------------------------------------------------------------------------------------
-class MovieModel(QtCore.QAbstractTableModel):
+class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
   """ 
   Represents 0 or more movies
   """
@@ -74,13 +75,45 @@ class MovieModel(QtCore.QAbstractTableModel):
   beginUpdateSignal = QtCore.pyqtSignal()
   endUpdateSignal = QtCore.pyqtSignal() 
   
+  ALL_ACTIONS = (workBench.BaseWorkBenchModel.ACTION_DELETE,
+                 workBench.BaseWorkBenchModel.ACTION_LAUNCH,
+                 workBench.BaseWorkBenchModel.ACTION_OPEN,
+                 workBench.BaseWorkBenchModel.ACTION_MOVIE)  
+  
   def __init__(self, parent=None):
-    super(MovieModel, self).__init__(parent)
+    super(QtCore.QAbstractTableModel, self).__init__(parent)
+    super(workBench.BaseWorkBenchModel, self).__init__()
     self._movies = []
     self._bulkProcessing = False
     self._requireYear = True
     self._requireGenre = True
     self._flagDuplicates = True
+    
+  def getFile(self, index):
+    if not index.isValid():
+      return None
+  
+    item = self._movies[index.row()]    
+    return item.movie.filename
+  
+  def getFolder(self, index):
+    ret = self.getFile(index)
+    if ret:
+      ret = fileHelper.FileHelper.dirname(ret)
+    return ret
+  
+  def getDeleteItem(self, index):
+    return self.getFile(index)
+    
+  def getAvailableActions(self, index):
+    ret = self.getDefaultAvailableActions()
+    hasIndex = index and index.isValid()
+    
+    ret[workBench.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
+    ret[workBench.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
+    ret[workBench.BaseWorkBenchModel.ACTION_OPEN] = hasIndex
+    ret[workBench.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
+    return ret
     
   def columnCount(self, parent):
     return Columns.NUM_COLS

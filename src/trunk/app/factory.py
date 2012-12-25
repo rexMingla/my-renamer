@@ -13,15 +13,16 @@ from common import outputFormat
 
 from tv import tvManager
 from tv import tvInfoClient
+from tv import tvWorkBench
 
 from movie import movieManager
 from movie import movieInfoClient
+from movie import movieWorkBench
 
 import editSourcesWidget
 import inputWidget
 import outputWidget
 import renamerModule
-import workBenchWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 class Factory:
@@ -51,9 +52,9 @@ class Factory:
   def getWorkBenchWidget(mode, parent=None):
     manager = Factory.getManager(mode)
     if mode == interfaces.Mode.MOVIE_MODE:
-      return workBenchWidget.MovieWorkBenchWidget(manager, parent) 
+      return movieWorkBench.MovieWorkBenchWidget(manager, parent) 
     else:
-      return workBenchWidget.TvWorkBenchWidget(manager, parent)
+      return tvWorkBench.TvWorkBenchWidget(manager, parent)
     
   @staticmethod
   def getRenameItemGenerator(mode):
