@@ -27,11 +27,8 @@ class RenameThread(thread.AdvancedWorkerThread):
    
   def _applyToItem(self, item):
     ret = item.performAction()
-    return item, item.resultStr(ret)
+    return thread.WorkResult(item, item.resultStr(ret), item.resultToLogItem(result))
     
-  def _formatLogItem(self, item, result):
-    return item.resultToLogItem(result)
-
 # --------------------------------------------------------------------------------------------------------------------
 class RenamerModule(QtCore.QObject):
   """ 
@@ -152,10 +149,10 @@ class TvRenamerModule(RenamerModule):
     season = self._manager.getSeasonForFolder(item, 
                                               extension.FileExtensions(data["extensions"].split()), 
                                               data["minFileSizeBytes"]) 
+    ret = None
     if season:
-      return season, season.resultStr(season.status)
-    else:
-      return None, None
+      ret = thread.WorkerItem(season, season.resultStr(season.status))
+    return ret
   
 # --------------------------------------------------------------------------------------------------------------------
 class MovieRenamerModule(RenamerModule):
@@ -174,8 +171,7 @@ class MovieRenamerModule(RenamerModule):
     
   def _transformExploreItem(self, item):
     item = self._manager.processFile(item)
+    ret = None
     if item:
-      return item, movieManager.Result.resultStr(item.result)
-    else:
-      return None, None
-    
+      ret = thread.WorkItem(item, movieManager.Result.resultStr(item.result))
+    return ret
