@@ -8,8 +8,10 @@
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-import interfaces
 from common import utils
+
+import app
+import interfaces
 
 # --------------------------------------------------------------------------------------------------------------------
 class WelcomeWidget(QtGui.QDialog):
@@ -18,6 +20,7 @@ class WelcomeWidget(QtGui.QDialog):
     utils.verify(mode in interfaces.VALID_MODES, "mode must be valid")
     super(WelcomeWidget, self).__init__(parent)
     uic.loadUi("ui/ui_Welcome.ui", self)
+    self.setWindowTitle("Welcome to {}".format(app.__NAME__))
     self.setWindowModality(True)
     
     if mode == interfaces.Mode.MOVIE_MODE:

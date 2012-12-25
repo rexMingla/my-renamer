@@ -27,6 +27,7 @@ class MainWindow(QtGui.QMainWindow):
   """ Window widget for the application. """
   def __init__(self, configFile="config.txt", cacheFile="cache.txt", logFile="log.txt", parent = None):
     super(QtGui.QMainWindow, self).__init__(parent)
+    self.setWindowIcon(QtGui.QIcon("img/icon.ico"))
     self._configFile = configFile
     self._cacheFile = cacheFile
     
@@ -49,7 +50,11 @@ class MainWindow(QtGui.QMainWindow):
     self.actionSave.triggered.connect(self._saveSettings)
     self.actionRestoreDefaults.triggered.connect(self._restoreDefaults)
     self.actionClearCache.triggered.connect(self._clearCache)
-    self._modeToAction = {interfaces.Mode.MOVIE_MODE : self.actionMovieMode, interfaces.Mode.TV_MODE: self.actionTvMode}
+    
+    self.actionToolBar.addAction(self.actionMovieMode)
+    self.actionToolBar.addAction(self.actionTvMode)
+    self._modeToAction = {interfaces.Mode.MOVIE_MODE : self.actionMovieMode, 
+                          interfaces.Mode.TV_MODE: self.actionTvMode}
                 
     #dock widgets
     dockAreas = QtCore.Qt.AllDockWidgetAreas
@@ -82,9 +87,11 @@ class MainWindow(QtGui.QMainWindow):
     for mode in interfaces.VALID_MODES:
       text.append(getText(mode))
     
-    msg = ("<html><p>MyRenamer {} is written in python with PyQt.<p/>\n\n"
-          "<p>Special thanks to the following libraries:</p>\n\n{}</html>").format(app.__VERSION__, "\n\n".join(text))
-    QtGui.QMessageBox.about(self, "About MyRenamer", msg)
+    msg = ("<html><p>{0} is written in python with PyQt.<p/>\n"
+          "<p>Special thanks to the following libraries:</p>\n{1}"
+          "<p>Icon used comes from <a href=\"{2}\">{2}</a></p>\n"
+          "</html>").format(app.__NAME__, "\n\n".join(text), "http://www.designkindle.com/2011/10/07/build-icons/")
+    QtGui.QMessageBox.about(self, "About {}".format(app.__NAME__), msg)
     
   def _addModule(self, module):
     self._modeToModule[module.mode] = module
@@ -147,7 +154,7 @@ class MainWindow(QtGui.QMainWindow):
     self._workBenchStackWidget.setCurrentWidget(module.workBenchWidget)
     self._outputStackWidget.setCurrentWidget(module.outputWidget)
     module.setActive()
-    self.setWindowTitle("MyRenamer {} [{} mode]".format(app.__VERSION__, self._mode))
+    self.setWindowTitle("{} [{} mode]".format(app.__NAME__, self._mode))
   
   def _saveSettings(self):
     self._saveSettingsConfig()

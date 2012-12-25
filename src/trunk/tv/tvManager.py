@@ -85,7 +85,7 @@ class TvManager(manager.BaseManager):
   helper = TvHelper
   
   def __init__(self):
-    super(TvManager, self).__init__(interfaces.Mode.TV_MODE)
+    super(TvManager, self).__init__(tvInfoClient.getStoreHolder())
 
   def getSeasonsForFolders(self, rootFolder, isRecursive, extensionFilter):
     utils.verifyType(rootFolder, str)

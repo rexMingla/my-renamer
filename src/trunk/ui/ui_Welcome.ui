@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>348</width>
+    <width>365</width>
     <height>127</height>
    </rect>
   </property>
@@ -29,7 +29,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Welcome! Please select what you want to rename first:</string>
+      <string>Please select what you want to rename first:</string>
      </property>
     </widget>
    </item>
