@@ -41,7 +41,7 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     #self.tvView.setItemDelegateForColumn(tvModel.Columns.COL_NEW_NAME, tvModel.SeriesDelegate(self))
     
     self.tvView.selectionModel().selectionChanged.connect(self._onSelectionChanged)
-    self.tvView.doubleClicked.connect(self._onTvDoubleClicked)
+    self.tvView.doubleClicked.connect(self._showItem)
     
     self.movieView.setVisible(False)
     self.movieGroupBox.setVisible(False)
@@ -63,13 +63,12 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     indexes = selection.indexes()
     self._currentIndex = indexes[0] if indexes else None
     self._updateActions()
-
-  def _onTvDoubleClicked(self, modelIndex):
-    utils.verifyType(modelIndex, QtCore.QModelIndex)
-    moveItemCandidateData, isMoveItemCandidate = self._model.data(modelIndex, tvModel.RAW_DATA_ROLE)
+    
+  def _showItem(self):
+    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
     if isMoveItemCandidate:
       if (isMoveItemCandidate and moveItemCandidateData.canEdit and 
-          bool(self._model.data(modelIndex.parent(), tvModel.RAW_DATA_ROLE)[0].destination.matches)):
+          bool(self._model.data(self._currentIndex.parent(), tvModel.RAW_DATA_ROLE)[0].destination.matches)):
         self._editEpisode()
       else:
         QtGui.QMessageBox.information(self, "Can not edit Episode", 

@@ -17,10 +17,10 @@ from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseManager(object):
-  def __init__(self, store):
+  def __init__(self, holder):
     super(BaseManager, self).__init__()
     self._cache = {}
-    self._store = store
+    self._holder = holder
     
   @staticmethod
   def getFolders(rootFolder, isRecursive):
@@ -48,7 +48,7 @@ class BaseManager(object):
     if useCache and cacheKey in self._cache:
       item = self._cache[cacheKey]
     else:
-      item = self._store.getInfo(searchParams, default=searchParams.toInfo())
+      item = self._holder.getInfo(searchParams, default=searchParams.toInfo())
       if item and item.hasData():
         newKey = item.toSearchParams().getKey()
         cachedItem = copy.copy(item)

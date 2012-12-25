@@ -17,11 +17,11 @@ import interfaces
 # --------------------------------------------------------------------------------------------------------------------
 class BaseWorkBenchModel(object):
   ACTION_DELETE = "Delete"
-  ACTION_LAUNCH = "Open location"
-  ACTION_OPEN = "Open file"
-  ACTION_EPISODE = "Edit episode"
-  ACTION_SEASON = "Edit season"
-  ACTION_MOVIE = "Edit movie"
+  ACTION_LAUNCH = "Launch File"
+  ACTION_OPEN = "Open Location"
+  ACTION_EPISODE = "Edit Episode"
+  ACTION_SEASON = "Edit Season"
+  ACTION_MOVIE = "Edit Movie"
   
   ALL_ACTIONS = ()
   
@@ -49,6 +49,18 @@ class BaseWorkBenchModel(object):
             BaseWorkBenchModel.ACTION_SEASON: False,
             BaseWorkBenchModel.ACTION_MOVIE: False} 
     return ret
+
+# --------------------------------------------------------------------------------------------------------------------
+class _ActionHolder:
+  def __init__(self, button, parent, cb, shortcut, index):
+    self.name = str(button.text()) #assumes the names match
+    self.button = button
+    self.action = QtGui.QAction(self.name, parent)
+    self.button.clicked.connect(self.action.trigger)
+    self.action.triggered.connect(cb)
+    if shortcut:
+      self.action.setShortcut(shortcut)
+    self.index = index # to keep them ordered
       
 # --------------------------------------------------------------------------------------------------------------------
 class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
@@ -61,27 +73,62 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self._model = None
     self._manager = manager
     self.selectAllCheckBox.clicked.connect(self._setOverallCheckedState)
-    self.launchButton.clicked.connect(self._launch)
-    self.openButton.clicked.connect(self._open)    
-    self.deleteButton.clicked.connect(self._delete)
-    self.editEpisodeButton.clicked.connect(self._editEpisode)
-    self.editSeasonButton.clicked.connect(self._editSeason)
-    self.editMovieButton.clicked.connect(self._editMovie)    
-    self._actionToButton = {BaseWorkBenchModel.ACTION_DELETE: self.deleteButton,
-                            BaseWorkBenchModel.ACTION_LAUNCH: self.launchButton,
-                            BaseWorkBenchModel.ACTION_OPEN: self.openButton,
-                            BaseWorkBenchModel.ACTION_EPISODE: self.editEpisodeButton,
-                            BaseWorkBenchModel.ACTION_SEASON: self.editSeasonButton,
-                            BaseWorkBenchModel.ACTION_MOVIE: self.editMovieButton}
+    
+    def createAction(actions, button, cb, shortcut=None):
+      # can't get shortcuts working at the moment...
+      holder = _ActionHolder(button, self, cb, None, len(actions))
+      actions[holder.name] = holder
+
+    self._actions = {}
+    createAction(self._actions, self.openButton, self._open, QtCore.Qt.ControlModifier + QtCore.Qt.Key_O)
+    createAction(self._actions, self.launchButton, self._launch, QtCore.Qt.ControlModifier + QtCore.Qt.Key_L)
+    createAction(self._actions, self.deleteButton, self._delete, QtCore.Qt.Key_Delete)
+    createAction(self._actions, self.editEpisodeButton, self._editEpisode)
+    createAction(self._actions, self.editSeasonButton, self._editSeason)
+    createAction(self._actions, self.editMovieButton, self._editMovie)
+    
+    self._currentIndex = None
+    self.tvView.viewport().installEventFilter(self) #filter out double right click
+    self.movieView.viewport().installEventFilter(self)
+    
+    self.tvView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+    self.tvView.customContextMenuRequested.connect(self._showContextMenu)
+    
+    self.movieView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+    self.movieView.customContextMenuRequested.connect(self._showContextMenu)
+    
+  def eventFilter(self, obj, event):
+    if obj in (self.tvView.viewport(), self.movieView.viewport()):
+      if event.type() == QtCore.QEvent.MouseButtonDblClick and event.button() == QtCore.Qt.RightButton:
+        event.accept() #do nothing
+        return True
+    return super(BaseWorkBenchWidget, self).eventFilter(obj, event)
+    
+  def _showItem(self):
+    raise NotImplementedError("BaseWorkBenchWidget._showItem not implemented")    
+    
+  def _onSelectionChanged(self, selection):
+    raise NotImplementedError("BaseWorkBenchWidget._onSelectionChanged not implemented")
+  
+  def _showContextMenu(self, pos):
+    #preserver ordering so that it matches the buttons
+    actions = []
+    for action, enabled in self._model.getAvailableActions(self._currentIndex).items():
+      if enabled:
+        actions.append(self._actions[action])
+    actions.sort(key=lambda a: a.index)
+    m = QtGui.QMenu()
+    m.addActions([a.action for a in actions])
+    m.exec_(QtGui.QCursor.pos())
     
   def _editEpisode(self):
-    raise NotImplementedError("BaseWorkBenchWidget.editEpisode not implemented")
+    raise NotImplementedError("BaseWorkBenchWidget._editEpisode not implemented")
     
   def _editSeason(self):
-    raise NotImplementedError("BaseWorkBenchWidget.editEpisode not implemented")
+    raise NotImplementedError("BaseWorkBenchWidget._editSeason not implemented")
     
   def _editMovie(self):
-    raise NotImplementedError("BaseWorkBenchWidget.editEpisode not implemented")
+    raise NotImplementedError("BaseWorkBenchWidget._editMovie not implemented")
     
   def _setModel(self, m):
     self._model = m
@@ -89,8 +136,8 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self._onWorkBenchChanged(False)
     self._model.beginUpdateSignal.connect(self.startWorkBenching)
     self._model.endUpdateSignal.connect(self.stopWorkBenching)
-    for action, button in self._actionToButton.items():
-      button.setVisible(action in self._model.ALL_ACTIONS)
+    for action in self._actions.values():
+      action.button.setVisible(action.name in self._model.ALL_ACTIONS)
     
   def _launchLocation(self, location):
     path = QtCore.QDir.toNativeSeparators(location)
@@ -171,7 +218,8 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   
   def _updateActions(self):
     for action, isEnabled in self._model.getAvailableActions(self._currentIndex).items():
-      self._actionToButton[action].setEnabled(isEnabled)
+      self._actions[action].button.setEnabled(isEnabled)
+      self._actions[action].action.setEnabled(isEnabled)
     
   def _deleteLocation(self, location):
     isDel = False
@@ -180,7 +228,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
       isDel = True
     except OSError as e:
       mb = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
-                                   "An error occured", "Unable to move to trash. Path:\n{}".format(location))
+                             "An error occured", "Unable to move to trash. Path:\n{}".format(location))
       mb.setDetailedText("Error:\n{}".format(str(e)))
       mb.exec_()  
     return isDel

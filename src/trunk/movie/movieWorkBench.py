@@ -69,6 +69,9 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self.duplicateCheckBox.setChecked(data.get("duplicate_as_error", True)),
     self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
     self._changeMovieWidget.setSeriesList(data.get("series_list", []))
+    
+  def _showItem(self):    
+    self._editMovie()
 
   def _onSelectionChanged(self, selection):
     indexes = selection.indexes()
