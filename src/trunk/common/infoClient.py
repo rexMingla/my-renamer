@@ -24,7 +24,7 @@ class BaseInfoClientSearchParams(object):
     raise NotImplementedError("BaseInfoClientSearchParams.toInfo not implemented")
 
 # --------------------------------------------------------------------------------------------------------------------
-class BaseInfoStore(object):
+class BaseInfoStoreHolder(object):
   def __init__(self):
     self.stores = []
   
@@ -38,12 +38,12 @@ class BaseInfoStore(object):
   def getStoreIndex(self, name):
     return next( (i for i, s in enumerate(self.stores) if name == s.prettyName() ), -1)
   
-  def getStore(self, name):
+  def getStoreHolder(self, name):
     return next( (s for s in self.stores if name == s.prettyName() ), None)
   
   def setAllActive(self, stores):
     for key in stores:
-      s = self.getStore(key)
+      s = self.getStoreHolder(key)
       if s and s.isAvailable():
         s.isEnabled = True
     

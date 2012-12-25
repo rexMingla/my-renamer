@@ -35,7 +35,7 @@ def _runGUI(cl):
   cm = editMovieWidget.EditMovieWidget(None)
   cm.show()
   
-  es = editSourcesWidget.EditSourcesWidget(movieInfoClient.getStore(), cm)
+  es = editSourcesWidget.EditSourcesWidget(movieInfoClient.getStoreHolder(), cm)
   cm.showEditSourcesSignal.connect(es.show)"""
   
   # --------------------------------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ def _runGUI(cl):
   cs = editSeasonWidget.EditSeasonWidget(None)
   cs.show()
   
-  es = editSourcesWidget.EditSourcesWidget(tvInfoClient.getStore(), cs)
+  es = editSourcesWidget.EditSourcesWidget(tvInfoClient.getStoreHolder(), cs)
   cs.showEditSourcesSignal.connect(es.show)"""
 
   app.exec_()

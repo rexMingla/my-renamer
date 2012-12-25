@@ -54,16 +54,16 @@ class TvInfo(infoClient.BaseInfo):
     return ret
   
 # --------------------------------------------------------------------------------------------------------------------
-class TvInfoStore(infoClient.BaseInfoStore):
+class TvInfoStoreHolder(infoClient.BaseInfoStoreHolder):
   pass
 
 _STORE = None
 
 # --------------------------------------------------------------------------------------------------------------------
-def getStore():
+def getStoreHolder():
   global _STORE
   if not _STORE:
-    _STORE = TvInfoStore()
+    _STORE = TvInfoStoreHolder()
     _STORE.addStore(TvdbClient())  
     _STORE.addStore(TvRageClient())  
   return _STORE
@@ -92,8 +92,9 @@ class TvdbClient(BaseTvInfoClient):
         show = episode.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
         eps.addItem(show)
     except tvdb_exceptions.tvdb_exception as e:
-      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(searchParams.showName, 
-                                                                                        searchParams.seasonNum, e))
+      utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 
+                                                                            searchParams.seasonNum, type(e), e), 
+                       title="{} lookup".format(self.displayName))
     return ret
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -114,7 +115,8 @@ class TvRageClient(BaseTvInfoClient):
         show = episode.DestinationEpisode(int(ep.number), utils.sanitizeString(ep.title))
         eps.addItem(show)
     except tvrage.exceptions.BaseError as e:
-      utils.logWarning("Could not find season. Show: {} seasonNum: {} Error: {}".format(searchParams.showName, 
-                                                                                        searchParams.seasonNum, e))
+      utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 
+                                                                            searchParams.seasonNum, type(e), e), 
+                       title="{} lookup".format(self.displayName))
     return ret
   

@@ -111,7 +111,7 @@ class EditSeasonWidget(QtGui.QDialog):
     
     self._workerThread = GetSeasonThread(tvInfoClient.TvSearchParams(utils.toString(self.seasonEdit.text()), 
                                                                      self.seasonSpin.value()),
-                                         tvInfoClient.getStore(),
+                                         tvInfoClient.getStoreHolder(),
                                          self._isLucky)
     self._workerThread.newDataSignal.connect(self._onDataFound)
     self._workerThread.finished.connect(self._onThreadFinished)

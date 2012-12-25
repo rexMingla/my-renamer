@@ -20,35 +20,33 @@ USE_SOURCE_DIRECTORY = "" #TODO: why is this here?
 
 # --------------------------------------------------------------------------------------------------------------------
 class ConfigManager(object):
-  _data = {}
-    
-  @classmethod
-  def getData(cls, key, default=""):
-    return cls._data.get(key, default)
-  
-  @classmethod
-  def setData(cls, key, value):
-    cls._data[key] = value
 
-  @classmethod
-  def loadConfig(cls, filename):
-    cls._data = {}
+  def __init__(self):
+    self._data = {}
+    
+  def getData(self, key, default=""):
+    return self._data.get(key, default)
+  
+  def setData(self, key, value):
+    self._data[key] = value
+    
+  def loadConfig(self, filename):
+    self._data = {}
     if fileHelper.FileHelper.fileExists(filename):
       f = open(filename, "r")
       try:
-        cls._data = jsonpickle.decode(f.read())
+        self._data = jsonpickle.decode(f.read())
       except (ValueError, TypeError, KeyError) as e:
         utils.logWarning("loadConfig error: {}".format(e))
-    if not isinstance(cls._data, dict):
-      cls._data = {}
+    if not isinstance(self._data, dict):
+      self._data = {}
   
-  @classmethod
-  def saveConfig(cls, filename):
+  def saveConfig(self, filename):
     tmpFile = "{}.bak".format(filename)
     try:
       #write a temp file and swap on success
       f = open(tmpFile, "w")
-      f.write(jsonpickle.encode(cls._data))
+      f.write(jsonpickle.encode(self._data))
       f.close()
       if os.path.exists(filename):
         os.remove(filename)
