@@ -57,4 +57,4 @@ class BaseManager(object):
     return item    
   
   def setItem(self, item): 
-    self._cache[item.toSearchParams().getKey()] = item  
+    self._cache[item.toSearchParams().getKey()] = item

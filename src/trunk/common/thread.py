@@ -52,14 +52,22 @@ class WorkerThread(QtCore.QThread):
     
   def _onData(self, data):
     self.newDataSignal.emit(data)
-        
+
+# --------------------------------------------------------------------------------------------------------------------
+class WorkItem(object):
+  """ result and object. assumed result is human readible """
+  def __init__(self, obj, result, log=None):
+    super(WorkItem, self).__init__()
+    self.obj = obj
+    self.result = result
+    self.log = log
+    
 # --------------------------------------------------------------------------------------------------------------------
 class AdvancedWorkerThread(WorkerThread):
-  def __init__(self, name, getAllItemsCb=None, applyToItemCb=None, formatLogItemCb=None):
+  def __init__(self, name, getAllItemsCb=None, applyToItemCb=None):
     super(AdvancedWorkerThread, self).__init__(name)
     self._getAllItemsCb = getAllItemsCb
     self._applyToItemCb = applyToItemCb
-    self._formatLogItemCb = formatLogItemCb
 
   def _getAllItems(self):
     if self._getAllItemsCb:
@@ -73,14 +81,6 @@ class AdvancedWorkerThread(WorkerThread):
     else:
       raise NotImplementedError("WorkerThreadBase._applyToItem not implemented")
     
-  def _formatLogItem(self, item, result):
-    if self._formatLogItemCb:
-      return self._formatLogItemCb(item, result)
-    else:
-      #fullLog = "{} {}".format(item, result)
-      #shortLog = " ".join([ word if os.path.isabs(word) else os.path.basename(word) for word in fullLog.split()])
-      return None#return logModel.LogItem(logModel.LogLevel.INFO, self._name, shortLog, fullLog) 
-    
   def run(self):
     """ obfuscation for the win!! wow. this is madness. sorry """
     items = self._getAllItems()
@@ -88,14 +88,14 @@ class AdvancedWorkerThread(WorkerThread):
     numItems = len(items)
     results = collections.defaultdict(int)
     for i, inputItem in enumerate(items):
-      item, result = self._applyToItem(inputItem)
-      if item != None:
-        self._onData(item)
-        itemCount += 1
-        log = self._formatLogItem(item, result)
-        if log:
-          self._onLog(log)
-        results[result] += 1
+      item = self._applyToItem(inputItem)
+      if item:
+        if item.obj != None:
+          self._onData(item.obj)
+          itemCount += 1
+        if item.log:
+          self._onLog(item.log)
+        results[item.result] += 1
       if self._userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      self._name,
