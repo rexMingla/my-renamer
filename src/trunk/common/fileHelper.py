@@ -163,20 +163,27 @@ class FileHelper:
 
     def unsafeCopyFile(s, d, progressCb):
       assert(progressCb)
-      sourceSize = os.stat(s).st_size
       copied = 0
-      with open(s, "rb") as source:
-        with open(d, "wb") as dest:
-          chunk = ""
-          while True:
-            chunk = source.read(pow(2, 15))
-            if not chunk:
-              break
-            copied += len(chunk)
-            dest.write(chunk)
-            if not progressCb(int(100.0 * copied / sourceSize)):
-              break
-          return FileHelper.getFileSize(d) == sourceSize
+      ret = False
+      try:
+        sourceSize = os.stat(s).st_size
+        with open(s, "rb") as source:
+          with open(d, "wb") as dest:
+            chunk = ""
+            while True:
+              chunk = source.read(pow(2, 15))
+              if not chunk:
+                break
+              copied += len(chunk)
+              dest.write(chunk)
+              if not progressCb(int(100.0 * copied / sourceSize)):
+                break
+            ret = FileHelper.getFileSize(d) == sourceSize
+      except os.error:
+        pass
+      if not ret:
+        FileHelper.removeFile(d)
+      return ret
       
     def safeCopyFile(source, dest):
       try:
@@ -194,4 +201,5 @@ class FileHelper:
         else:
           ret = unsafeCopyFile(source, dest, progressCb)
     return ret
-  
+
+
