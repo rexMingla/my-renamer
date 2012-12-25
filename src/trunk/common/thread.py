@@ -85,9 +85,9 @@ class AdvancedWorkerThread(WorkerThread):
     """ obfuscation for the win!! wow. this is madness. sorry """
     items = self._getAllItems()
     itemCount = 0
-    numItems = len(items)
+    self._numItems = len(items)
     results = collections.defaultdict(int)
-    for i, inputItem in enumerate(items):
+    for self._i, inputItem in enumerate(items):
       item = self._applyToItem(inputItem)
       if item:
         if item.obj != None:
@@ -99,9 +99,9 @@ class AdvancedWorkerThread(WorkerThread):
       if self._userStopped:
         self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
                                      self._name,
-                                     "User cancelled. {} of {} processed.".format(i + 1, numItems)))              
+                                     "User cancelled. {} of {} processed.".format(self._i + 1, self._numItems)))              
         break
-      self._onProgress(int(100.0 * (i + 1) / numItems))
+      self._onProgress(int(100.0 * (self._i + 1) / self._numItems))
     
     results["Total"] = sum(v for _, v in results.items())
     summaryText = " ".join([("{}:{}".format(key, results[key])) 

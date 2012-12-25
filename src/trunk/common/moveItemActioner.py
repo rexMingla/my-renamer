@@ -19,9 +19,6 @@ class BaseRenameItem(object):
   def itemToInfo(self):
     return NotImplementedError("BaseRenameItem.itemToInfo not implemented")      
     
-  def visit(self, visitor):
-    raise NotImplementedError("BaseRenameItem.accept not implemented")
-    
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItemGenerator(object):
   """ generates list of item actioner """
@@ -78,7 +75,7 @@ class BaseRenamer(object):
   def __init__(self):
     super(BaseRenamer, self).__init__()
     
-  def performAction(self):
+  def performAction(self, progressCb=None):
     raise NotImplementedError("BaseRenamer.performAction not implemented")
     
 # --------------------------------------------------------------------------------------------------------------------
@@ -111,11 +108,11 @@ class FileRenamer(BaseRenamer):
     longText = "{} -> {}".format(self.source, self.dest) 
     shortText = "{} -> {}".format(fileHelper.FileHelper.basename(self.source), fileHelper.FileHelper.basename(self.dest))
     level = logModel.LogLevel.INFO
-    if res != FileRenamer.resultStr(FileRenamer.SUCCESS):
+    if res != FileRenamer.SUCCESS:
       level = logModel.LogLevel.ERROR
-    return logModel.LogItem(level, res, shortText, longText)
+    return logModel.LogItem(level, FileRenamer.resultStr(res), shortText, longText)
   
-  def performAction(self):
+  def performAction(self, progressCb=None):
     """ Move/Copy a file from source to destination. """
     #sanity checks
     if not fileHelper.FileHelper.fileExists(self.source):
@@ -128,18 +125,18 @@ class FileRenamer(BaseRenamer):
       return FileRenamer.COULD_NOT_OVERWRITE    
 
     if self.keepSource:
-      return self._copyFile()
+      return self._copyFile(progressCb)
     else:
-      return self._moveFile()    
+      return self._moveFile(progressCb)    
   
-  def _moveFile(self):
-    if fileHelper.FileHelper.moveFile(self.source, self.dest):
+  def _moveFile(self, progressCb):
+    if fileHelper.FileHelper.moveFile(self.source, self.dest, progressCb):
       return FileRenamer.SUCCESS
     else:
       return FileRenamer.FAILED
     
-  def _copyFile(self):
-    if fileHelper.FileHelper.copyFile(self.source, self.dest):
+  def _copyFile(self, progressCb):
+    if fileHelper.FileHelper.copyFile(self.source, self.dest, progressCb):
       return FileRenamer.SUCCESS
     else:
       return FileRenamer.FAILED
