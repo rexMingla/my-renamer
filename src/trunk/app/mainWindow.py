@@ -75,6 +75,14 @@ class MainWindow(QtGui.QMainWindow):
     event.accept()
     
   def closeEvent(self, event):
+    module = self._modeToModule[self._mode]
+    if module.outputWidget.isExecuting():
+      response = QtGui.QMessageBox.warning(self, "You have unfinished renames", 
+                                           "Ok to discard the renames and exit, Cancel to go back?", 
+                                           QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+      if response == QtGui.QMessageBox.Cancel:
+        event.ignore()
+        return
     self.saveConfig()
     event.accept()
     

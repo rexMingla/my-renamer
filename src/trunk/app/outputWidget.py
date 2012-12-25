@@ -44,9 +44,13 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     completer.setModel(fsModel)
     self.specificDirectoryEdit.setCompleter(completer)
     
+    self._isActioning = False
     self.stopActioning()
     self.stopExploring()
     self._showHelp()
+    
+  def isExecuting(self):
+    return self._isActioning
       
   def startExploring(self):
     self.renameButton.setEnabled(False)
@@ -55,6 +59,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self.renameButton.setEnabled(True)
 
   def startActioning(self):
+    self._isActioning = True
     self.progressBar.setValue(0)    
     self.progressBar.setVisible(True)
     self.stopButton.setEnabled(True)
@@ -62,6 +67,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self.renameButton.setVisible(False)
 
   def stopActioning(self):
+    self._isActioning = False
     self.progressBar.setVisible(False)
     self.stopButton.setVisible(False)
     self.renameButton.setVisible(True)
