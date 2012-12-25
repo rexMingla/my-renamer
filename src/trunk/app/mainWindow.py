@@ -14,9 +14,9 @@ from PyQt4 import uic
 from common import utils
 
 import config
+import factory
 import logWidget
 import interfaces
-import renamerModule
 import welcomeWidget
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -50,8 +50,8 @@ class MainWindow(QtGui.QMainWindow):
     self._addDockWidget(self._logWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
     self._modeToModule = {}
-    self._addModule(renamerModule.ModuleFactory.createModule(interfaces.Mode.MOVIE_MODE, self))
-    self._addModule(renamerModule.ModuleFactory.createModule(interfaces.Mode.TV_MODE, self))
+    self._addModule(factory.Factory.getRenamerModule(interfaces.Mode.MOVIE_MODE, self))
+    self._addModule(factory.Factory.getRenamerModule(interfaces.Mode.TV_MODE, self))
     self._mode = None
     self._autoStart = False
     

@@ -15,14 +15,15 @@ from common import utils
 from movie import movieManager
 from movie import movieInfoClient
 
+import interfaces
 import searchResultsWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetMovieThread(thread.WorkerThread):
-  def __init__(self, searchParams, store, isLucky):
+  def __init__(self, searchParams, isLucky):
     super(GetMovieThread, self).__init__("movie search")
     self._searchParams = searchParams
-    self._store = store
+    self._store = movieInfoClient.getStore()
     self._isLucky = isLucky
 
   def run(self):
@@ -105,8 +106,7 @@ class EditMovieWidget(QtGui.QDialog):
     self.placeholderWidget.setEnabled(False)    
     self.progressBar.setVisible(True)
     
-    self._workerThread = GetMovieThread(movieInfoClient.MovieSearchParams(utils.toString(self.searchEdit.text())),
-                                        movieInfoClient.getStore(), self._isLucky)
+    self._workerThread = GetMovieThread(movieInfoClient.MovieSearchParams(utils.toString(self.searchEdit.text())), self._isLucky)
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
