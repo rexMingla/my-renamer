@@ -26,7 +26,7 @@ class SourceEpisode(object):
     self.epNum = epNum
     self.filename = filename
     self.fileSize = fileHelper.FileHelper.getFileSize(filename)
-    self.ext = os.path.splitext(filename)[1]
+    self.ext = fileHelper.FileHelper.extension(filename)
     
   @staticmethod
   def createUnresolvedSource():

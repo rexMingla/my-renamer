@@ -50,6 +50,11 @@ class FileHelper:
     return os.path.splitdrive(p)
   
   @staticmethod
+  def extension(f):
+    utils.verifyType(f, str)
+    return os.path.splitext(f)[1]
+  
+  @staticmethod
   def joinPath(d, f):
     utils.verifyType(d, str)
     utils.verifyType(f, str)
@@ -125,32 +130,68 @@ class FileHelper:
     return ret
 
   @staticmethod
-  def moveFile(source, dest):
+  def moveFile(source, dest, progressCb=None):
     utils.verifyType(source, str)
     utils.verifyType(dest, str)
+    
+    def safeMoveFile(source, dest):
+      try:
+        shutil.move(source, dest)
+        ret = True
+      except shutil.Error:
+        pass
+      
+    def unsafeMoveFile(source, dest, progressCb):
+      ret = FileHelper.copyFile(source, dest, progressCb) and FileHelper.removeFile(source)
+      return ret
+      
     ret = False
     if FileHelper.fileExists(source):
       destFolder = FileHelper.dirname(dest)
       if not destFolder or FileHelper.createDir(destFolder):
-        try:
-          shutil.move(source, dest)
-          ret = True
-        except shutil.Error:
-          pass
+        if os.path.commonprefix([source, dest]) or not progressCb:         
+          ret = safeMoveFile(source, dest)
+        else:
+          ret = unsafeMoveFile(source, dest, progressCb)
+
     return ret
   
   @staticmethod
-  def copyFile(source, dest):
+  def copyFile(source, dest, progressCb=None):
     utils.verifyType(source, str)
     utils.verifyType(dest, str)
+
+    def unsafeCopyFile(s, d, progressCb):
+      assert(progressCb)
+      sourceSize = os.stat(s).st_size
+      copied = 0
+      with open(s, "rb") as source:
+        with open(d, "wb") as dest:
+          chunk = ""
+          while True:
+            chunk = source.read(pow(2, 15))
+            if not chunk:
+              break
+            copied += len(chunk)
+            dest.write(chunk)
+            if not progressCb(int(100.0 * copied / sourceSize)):
+              break
+          return FileHelper.getFileSize(d) == sourceSize
+      
+    def safeCopyFile(source, dest):
+      try:
+        shutil.copy2(source, dest)
+        ret = True
+      except shutil.Error:
+        pass    
+    
     ret = False
     if FileHelper.fileExists(source):
       destFolder = FileHelper.dirname(dest)
       if not destFolder or FileHelper.createDir(destFolder):
-        try:
-          shutil.copy2(source, dest)
-          ret = True
-        except shutil.Error:
-          pass
+        if not progressCb:         
+          ret = safeCopyFile(source, dest)
+        else:
+          ret = unsafeCopyFile(source, dest, progressCb)
     return ret
-      
+  

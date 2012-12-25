@@ -26,8 +26,13 @@ class RenameThread(thread.AdvancedWorkerThread):
     return self._renameVisitor.getRenamerItems()
    
   def _applyToItem(self, item):
-    ret = item.performAction()
-    return thread.WorkResult(item, item.resultStr(ret), item.resultToLogItem(result))
+    ret = item.performAction(self._onPercentageComplete)
+    return thread.WorkItem(item, item.resultStr(ret), item.resultToLogItem(ret))
+  
+  def _onPercentageComplete(self, percentage):
+    overall = int((percentage + 100.0 * self._i) / self._numItems)
+    self._onProgress(overall)
+    return not self._userStopped
     
 # --------------------------------------------------------------------------------------------------------------------
 class RenamerModule(QtCore.QObject):

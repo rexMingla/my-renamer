@@ -48,7 +48,7 @@ class Movie(moveItemActioner.BaseRenameItem):
     super(Movie, self).__init__()
     self.filename = filename #utils.toString(filename)
     self.fileSize = fileHelper.FileHelper.getFileSize(filename)
-    self.ext = os.path.splitext(filename)[1]
+    self.ext = fileHelper.FileHelper.extension(filename)
     self.title = utils.toString(title)
     #self.subsFiles = subsFiles # not used atm
     #dynamic properties
