@@ -12,6 +12,7 @@ from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
+from common import workBench
 
 import episode
 import moveItemCandidate
@@ -201,7 +202,7 @@ class TreeItem(object):
       self.raw.performMove = isChecked
 
 # --------------------------------------------------------------------------------------------------------------------
-class TvModel(QtCore.QAbstractItemModel):
+class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
   """ 
   Represents 0 or more tv seasons. Each folder (season) contains a collection of moveItemCandiates. 
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
@@ -209,9 +210,16 @@ class TvModel(QtCore.QAbstractItemModel):
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
   beginUpdateSignal = QtCore.pyqtSignal()
   endUpdateSignal = QtCore.pyqtSignal()  
+  
+  ALL_ACTIONS = (workBench.BaseWorkBenchModel.ACTION_DELETE,
+                 workBench.BaseWorkBenchModel.ACTION_LAUNCH,
+                 workBench.BaseWorkBenchModel.ACTION_OPEN,
+                 workBench.BaseWorkBenchModel.ACTION_EPISODE,
+                 workBench.BaseWorkBenchModel.ACTION_SEASON)
 
   def __init__(self, parent=None):
-    super(TvModel, self).__init__(parent)
+    super(QtCore.QAbstractItemModel, self).__init__(parent)
+    super(workBench.BaseWorkBenchModel, self).__init__()
     self._seasons = []
     self.rootItem = TreeItem(("",))
     self._bulkProcessing = False
@@ -219,15 +227,66 @@ class TvModel(QtCore.QAbstractItemModel):
 
   def columnCount(self, parent):
     return Columns.NUM_COLS
+  
+  def getFile(self, index):
+    if not index.isValid():
+      return None
+
+    item = index.internalPointer()
+    ret = ""
+    if item.isMoveItemCandidate():
+      ret = item.raw.source.filename 
+    return ret
+  
+  def getFolder(self, index):
+    if not index.isValid():
+      return None
+
+    item = index.internalPointer()
+    ret = ""
+    if item.isMoveItemCandidate():
+      ret = fileHelper.FileHelper.dirname(item.raw.source.filename)
+    else:
+      ret = item.raw.inputFolder
+    return ret
+  
+  def getDeleteItem(self, index):
+    if not index.isValid():
+      return None
+
+    item = index.internalPointer()
+    ret = ""
+    if item.isMoveItemCandidate():
+      ret = item.raw.source.filename
+    else:
+      ret = item.raw.inputFolder
+    return ret
+  
+  def getAvailableActions(self, index):
+    ret = self.getDefaultAvailableActions()
+    if not index or not index.isValid():
+      return ret
+    
+    moveItemCandidateData, isMoveItemCandidate = self.data(index, RAW_DATA_ROLE)
+    #filthy. check if parent has season info
+    canEditEp = (isMoveItemCandidate and moveItemCandidateData.canEdit and 
+                bool(self.data(index.parent(), RAW_DATA_ROLE)[0].destination.matches))
+    ret[workBench.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
+    ret[workBench.BaseWorkBenchModel.ACTION_SEASON] = True
+    ret[workBench.BaseWorkBenchModel.ACTION_OPEN] = True
+    ret[workBench.BaseWorkBenchModel.ACTION_LAUNCH] = isMoveItemCandidate
+    ret[workBench.BaseWorkBenchModel.ACTION_DELETE] = (not isMoveItemCandidate or 
+                                             fileHelper.FileHelper.fileExists(moveItemCandidateData.source.filename))    
+    return ret
 
   def data(self, index, role):
     if not index.isValid():
       return None
-    if role == RAW_DATA_ROLE:
-      item = index.internalPointer()
-      return (copy.copy(item.raw), item.isMoveItemCandidate()) #wow. this is confusing as hell..
 
     item = index.internalPointer()
+    if role == RAW_DATA_ROLE:
+      return (copy.copy(item.raw), item.isMoveItemCandidate()) #wow. this is confusing as hell..
+
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       if item.canCheck():
         return item.checkState()

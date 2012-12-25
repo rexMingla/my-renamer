@@ -156,7 +156,7 @@ class TvRenamerModule(RenamerModule):
                                               data["minFileSizeBytes"]) 
     ret = None
     if season:
-      ret = thread.WorkerItem(season, season.resultStr(season.status))
+      ret = thread.WorkItem(season, season.resultStr(season.status))
     return ret
   
 # --------------------------------------------------------------------------------------------------------------------
