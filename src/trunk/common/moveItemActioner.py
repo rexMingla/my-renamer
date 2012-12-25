@@ -23,48 +23,44 @@ class BaseRenameItem(object):
     raise NotImplementedError("BaseRenameItem.accept not implemented")
     
 # --------------------------------------------------------------------------------------------------------------------
-class BaseRenameItemGeneratorVisitor(object):
+class BaseRenameItemGenerator(object):
   """ generates list of item actioner """
-  def __init__(self, config, items):
-    super(BaseRenameItemGeneratorVisitor, self).__init__()
-    self._config = config
-    self._items = items
+  def __init__(self, config=None, items=None):
+    super(BaseRenameItemGenerator, self).__init__()
+    self.config = config or {}
+    self.items = items or []
     
   def getRenamerItems(self):
     ret = []
-    for item in self._items:
-      ret.extend(item.visit(self))
+    for item in self.items:
+      ret.extend(self._getRenameItems(item))
     return ret
+  
+  def _getRenameItems(self, item):
+    raise NotImplementedError("BaseRenameItemGenerator._getRenameItems not implemented")
     
-  def accept(self, obj):
-    return obj.visit(self)
-  
-  def acceptMovie(self, movie):
-    return []
-  
-  def acceptTv(self, tv):
-    return []
-  
 # --------------------------------------------------------------------------------------------------------------------
-class FileRenameItemGeneratorVisitor(BaseRenameItemGeneratorVisitor):  
-  def acceptMovie(self, movie):
+class MovieRenameItemGenerator(BaseRenameItemGenerator):
+  def _getRenameItems(self, movie):
     ret = []
-    oFormat = outputFormat.OutputFormat(self._config["format"])
-    outputFolder = self._config["folder"] or fileHelper.FileHelper.dirname(movie.filename)
+    oFormat = outputFormat.OutputFormat(self.config["format"])
+    outputFolder = self.config["folder"] or fileHelper.FileHelper.dirname(movie.filename)
     genre = movie.genre("unknown")
     im = outputFormat.MovieInputMap(fileHelper.FileHelper.replaceSeparators(movie.title), 
                                     movie.year, 
                                     fileHelper.FileHelper.replaceSeparators(genre), movie.part, movie.series)
     newName = oFormat.outputToString(im, movie.ext, outputFolder)
     newName = fileHelper.FileHelper.sanitizeFilename(newName)
-    ret.append(FileRenamer(movie.filename, newName, canOverwrite=not self._config["dontOverwrite"], 
-                                                    keepSource=not self._config["move"]))
+    ret.append(FileRenamer(movie.filename, newName, canOverwrite=not self.config["dontOverwrite"], 
+                                                    keepSource=not self.config["move"]))
     return ret   
   
-  def acceptTv(self, tv):
+# --------------------------------------------------------------------------------------------------------------------
+class TvRenameItemGenerator(BaseRenameItemGenerator):
+  def _getRenameItems(self, tv):
     ret = []
-    outputFolder = self._config["folder"] or tv.inputFolder
-    oFormat = outputFormat.OutputFormat(self._config["format"])
+    outputFolder = self.config["folder"] or tv.inputFolder
+    oFormat = outputFormat.OutputFormat(self.config["format"])
     for ep in tv.moveItemCandidates:
       if ep.performMove:
         im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(tv.seasonName), 
@@ -73,8 +69,8 @@ class FileRenameItemGeneratorVisitor(BaseRenameItemGeneratorVisitor):
                                      fileHelper.FileHelper.replaceSeparators(ep.destination.epName))
         newName = oFormat.outputToString(im, ep.source.ext, outputFolder)
         newName = fileHelper.FileHelper.sanitizeFilename(newName)
-        ret.append(FileRenamer(ep.source.filename, newName, canOverwrite=not self._config["dontOverwrite"], 
-                                                            keepSource=not self._config["move"]))
+        ret.append(FileRenamer(ep.source.filename, newName, canOverwrite=not self.config["dontOverwrite"], 
+                                                            keepSource=not self.config["move"]))
     return ret    
     
 # --------------------------------------------------------------------------------------------------------------------    

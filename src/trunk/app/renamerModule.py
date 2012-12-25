@@ -7,51 +7,14 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore
 
-import collections
-
-from common import outputFormat
 from common import extension
-from common import fileHelper
-from common import logModel
-from common import moveItemActioner
-from common import manager
-from common import utils
+from common import interfaces
 from common import thread
-
-from tv import tvManager
-from tv import tvInfoClient
+from common import utils
 
 from movie import movieManager
-from movie import movieInfoClient
 
-import config
-import editSourcesWidget
-import inputWidget
-import outputWidget
-import workBenchWidget
-
-# --------------------------------------------------------------------------------------------------------------------
-class ModuleFactory:
-  @staticmethod
-  def createModule(mode, mw):
-    if mode == Mode.MOVIE_MODE:
-      store = movieInfoClient.getStore()
-      manager = movieManager.getManager()
-      return MovieRenamerModule(editSourcesWidget.EditSourcesWidget(store, mw),
-                                inputWidget.InputWidget(mode, store, mw), 
-                                outputWidget.OutputWidget(mode, outputFormat.MovieInputMap, mw),
-                                workBenchWidget.MovieWorkBenchWidget(manager, mw),
-                                manager,
-                                moveItemActioner.FileRenameItemGeneratorVisitor)
-    else:
-      store = tvInfoClient.getStore()
-      manager = tvManager.getManager()
-      return TvRenamerModule(editSourcesWidget.EditSourcesWidget(store, mw),
-                             inputWidget.InputWidget(mode, store, mw), 
-                             outputWidget.OutputWidget(mode, outputFormat.TvInputMap, mw),
-                             workBenchWidget.TvWorkBenchWidget(manager, mw),
-                             manager,
-                             moveItemActioner.FileRenameItemGeneratorVisitor)
+import factory
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenameThread(thread.AdvancedWorkerThread):  
@@ -68,13 +31,6 @@ class RenameThread(thread.AdvancedWorkerThread):
     
   def _formatLogItem(self, item, result):
     return item.resultToLogItem(result)
-    
-# --------------------------------------------------------------------------------------------------------------------
-class Mode:
-  MOVIE_MODE = "movie"
-  TV_MODE = "tv"
-  
-VALID_MODES = (Mode.MOVIE_MODE, Mode.TV_MODE)
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenamerModule(QtCore.QObject):
@@ -84,18 +40,17 @@ class RenamerModule(QtCore.QObject):
   """  
   logSignal = QtCore.pyqtSignal(object)
   
-  def __init__(self, mode, editSourcesWidget_, inputWidget_, outputWidget_, workBenchWidget_, manager_, renameVisitorFn_, 
-               parent=None):
+  def __init__(self, mode, parent=None):
     super(RenamerModule, self).__init__(parent)
     
     self.mode = mode
-    self.editSourcesWidget = editSourcesWidget_
+    self.editSourcesWidget = factory.Factory.getEditSourceWidget(mode, parent)
     self.editSourcesWidget.setVisible(False)    
-    self.inputWidget = inputWidget_
-    self.outputWidget = outputWidget_
-    self.workBenchWidget = workBenchWidget_
-    self._manager = manager_
-    self._renameVisitorFn = renameVisitorFn_
+    self.inputWidget = factory.Factory.getInputWidget(mode, parent)
+    self.outputWidget = factory.Factory.getOutputWidget(mode, parent)
+    self.workBenchWidget = factory.Factory.getWorkBenchWidget(mode, parent)
+    self._manager = factory.Factory.getManager(mode)
+    self._renamerItemGenerator = factory.Factory.getRenameItemGenerator(mode)
     self._widgets = (self.inputWidget, self.outputWidget, self.workBenchWidget)
     
     self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
@@ -146,8 +101,9 @@ class RenamerModule(QtCore.QObject):
     for w in self._widgets:
       w.startActioning()
 
-    renameVisitor = self._renameVisitorFn(self.outputWidget.getConfig(), self.workBenchWidget.actionableItems())
-    self._workerThread = RenameThread("rename {}".format(self.mode), renameVisitor)
+    self._renamerItemGenerator.config = self.outputWidget.getConfig()
+    self._renamerItemGenerator.items = self.workBenchWidget.actionableItems()
+    self._workerThread = RenameThread("rename {}".format(self.mode), self._renamerItemGenerator)
     self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
     self._workerThread.logSignal.connect(self.logSignal)
     self._workerThread.finished.connect(self._onThreadFinished)
@@ -184,15 +140,8 @@ class TvRenamerModule(RenamerModule):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, renameVisitorFn, parent=None):
-    super(TvRenamerModule, self).__init__(Mode.TV_MODE, 
-                                          editSourcesWidget, 
-                                          inputWidget, 
-                                          outputWidget, 
-                                          workbenchWidget, 
-                                          manager,
-                                          renameVisitorFn,
-                                          parent)  
+  def __init__(self, parent=None):
+    super(TvRenamerModule, self).__init__(interfaces.Mode.TV_MODE, parent)  
     
   def _getExploreItems(self):
     data = self.inputWidget.getConfig()
@@ -214,15 +163,8 @@ class MovieRenamerModule(RenamerModule):
   Class responsible for the input, output, working and logging components.
   This class manages all interactions required between the components.
   """  
-  def __init__(self, editSourcesWidget, inputWidget, outputWidget, workbenchWidget, manager, renameVisitorFn, parent=None):
-    super(MovieRenamerModule, self).__init__(Mode.MOVIE_MODE, 
-                                             editSourcesWidget, 
-                                             inputWidget, 
-                                             outputWidget, 
-                                             workbenchWidget, 
-                                             manager,
-                                             renameVisitorFn,
-                                             parent)
+  def __init__(self, parent=None):
+    super(MovieRenamerModule, self).__init__(interfaces.Mode.MOVIE_MODE, parent)
    
   def _getExploreItems(self):
     data = self.inputWidget.getConfig()

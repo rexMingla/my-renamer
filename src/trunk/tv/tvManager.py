@@ -14,6 +14,7 @@ import re
 
 from common import extension
 from common import fileHelper
+from common import interfaces
 from common import manager
 from common import utils
 
@@ -84,7 +85,7 @@ class TvManager(manager.BaseManager):
   helper = TvHelper
   
   def __init__(self):
-    super(TvManager, self).__init__(tvInfoClient.getStore())
+    super(TvManager, self).__init__(interfaces.Mode.TV_MODE)
 
   def getSeasonsForFolders(self, rootFolder, isRecursive, extensionFilter):
     utils.verifyType(rootFolder, str)
