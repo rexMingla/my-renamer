@@ -18,6 +18,7 @@ class LogWidget(QtGui.QWidget):
     super(QtGui.QWidget, self).__init__(parent)
     uic.loadUi("ui/ui_LogWidget.ui", self)
     self.clearButton.clicked.connect(self._clearLog)
+    self.clearButton.setIcon(QtGui.QIcon("img/clear.png"))    
     self.clearButton.setEnabled(True)
 
     self._model = logModel.LogModel(self)

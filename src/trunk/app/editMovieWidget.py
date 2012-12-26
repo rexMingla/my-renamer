@@ -46,6 +46,7 @@ class EditMovieWidget(QtGui.QDialog):
     self.searchEdit.setPlaceholderText("Enter movie and year to search")
     self.searchEdit.installEventFilter(self)
     self.searchButton.clicked.connect(self._search)
+    self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
     
     self._searchResults = searchResultsWidget.SearchResultsWidget(self)
     self._searchResults.itemSelectedSignal.connect(self._setMovieInfo)
@@ -57,6 +58,7 @@ class EditMovieWidget(QtGui.QDialog):
     self.hideLabel.linkActivated.connect(self._hideResults)    
     self.showLabel.linkActivated.connect(self._showResults)    
     self.stopButton.clicked.connect(self._stopThread)    
+    self.stopButton.setIcon(QtGui.QIcon("img/stop.png"))
     self.partCheckBox.toggled.connect(self.partSpinBox.setEnabled)
     self.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)    
     

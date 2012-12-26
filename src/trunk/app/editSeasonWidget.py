@@ -49,7 +49,9 @@ class EditSeasonWidget(QtGui.QDialog):
     self._data = season.Season("", 1, episode.SourceEpisodeMap(), episode.DestinationEpisodeMap(), "")
     
     self.searchButton.clicked.connect(self._search)
+    self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
     self.stopButton.clicked.connect(self._stopThread)
+    self.stopButton.setIcon(QtGui.QIcon("img/stop.png"))
     self.addButton.clicked.connect(self._add)
     self.removeButton.clicked.connect(self._remove)
     self.upButton.clicked.connect(self._moveUp)
@@ -245,6 +247,6 @@ class EditSeasonWidget(QtGui.QDialog):
   def _hideResults(self):
     self.placeholderWidget.setVisible(False)
     self.hideLabel.setVisible(False)
-    self.showLabel.setVisible(True)  
+    self.showLabel.setVisible(True)
 
   

@@ -46,7 +46,7 @@
    <item>
     <widget class="QRadioButton" name="tvRadio">
      <property name="text">
-      <string>Tv Shows</string>
+      <string>Tv shows</string>
      </property>
     </widget>
    </item>

@@ -28,7 +28,9 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     
     self._setOutputFormat(fmt)
     self.renameButton.clicked.connect(self.renameSignal)
+    self.renameButton.setIcon(QtGui.QIcon("img/rename.png"))
     self.stopButton.clicked.connect(self.stopSignal)
+    self.stopButton.setIcon(QtGui.QIcon("img/stop.png"))
         
     self.specificDirectoryButton.clicked.connect(self._showFolderSelectionDialog)
     
@@ -46,7 +48,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     
     self._isActioning = False
     self.stopActioning()
-    self.stopExploring()
+    self.renameButton.setEnabled(False)
     self._showHelp()
     
   def isExecuting(self):

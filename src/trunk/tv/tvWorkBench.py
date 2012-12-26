@@ -45,6 +45,7 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     
     self.movieView.setVisible(False)
     self.movieGroupBox.setVisible(False)
+    self._onSelectionChanged()
     
   def getConfig(self):
     return {"cache" : self._manager.cache(),
@@ -59,8 +60,8 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     super(TvWorkBenchWidget, self).stopExploring()
     self.tvView.expandAll()
             
-  def _onSelectionChanged(self, selection):
-    indexes = selection.indexes()
+  def _onSelectionChanged(self, selection=None):
+    indexes = selection and selection.indexes()
     self._currentIndex = indexes[0] if indexes else None
     self._updateActions()
     
