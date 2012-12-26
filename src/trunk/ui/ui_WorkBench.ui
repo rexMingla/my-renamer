@@ -63,7 +63,7 @@
      <item>
       <widget class="QPushButton" name="openButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Open containing folder for selected item</string>
@@ -76,7 +76,7 @@
      <item>
       <widget class="QPushButton" name="launchButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Launch file in default program</string>
@@ -89,7 +89,7 @@
      <item>
       <widget class="QPushButton" name="deleteButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Delete to recycling bin</string>
@@ -118,7 +118,7 @@
      <item>
       <widget class="QPushButton" name="editSeasonButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Edit selected season</string>
@@ -131,7 +131,7 @@
      <item>
       <widget class="QPushButton" name="editEpisodeButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Edit selected episode</string>
@@ -144,7 +144,7 @@
      <item>
       <widget class="QPushButton" name="editMovieButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Edit selected movie</string>

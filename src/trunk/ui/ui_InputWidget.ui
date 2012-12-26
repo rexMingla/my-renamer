@@ -306,12 +306,12 @@
       <number>4</number>
      </property>
      <item>
-      <widget class="QPushButton" name="findButton">
+      <widget class="QPushButton" name="searchButton">
        <property name="toolTip">
         <string>Explore contents of folder</string>
        </property>
        <property name="text">
-        <string>Find</string>
+        <string>Search</string>
        </property>
       </widget>
      </item>

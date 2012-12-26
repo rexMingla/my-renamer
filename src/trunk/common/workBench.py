@@ -75,6 +75,14 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self._manager = manager
     self.selectAllCheckBox.clicked.connect(self._setOverallCheckedState)
     
+    #images
+    self.openButton.setIcon(QtGui.QIcon("img/open.png"))
+    self.launchButton.setIcon(QtGui.QIcon("img/launch.png"))
+    self.deleteButton.setIcon(QtGui.QIcon("img/delete.png"))
+    self.editEpisodeButton.setIcon(QtGui.QIcon("img/edit.png"))
+    self.editSeasonButton.setIcon(QtGui.QIcon("img/edit.png"))
+    self.editMovieButton.setIcon(QtGui.QIcon("img/edit.png"))
+    
     def createAction(actions, button, cb, shortcut=None):
       # can't get shortcuts working at the moment...
       holder = _ActionHolder(button, self, cb, None, len(actions))

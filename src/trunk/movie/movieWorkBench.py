@@ -54,6 +54,7 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self._flagDuplicateChanged(self.duplicateCheckBox.isChecked())
     
     self.tvView.setVisible(False)
+    self._onSelectionChanged()
      
   def getConfig(self):
     return {"no_year_as_error" : self.yearCheckBox.isChecked(),
@@ -73,8 +74,8 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
   def _showItem(self):    
     self._editMovie()
 
-  def _onSelectionChanged(self, selection):
-    indexes = selection.indexes()
+  def _onSelectionChanged(self, selection=None):
+    indexes = selection and selection.indexes()
     self._currentIndex = self._sortModel.mapToSource(indexes[0]) if indexes else None
     self._updateActions()
       

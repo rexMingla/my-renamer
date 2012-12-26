@@ -45,9 +45,12 @@ class MainWindow(QtGui.QMainWindow):
     
     #menu actions
     self.actionMovieMode.triggered.connect(self._setMovieMode)
+    self.actionMovieMode.setIcon(QtGui.QIcon("img/movie.png"))
     self.actionTvMode.triggered.connect(self._setTvMode)
+    self.actionTvMode.setIcon(QtGui.QIcon("img/tv.png"))                                     
     self.actionExit.triggered.connect(self.close)
     self.actionAbout.triggered.connect(self._showAbout)
+    self.actionAbout.setIcon(QtGui.QIcon("img/info.png"))
     self.actionSave.triggered.connect(self._saveSettings)
     self.actionRestoreDefaults.triggered.connect(self._restoreDefaults)
     self.actionClearCache.triggered.connect(self._clearCache)
@@ -79,8 +82,8 @@ class MainWindow(QtGui.QMainWindow):
       info = []
       holder = factory.Factory.getStoreHolder(mode)
       for s in holder.stores:
-        info.append("<li>{0} <a href=\"{1}\">{1}</a> "
-                    "(interface to <a href=\"{2}\">{2}</a>)</li>".format(s.displayName, s.url, s.sourceName))
+        info.append("<li><a href=\"{0}\">{1}</a> "
+                    "(interface to <a href=\"{2}\">{2}</a>)</li>".format(s.url, s.displayName, s.sourceName))
       info.append("</ul>")
       return "{} libraries:<ul>{}</ul>".format(mode, "\n".join(info))
     
@@ -88,10 +91,13 @@ class MainWindow(QtGui.QMainWindow):
     for mode in interfaces.VALID_MODES:
       text.append(getText(mode))
     
-    msg = ("<html><p>{0} is written in python with PyQt.<p/>\n"
-          "<p>Special thanks to the following libraries:</p>\n{1}"
-          "<p>Icon used comes from <a href=\"{2}\">{2}</a></p>\n"
-          "</html>").format(app.__NAME__, "\n\n".join(text), "http://www.designkindle.com/2011/10/07/build-icons/")
+    msg = ("<html><p>{} is written in python with PyQt.<p/>\n"
+          "<p>Special thanks to the following:</p>\n{}"
+          "<p>The wand icon come from <a href=\"{}\">{}</a></p>\n"
+          "<p>Button images come from <a href=\"{}\">{}</a></p>\n"
+          "</html>").format(app.__NAME__, "\n\n".join(text), 
+                            "http://www.designkindle.com/2011/10/07/build-icons/", "Umar Irshad",
+                            "http://www.smashingmagazine.com/2011/12/29/freebie-free-vector-web-icons-91-icons/", "Tomas Gajar")
     QtGui.QMessageBox.about(self, "About {}".format(app.__NAME__), msg)
     
   def _addModule(self, module):
@@ -99,7 +105,6 @@ class MainWindow(QtGui.QMainWindow):
     self._inputStackWidget.addWidget(module.inputWidget)
     self._workBenchStackWidget.addWidget(module.workBenchWidget)
     self._outputStackWidget.addWidget(module.outputWidget) 
-    #module.workBenchWidget.modeChangedSignal.connect(self._setMode)    
     module.logSignal.connect(self._logWidget.appendMessage)
     
   def showEvent(self, event):

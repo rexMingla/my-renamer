@@ -27,12 +27,15 @@ class InputWidget(interfaces.LoadWidgetInterface):
   def __init__(self, mode, store, parent=None):
     super(InputWidget, self).__init__("input/{}".format(mode), parent)
     uic.loadUi("ui/ui_InputWidget.ui", self)
+    
     self._store = store
     self.folderButton.clicked.connect(self._showFolderSelectionDialog)
-    self.findButton.clicked.connect(self.exploreSignal)
+    self.searchButton.clicked.connect(self.exploreSignal)
+    self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
     self.folderEdit.returnPressed.connect(self.exploreSignal)
     self.fileExtensionEdit.returnPressed.connect(self.exploreSignal)
     self.stopButton.clicked.connect(self.stopSignal)
+    self.stopButton.setIcon(QtGui.QIcon("img/stop.png"))
     self.restrictedExtRadioButton.toggled.connect(self.fileExtensionEdit.setEnabled)
     self.restrictedSizeRadioButton.toggled.connect(self.sizeSpinBox.setEnabled)
     self.restrictedSizeRadioButton.toggled.connect(self.sizeComboBox.setEnabled)
@@ -58,18 +61,18 @@ class InputWidget(interfaces.LoadWidgetInterface):
     self.progressBar.setVisible(True)
     self.stopButton.setVisible(True)
     self.stopButton.setEnabled(True)
-    self.findButton.setVisible(False)
+    self.searchButton.setVisible(False)
   
   def stopExploring(self):
     self.progressBar.setVisible(False)
     self.stopButton.setVisible(False)
-    self.findButton.setVisible(True)
+    self.searchButton.setVisible(True)
 
   def startActioning(self):
-    self.findButton.setEnabled(False)
+    self.searchButton.setEnabled(False)
 
   def stopActioning(self):
-    self.findButton.setEnabled(True)
+    self.searchButton.setEnabled(True)
 
   def _showFolderSelectionDialog(self):
     folder = QtGui.QFileDialog.getExistingDirectory(self, "Select Folder", self.folderEdit.text())
