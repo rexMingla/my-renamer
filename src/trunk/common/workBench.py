@@ -59,6 +59,7 @@ class _ActionHolder:
     self.action = QtGui.QAction(self.name, parent)
     self.button.clicked.connect(self.action.trigger)
     self.action.triggered.connect(cb)
+    self.action.setIcon(button.icon())
     if shortcut:
       self.action.setShortcut(shortcut)
     self.index = index # to keep them ordered

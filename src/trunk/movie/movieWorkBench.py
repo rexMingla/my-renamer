@@ -68,7 +68,7 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self.yearCheckBox.setChecked(data.get("no_year_as_error", True))
     self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
     self.duplicateCheckBox.setChecked(data.get("duplicate_as_error", True)),
-    self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "")))
+    self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "AAAA/wAAAAAAAAABAAAAAQAAAAABAAAAAAAAAAAAAAAAAAAAAAAAA14AAAAJAAEAAQAAAAAAAAAAAAAAAGT/////AAAAhAAAAAAAAAAJAAAAGQAAAAEAAAACAAAAmQAAAAEAAAAAAAAA4wAAAAEAAAAAAAAAQgAAAAEAAAAAAAAAPwAAAAEAAAAAAAAAZAAAAAEAAAAAAAAAUAAAAAEAAAAAAAAARQAAAAEAAAAAAAAATwAAAAEAAAAA")))
     self._changeMovieWidget.setSeriesList(data.get("series_list", []))
     
   def _showItem(self):    

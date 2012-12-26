@@ -191,8 +191,8 @@ class MainWindow(QtGui.QMainWindow):
   def _loadSettingsConfig(self):
     self._configManager.loadConfig(self._configFile)
     
-    geo = self._configManager.getData("mw/geometry", "AdnQywABAAAAAACWAAAAlgAAA6sAAAKmAAAAngAAALQAAAOjAAACngAAAAAAAA==")
-    state = self._configManager.getData("mw/windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAMGAAAAafwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAADBgAAAOQA////AAAAAwAAAwYAAADa/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAdwAAAFIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAHcAAABKgAAAMkA////AAADBgAAAKAAAAAEAAAABAAAAAgAAAAI/AAAAAA=")
+    geo = self._configManager.getData("mw/geometry", "AdnQywABAAAAAABbAAAACQAABEsAAALmAAAAYwAAACcAAARDAAAC3gAAAAAAAA==")
+    state = self._configManager.getData("mw/windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAPhAAAAsvwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAAD4QAAAKMA////AAAAAwAAA+EAAADU/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAnIAAAGIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAJ2AAABawAAAHsA////AAAD4QAAAPMAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABoAYQBjAHQAaQBvAG4AVABvAG8AbABCAGEAcgEAAAAA/////wAAAAAAAAAA")
     self.restoreGeometry(QtCore.QByteArray.fromBase64(geo))
     self.restoreState(QtCore.QByteArray.fromBase64(state))
     dontShowAgainWidget.DontShowManager.setConfig(self._configManager.getData("mw/dontShow", {}))

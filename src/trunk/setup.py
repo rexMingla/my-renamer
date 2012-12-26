@@ -15,7 +15,7 @@ import app
 
 setup(
     version = app.__VERSION__,
-    name = "Renamer",
+    name = app.__APP_NAME__,
     description = "Media file renamer tool written in PyQt",
     author = "Tim Mathas",
     author_email = "rexmingla@gmail.com",
@@ -34,7 +34,7 @@ setup(
       } 
     },
     data_files = [("ui", glob.glob("ui/*.ui")),
-                  ("img", glob.glob("img/*")),
+                  ("img", glob.glob("img/*.png")),
                   ("imageformats", [r"C:\Python27\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll"])]
 )
 
