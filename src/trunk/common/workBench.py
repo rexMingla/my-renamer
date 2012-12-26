@@ -10,6 +10,7 @@ from PyQt4 import QtGui
 from PyQt4 import uic
 from send2trash import send2trash
 
+from app import dontShowAgainWidget
 from common import utils
 
 import interfaces
@@ -223,6 +224,11 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     
   def _deleteLocation(self, location):
     isDel = False
+    ret = dontShowAgainWidget.DontShowManager.getAnswer("Please confirm delete", 
+                                                        "Are you sure you want to delete this file?\n"
+                                                        "{}".format(location), "delete", parent=self)
+    if ret != QtGui.QDialogButtonBox.Ok:
+      return False
     try:
       send2trash(location)
       isDel = True

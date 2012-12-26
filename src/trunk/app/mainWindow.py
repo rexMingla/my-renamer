@@ -15,6 +15,7 @@ from common import fileHelper
 from common import utils
 
 import config
+import dontShowAgainWidget
 import factory
 import logWidget
 import interfaces
@@ -165,7 +166,8 @@ class MainWindow(QtGui.QMainWindow):
     self._configManager.setData("mw/windowState", utils.toString(self.saveState().toBase64()))
     self._configManager.setData("mw/mode", self._mode)
     self._configManager.setData("mw/autoStart", self._autoStart)
-    
+    self._configManager.setData("mw/dontShow", dontShowAgainWidget.DontShowManager.getConfig())
+
     for m in self._modeToModule.values():
       for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
         self._configManager.setData(w.configName, w.getConfig())
@@ -188,6 +190,7 @@ class MainWindow(QtGui.QMainWindow):
     state = self._configManager.getData("mw/windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAMGAAAAafwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAADBgAAAOQA////AAAAAwAAAwYAAADa/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAdwAAAFIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAHcAAABKgAAAMkA////AAADBgAAAKAAAAAEAAAABAAAAAgAAAAI/AAAAAA=")
     self.restoreGeometry(QtCore.QByteArray.fromBase64(geo))
     self.restoreState(QtCore.QByteArray.fromBase64(state))
+    dontShowAgainWidget.DontShowManager.setConfig(self._configManager.getData("mw/dontShow", {}))
     mode = self._configManager.getData("mw/mode")
     if not mode in interfaces.VALID_MODES:
       mode = interfaces.Mode.TV_MODE
