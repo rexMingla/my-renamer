@@ -263,20 +263,22 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     return ret
   
   def getAvailableActions(self, index):
-    ret = self.getDefaultAvailableActions()
-    if not index or not index.isValid():
-      return ret
+    canEditEp = False
+    if index.isValid():      
+      moveItemCandidateData, isMoveItemCandidate = self.data(index, RAW_DATA_ROLE)
+      #filthy. check if parent has season info
+      canEditEp = (isMoveItemCandidate and moveItemCandidateData.canEdit and 
+                  bool(self.data(index.parent(), RAW_DATA_ROLE)[0].destination.matches))
+    canLaunch = bool(self.getFile(index))
+    canOpen = bool(self.getFolder(index))
+    canDelete = bool(self.getDeleteItem(index))
     
-    moveItemCandidateData, isMoveItemCandidate = self.data(index, RAW_DATA_ROLE)
-    #filthy. check if parent has season info
-    canEditEp = (isMoveItemCandidate and moveItemCandidateData.canEdit and 
-                bool(self.data(index.parent(), RAW_DATA_ROLE)[0].destination.matches))
+    ret = {}
     ret[workBench.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
-    ret[workBench.BaseWorkBenchModel.ACTION_SEASON] = True
-    ret[workBench.BaseWorkBenchModel.ACTION_OPEN] = True
-    ret[workBench.BaseWorkBenchModel.ACTION_LAUNCH] = isMoveItemCandidate
-    ret[workBench.BaseWorkBenchModel.ACTION_DELETE] = (not isMoveItemCandidate or 
-                                             fileHelper.FileHelper.fileExists(moveItemCandidateData.source.filename))    
+    ret[workBench.BaseWorkBenchModel.ACTION_SEASON] = canLaunch
+    ret[workBench.BaseWorkBenchModel.ACTION_OPEN] = canOpen
+    ret[workBench.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
+    ret[workBench.BaseWorkBenchModel.ACTION_DELETE] = canDelete
     return ret
 
   def data(self, index, role):

@@ -106,9 +106,9 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
     return self.getFile(index)
     
   def getAvailableActions(self, index):
-    ret = self.getDefaultAvailableActions()
-    hasIndex = bool(index) and index.isValid()
+    hasIndex = index.isValid()
     
+    ret = {}
     ret[workBench.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
     ret[workBench.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
     ret[workBench.BaseWorkBenchModel.ACTION_OPEN] = hasIndex

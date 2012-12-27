@@ -25,16 +25,16 @@ setup(
                 "icon_resources": [(1, "img/icon.ico")]
                }],
     options = {
-      "py2exe":{
-        "includes":["sip", "PyQt4.uic", "PyQt4.QtCore", "jsonpickle", 
-                    "pymdb", "tmdb", "rottentomatoes", #movies
-                    "tvdb_api", "tvrage", #tv
+      "py2exe": {
+        "includes": ["sip", "PyQt4.uic", "PyQt4.QtCore", "jsonpickle", 
+                     "pymdb", "tmdb", "rottentomatoes", #movies
+                     "tvdb_api", "tvrage", #tv
                     ],
         "dll_excludes": ["MSVCP90.dll"]
       } 
     },
     data_files = [("ui", glob.glob("ui/*.ui")),
-                  ("img", glob.glob("img/*.png")),
+                  ("img", glob.glob("img/*")),
                   ("imageformats", [r"C:\Python27\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll"])]
 )
 
