@@ -160,7 +160,10 @@ class MainWindow(QtGui.QMainWindow):
     self._workBenchStackWidget.setCurrentWidget(module.workBenchWidget)
     self._outputStackWidget.setCurrentWidget(module.outputWidget)
     module.setActive()
-    self.setWindowTitle("{} [{} mode]".format(app.__NAME__, self._mode))
+    self.setWindowTitle("{} [{} mode]".format(app.__NAME__, self._mode.capitalize()))
+
+    self.menuAction.clear()
+    map(self.menuAction.addAction, self._modeToModule[self._mode].workBenchWidget.actions())
   
   def _saveSettings(self):
     self._saveSettingsConfig()

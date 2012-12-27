@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>519</width>
-    <height>357</height>
+    <height>321</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -87,19 +87,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="deleteButton">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="toolTip">
-        <string>Delete to recycling bin</string>
-       </property>
-       <property name="text">
-        <string>Delete</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="verticalSpacer_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -129,19 +116,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="editEpisodeButton">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="toolTip">
-        <string>Edit selected episode</string>
-       </property>
-       <property name="text">
-        <string>Edit Episode</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="editMovieButton">
        <property name="enabled">
         <bool>true</bool>
@@ -151,6 +125,19 @@
        </property>
        <property name="text">
         <string>Edit Movie</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="editEpisodeButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="toolTip">
+        <string>Edit selected episode</string>
+       </property>
+       <property name="text">
+        <string>Edit Episode</string>
        </property>
       </widget>
      </item>
@@ -206,19 +193,6 @@
       </widget>
      </item>
      <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QCheckBox" name="selectAllCheckBox">
        <property name="enabled">
         <bool>false</bool>
@@ -231,6 +205,32 @@
        </property>
        <property name="tristate">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="deleteButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="toolTip">
+        <string>Delete to recycling bin</string>
+       </property>
+       <property name="text">
+        <string>Delete</string>
        </property>
       </widget>
      </item>

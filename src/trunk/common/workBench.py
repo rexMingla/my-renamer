@@ -41,16 +41,6 @@ class BaseWorkBenchModel(object):
   def getAvailableActions(self, index):
     raise NotImplementedError("BaseWorkBenchModel.getAvailableActions not implemented")  
    
-  @staticmethod 
-  def getDefaultAvailableActions():    
-    ret = { BaseWorkBenchModel.ACTION_DELETE: False,
-            BaseWorkBenchModel.ACTION_LAUNCH: False,
-            BaseWorkBenchModel.ACTION_OPEN: False,
-            BaseWorkBenchModel.ACTION_EPISODE: False,
-            BaseWorkBenchModel.ACTION_SEASON: False,
-            BaseWorkBenchModel.ACTION_MOVIE: False} 
-    return ret
-
 # --------------------------------------------------------------------------------------------------------------------
 class _ActionHolder:
   def __init__(self, button, parent, cb, shortcut, index):
@@ -85,8 +75,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self.editMovieButton.setIcon(QtGui.QIcon("img/edit.png"))
     
     def createAction(actions, button, cb, shortcut=None):
-      # can't get shortcuts working at the moment...
-      holder = _ActionHolder(button, self, cb, None, len(actions))
+      holder = _ActionHolder(button, self, cb, shortcut, len(actions))
       actions[holder.name] = holder
 
     self._actions = {}
@@ -97,15 +86,10 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     createAction(self._actions, self.editSeasonButton, self._editSeason)
     createAction(self._actions, self.editMovieButton, self._editMovie)
     
-    self._currentIndex = None
-    self.tvView.viewport().installEventFilter(self) #filter out double right click
-    self.movieView.viewport().installEventFilter(self)
-    
-    self.tvView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-    self.tvView.customContextMenuRequested.connect(self._showContextMenu)
-    
-    self.movieView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-    self.movieView.customContextMenuRequested.connect(self._showContextMenu)
+    self._currentIndex = QtCore.QModelIndex()
+    self._view = self.tvView if mode == interfaces.Mode.TV_MODE else self.movieView #HACK. yuck
+    self._view.viewport().installEventFilter(self) #filter out double right click
+    self._view.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
     
   def eventFilter(self, obj, event):
     if obj in (self.tvView.viewport(), self.movieView.viewport()):
@@ -119,17 +103,6 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     
   def _onSelectionChanged(self, selection):
     raise NotImplementedError("BaseWorkBenchWidget._onSelectionChanged not implemented")
-  
-  def _showContextMenu(self, pos):
-    #preserver ordering so that it matches the buttons
-    actions = []
-    for action, enabled in self._model.getAvailableActions(self._currentIndex).items():
-      if enabled:
-        actions.append(self._actions[action])
-    actions.sort(key=lambda a: a.index)
-    m = QtGui.QMenu()
-    m.addActions([a.action for a in actions])
-    m.exec_(QtGui.QCursor.pos())
     
   def _editEpisode(self):
     raise NotImplementedError("BaseWorkBenchWidget._editEpisode not implemented")
@@ -148,6 +121,12 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self._model.endUpdateSignal.connect(self.stopWorkBenching)
     for action in self._actions.values():
       action.button.setVisible(action.name in self._model.ALL_ACTIONS)
+    actions = []
+    for action, enabled in self._model.getAvailableActions(self._currentIndex).items():
+      actions.append(self._actions[action])
+    actions.sort(key=lambda a: a.index)
+    self.addActions([a.action for a in actions])
+    self._view.addActions([a.action for a in actions])
     
   def _launchLocation(self, location):
     path = QtCore.QDir.toNativeSeparators(location)

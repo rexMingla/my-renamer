@@ -59,8 +59,9 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self.tvView.expandAll()
             
   def _onSelectionChanged(self, selection=None):
-    indexes = selection and selection.indexes()
-    self._currentIndex = indexes[0] if indexes else None
+    selection = selection or QtGui.QItemSelection()
+    indexes = selection.indexes()
+    self._currentIndex = indexes[0] if indexes else QtCore.QModelIndex()
     self._updateActions()
     
   def _showItem(self):
