@@ -28,11 +28,8 @@ import renamerModule
 class Factory:
   @staticmethod
   def getRenamerModule(mode, parent=None):
-    if mode == interfaces.Mode.MOVIE_MODE:
-      return renamerModule.MovieRenamerModule(parent) 
-    else:
-      return renamerModule.TvRenamerModule(parent)
-  
+    return renamerModule.RenamerModule(mode, parent) 
+    
   @staticmethod
   def getEditSourceWidget(mode, parent=None):
     store = Factory.getStoreHolder(mode)

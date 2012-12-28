@@ -33,6 +33,61 @@ class RenameThread(thread.AdvancedWorkerThread):
     overall = int((percentage + 100.0 * self._i) / self._numItems)
     self._onProgress(overall)
     return not self._userStopped
+  
+# --------------------------------------------------------------------------------------------------------------------
+class SearchThread(thread.AdvancedWorkerThread):  
+  def __init__(self, mode, manager, config):
+    super(SearchThread, self).__init__("search {}".format(mode))
+    self._manager = manager
+    self._config = config
+
+# --------------------------------------------------------------------------------------------------------------------
+class TvSearchThread(SearchThread):
+  """ 
+  Class responsible for the input, output, working and logging components.
+  This class manages all interactions required between the components.
+  """  
+  def __init__(self, manager, config):
+    super(TvSearchThread, self).__init__(interfaces.Mode.TV_MODE, manager, config)  
+    
+  def _getAllItems(self):
+    return self._manager.getFolders(self._config["folder"], self._config["recursive"])
+    
+  def _applyToItem(self, item):
+    ext = extension.FileExtensions(["*"] if self._config["allExtensions"] else self._config["extensions"].split())
+    minSize = 0 if self._config["allFileSizes"] else self._config["minFileSizeBytes"]
+    season = self._manager.getSeasonForFolder(item, ext, minSize) 
+    ret = None
+    if season:
+      ret = thread.WorkItem(season, season.resultStr(season.status))
+    return ret
+  
+# --------------------------------------------------------------------------------------------------------------------
+class MovieSearchThread(SearchThread):
+  """ 
+  Class responsible for the input, output, working and logging components.
+  This class manages all interactions required between the components.
+  """  
+  def __init__(self, manager, config):
+    super(MovieSearchThread, self).__init__(interfaces.Mode.MOVIE_MODE, manager, config)
+   
+  def _getAllItems(self):
+    ext = extension.FileExtensions(["*"] if self._config["allExtensions"] else self._config["extensions"].split())
+    minSize = 0 if self._config["allFileSizes"] else self._config["minFileSizeBytes"]
+    return self._manager.helper.getFiles(self._config["folder"], ext, self._config["recursive"], minSize)
+    
+  def _applyToItem(self, item):
+    item = self._manager.processFile(item)
+    ret = None
+    if item:
+      ret = thread.WorkItem(item, movieManager.Result.resultStr(item.result))
+    return ret
+
+def getSearchThread(mode, manager, config):
+  if mode == interfaces.Mode.MOVIE_MODE:
+    return MovieSearchThread(manager, config)
+  else:
+    return TvSearchThread(manager, config)
     
 # --------------------------------------------------------------------------------------------------------------------
 class RenamerModule(QtCore.QObject):
@@ -79,10 +134,7 @@ class RenamerModule(QtCore.QObject):
     for w in self._widgets:
       w.startExploring()
       
-    data = self.inputWidget.getConfig()
-    self._workerThread = thread.AdvancedWorkerThread("explore {}".format(self.mode), 
-                                                     self._getExploreItems, 
-                                                     self._transformExploreItem)
+    self._workerThread = getSearchThread(self.mode, self._manager, self.inputWidget.getConfig()) 
     self._workerThread.progressSignal.connect(self.inputWidget.progressBar.setValue)
     self._workerThread.newDataSignal.connect(self.workBenchWidget.addItem)
     self._workerThread.logSignal.connect(self.logSignal)
@@ -135,48 +187,3 @@ class RenamerModule(QtCore.QObject):
   def _stopSearch(self):
     self.inputWidget.stopButton.setEnabled(False)
     self._stopThread()     
-
-# --------------------------------------------------------------------------------------------------------------------
-class TvRenamerModule(RenamerModule):
-  """ 
-  Class responsible for the input, output, working and logging components.
-  This class manages all interactions required between the components.
-  """  
-  def __init__(self, parent=None):
-    super(TvRenamerModule, self).__init__(interfaces.Mode.TV_MODE, parent)  
-    
-  def _getExploreItems(self):
-    data = self.inputWidget.getConfig()
-    return self._manager.helper.getFolders(data["folder"], data["recursive"])
-    
-  def _transformExploreItem(self, item):
-    data = self.inputWidget.getConfig()
-    season = self._manager.getSeasonForFolder(item, 
-                                              extension.FileExtensions(data["extensions"].split()), 
-                                              data["minFileSizeBytes"]) 
-    ret = None
-    if season:
-      ret = thread.WorkItem(season, season.resultStr(season.status))
-    return ret
-  
-# --------------------------------------------------------------------------------------------------------------------
-class MovieRenamerModule(RenamerModule):
-  """ 
-  Class responsible for the input, output, working and logging components.
-  This class manages all interactions required between the components.
-  """  
-  def __init__(self, parent=None):
-    super(MovieRenamerModule, self).__init__(interfaces.Mode.MOVIE_MODE, parent)
-   
-  def _getExploreItems(self):
-    data = self.inputWidget.getConfig()
-    ext = extension.FileExtensions(["*"] if data["allExtensions"] else data["extensions"].split())
-    minSize = 0 if data["allFileSizes"] else data["minFileSizeBytes"]
-    return self._manager.helper.getFiles(data["folder"], ext, data["recursive"], minSize)
-    
-  def _transformExploreItem(self, item):
-    item = self._manager.processFile(item)
-    ret = None
-    if item:
-      ret = thread.WorkItem(item, movieManager.Result.resultStr(item.result))
-    return ret
