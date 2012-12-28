@@ -81,10 +81,10 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self._actions = {}
     createAction(self._actions, self.openButton, self._open, QtCore.Qt.ControlModifier + QtCore.Qt.Key_O)
     createAction(self._actions, self.launchButton, self._launch, QtCore.Qt.ControlModifier + QtCore.Qt.Key_L)
-    createAction(self._actions, self.deleteButton, self._delete, QtCore.Qt.Key_Delete)
     createAction(self._actions, self.editEpisodeButton, self._editEpisode)
     createAction(self._actions, self.editSeasonButton, self._editSeason)
     createAction(self._actions, self.editMovieButton, self._editMovie)
+    createAction(self._actions, self.deleteButton, self._delete, QtCore.Qt.Key_Delete)
     
     self._currentIndex = QtCore.QModelIndex()
     self._view = self.tvView if mode == interfaces.Mode.TV_MODE else self.movieView #HACK. yuck

@@ -24,7 +24,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
   
   def __init__(self, mode, fmt, parent=None):
     super(OutputWidget, self).__init__("output/{}".format(mode), parent)    
-    uic.loadUi("ui/ui_OutputWidget.ui", self)
+    uic.loadUi("ui/ui_Output.ui", self)
     
     self._setOutputFormat(fmt)
     self.renameButton.clicked.connect(self.renameSignal)
