@@ -36,7 +36,7 @@ class Factory:
   @staticmethod
   def getEditSourceWidget(mode, parent=None):
     store = Factory.getStoreHolder(mode)
-    return editSourcesWidget.EditSourcesWidget(store, parent)
+    return editSourcesWidget.EditSourcesWidget(mode, store, parent)
   
   @staticmethod
   def getInputWidget(mode, parent=None):

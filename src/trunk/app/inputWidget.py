@@ -26,7 +26,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
   
   def __init__(self, mode, store, parent=None):
     super(InputWidget, self).__init__("input/{}".format(mode), parent)
-    uic.loadUi("ui/ui_InputWidget.ui", self)
+    uic.loadUi("ui/ui_Input.ui", self)
     
     self._store = store
     self.folderButton.clicked.connect(self._showFolderSelectionDialog)
@@ -40,6 +40,11 @@ class InputWidget(interfaces.LoadWidgetInterface):
     self.restrictedSizeRadioButton.toggled.connect(self.sizeSpinBox.setEnabled)
     self.restrictedSizeRadioButton.toggled.connect(self.sizeComboBox.setEnabled)
     self.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)
+    searchAction = QtGui.QAction(self.searchButton.text(), self)
+    searchAction.setIcon(self.searchButton.icon())
+    searchAction.setShortcut(QtCore.Qt.ControlModifier + QtCore.Qt.Key_F)
+    searchAction.triggered.connect(self.exploreSignal.emit)
+    self.addAction(searchAction)
     
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)

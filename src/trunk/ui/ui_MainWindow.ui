@@ -45,11 +45,19 @@
    </widget>
    <widget class="QMenu" name="menuAction">
     <property name="title">
-     <string>Action</string>
+     <string>&amp;Action</string>
     </property>
+   </widget>
+   <widget class="QMenu" name="menuSources">
+    <property name="title">
+     <string>&amp;Sources</string>
+    </property>
+    <addaction name="actionEditMovieSources"/>
+    <addaction name="actionEditTvSources"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuAction"/>
+   <addaction name="menuSources"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="actionToolBar">
@@ -124,6 +132,24 @@
   <action name="actionClearCache">
    <property name="text">
     <string>&amp;Clear cache</string>
+   </property>
+  </action>
+  <action name="actionManage_Tv_sources">
+   <property name="text">
+    <string>manage &amp;Tv sources</string>
+   </property>
+  </action>
+  <action name="actionEditTvSources">
+   <property name="text">
+    <string>Edit &amp;Tv Sources</string>
+   </property>
+   <property name="iconText">
+    <string>Edit Tv Sources</string>
+   </property>
+  </action>
+  <action name="actionEditMovieSources">
+   <property name="text">
+    <string>Edit &amp;Movie Sources</string>
    </property>
   </action>
  </widget>

@@ -43,20 +43,6 @@ class MainWindow(QtGui.QMainWindow):
     self._logWidget = logWidget.LogWidget(parent)
     self.setCentralWidget(self._workBenchStackWidget)
     
-    #menu actions
-    self.actionMovieMode.triggered.connect(self._setMovieMode)
-    self.actionMovieMode.setIcon(QtGui.QIcon("img/movie.png"))
-    self.actionTvMode.triggered.connect(self._setTvMode)
-    self.actionTvMode.setIcon(QtGui.QIcon("img/tv.png"))                                     
-    self.actionExit.triggered.connect(self.close)
-    self.actionAbout.triggered.connect(self._showAbout)
-    self.actionAbout.setIcon(QtGui.QIcon("img/info.png"))
-    self.actionSave.triggered.connect(self._saveSettings)
-    self.actionRestoreDefaults.triggered.connect(self._restoreDefaults)
-    self.actionClearCache.triggered.connect(self._clearCache)
-    
-    self.actionToolBar.addAction(self.actionMovieMode)
-    self.actionToolBar.addAction(self.actionTvMode)
     self._modeToAction = {interfaces.Mode.MOVIE_MODE : self.actionMovieMode, 
                           interfaces.Mode.TV_MODE: self.actionTvMode}
                 
@@ -74,6 +60,24 @@ class MainWindow(QtGui.QMainWindow):
       self._addModule(factory.Factory.getRenamerModule(mode, self))
     self._mode = None
     self._autoStart = False
+    
+    #menu actions
+    self.actionMovieMode.triggered.connect(self._setMovieMode)
+    self.actionMovieMode.setIcon(QtGui.QIcon("img/movie.png"))
+    self.actionTvMode.triggered.connect(self._setTvMode)
+    self.actionTvMode.setIcon(QtGui.QIcon("img/tv.png"))                                     
+    self.actionExit.triggered.connect(self.close)
+    self.actionAbout.triggered.connect(self._showAbout)
+    self.actionAbout.setIcon(QtGui.QIcon("img/info.png"))
+    self.actionSave.triggered.connect(self._saveSettings)
+    self.actionRestoreDefaults.triggered.connect(self._restoreDefaults)
+    self.actionClearCache.triggered.connect(self._clearCache)
+    self.actionEditTvSources.triggered.connect(self._modeToModule[interfaces.Mode.TV_MODE].editSourcesWidget.show)
+    self.actionEditMovieSources.triggered.connect(self._modeToModule[interfaces.Mode.MOVIE_MODE].editSourcesWidget.show)
+    
+    self.actionToolBar.addAction(self.actionMovieMode)
+    self.actionToolBar.addAction(self.actionTvMode)
+    
     
     self._loadSettings()
     
@@ -163,7 +167,9 @@ class MainWindow(QtGui.QMainWindow):
     self.setWindowTitle("{} [{} mode]".format(app.__NAME__, self._mode.capitalize()))
 
     self.menuAction.clear()
-    map(self.menuAction.addAction, self._modeToModule[self._mode].workBenchWidget.actions())
+    self.menuAction.addActions(self._modeToModule[self._mode].inputWidget.actions())
+    self.menuAction.addSeparator()
+    self.menuAction.addActions(self._modeToModule[self._mode].workBenchWidget.actions())
   
   def _saveSettings(self):
     self._saveSettingsConfig()
