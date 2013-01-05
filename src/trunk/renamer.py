@@ -16,6 +16,11 @@ def _runGUI(cl):
   from app import mainWindow
   
   try:
+    # HACK: for py2exe so it won't show "See log for details" message on shutdown
+    # http://www.py2exe.org/index.cgi/StderrLog
+    sys.stdout = open("my_stdout.log", "w")
+    sys.stderr = open("my_stderr.log", "w")    
+    
     import os
     dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dir)

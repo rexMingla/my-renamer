@@ -21,7 +21,7 @@ setup(
     author_email = "rexmingla@gmail.com",
     url = "http://code.google.com/p/my-renamer/",
     # targets to build
-    console = [{"script":"renamer.py", 
+    windows = [{"script":"renamer.py", 
                 "icon_resources": [(1, "img/icon.ico")]
                }],
     options = {
