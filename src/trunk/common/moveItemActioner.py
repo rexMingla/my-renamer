@@ -13,6 +13,7 @@ import utils
   
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItem(object):
+  """ stores filename and new metadata used to rename file """
   def __init__(self):
     super(BaseRenameItem, self).__init__()
     
@@ -21,7 +22,7 @@ class BaseRenameItem(object):
     
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItemGenerator(object):
-  """ generates list of item actioner """
+  """ generates list of item actioners """
   def __init__(self, config=None, items=None):
     super(BaseRenameItemGenerator, self).__init__()
     self.config = config or {}
@@ -38,6 +39,7 @@ class BaseRenameItemGenerator(object):
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieRenameItemGenerator(BaseRenameItemGenerator):
+  """ builds list of rename items for movie mode """
   def _getRenameItems(self, movie):
     ret = []
     oFormat = outputFormat.OutputFormat(self.config["format"])
@@ -54,6 +56,7 @@ class MovieRenameItemGenerator(BaseRenameItemGenerator):
   
 # --------------------------------------------------------------------------------------------------------------------
 class TvRenameItemGenerator(BaseRenameItemGenerator):
+  """ builds list of rename items for tv mode """
   def _getRenameItems(self, tv):
     ret = []
     outputFolder = self.config["folder"] or tv.inputFolder
@@ -72,6 +75,7 @@ class TvRenameItemGenerator(BaseRenameItemGenerator):
     
 # --------------------------------------------------------------------------------------------------------------------    
 class BaseRenamer(object):
+  """ performs rename on file """
   def __init__(self):
     super(BaseRenamer, self).__init__()
     

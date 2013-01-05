@@ -124,6 +124,9 @@
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Only include specified extensions</string>
+        </property>
         <property name="text">
          <string>restricted</string>
         </property>
@@ -176,6 +179,9 @@
       </item>
       <item>
        <widget class="QRadioButton" name="restrictedSizeRadioButton">
+        <property name="toolTip">
+         <string>Only include files of a certain size</string>
+        </property>
         <property name="text">
          <string>greater than</string>
         </property>
@@ -262,7 +268,7 @@
         <bool>false</bool>
        </property>
        <property name="toolTip">
-        <string>Where is the information being looked up</string>
+        <string>Where to look up the information (advanced users)</string>
        </property>
       </widget>
      </item>
@@ -293,7 +299,7 @@
    <item row="4" column="0">
     <widget class="QCheckBox" name="isRecursiveCheckBox">
      <property name="toolTip">
-      <string>Include/ignore child folders</string>
+      <string>Include/ignore sub folders</string>
      </property>
      <property name="text">
       <string>Explore sub folders</string>
@@ -330,6 +336,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="stopButton">
+       <property name="toolTip">
+        <string>Cancel search</string>
+       </property>
        <property name="text">
         <string>Stop</string>
        </property>

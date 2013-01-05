@@ -310,5 +310,4 @@ class AdvancedOutputFormat(unittest.TestCase):
 
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-  utils.setLogLevel(2)
   unittest.main()

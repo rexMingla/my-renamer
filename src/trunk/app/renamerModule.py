@@ -91,10 +91,7 @@ def getSearchThread(mode, manager, config):
     
 # --------------------------------------------------------------------------------------------------------------------
 class RenamerModule(QtCore.QObject):
-  """ 
-  Class responsible for the input, output, working and logging components.
-  This class manages all interactions required between the components.
-  """  
+  """ Class responsible for the input, output and workbench components and manages their interactions. """  
   logSignal = QtCore.pyqtSignal(object)
   
   def __init__(self, mode, parent=None):

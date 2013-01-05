@@ -19,7 +19,7 @@ from tv import season
 
 # --------------------------------------------------------------------------------------------------------------------
 class EditEpisodeWidget(QtGui.QDialog):
-  """ Allows the user to select the episode name for a given file """
+  """ Allows the user to assign an episode to a given file """
   def __init__(self, parent=None):
     super(QtGui.QDialog, self).__init__(parent)
     self._ui = uic.loadUi("ui/ui_ChangeEpisode.ui", self)

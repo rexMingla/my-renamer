@@ -27,6 +27,7 @@ def prettyTime(startTime):
 
 # --------------------------------------------------------------------------------------------------------------------
 class WorkerThread(QtCore.QThread):
+  """ base thread intended for use on a list of tasks where it can periodically signal progress, log and new data """ 
   progressSignal = QtCore.pyqtSignal(int)
   logSignal = QtCore.pyqtSignal(object)
   newDataSignal = QtCore.pyqtSignal(object)
@@ -64,22 +65,15 @@ class WorkItem(object):
     
 # --------------------------------------------------------------------------------------------------------------------
 class AdvancedWorkerThread(WorkerThread):
-  def __init__(self, name, getAllItemsCb=None, applyToItemCb=None):
+  """ 'simplified' version of WorkerThread were all summary messages are handled consistently """ 
+  def __init__(self, name):
     super(AdvancedWorkerThread, self).__init__(name)
-    self._getAllItemsCb = getAllItemsCb
-    self._applyToItemCb = applyToItemCb
 
   def _getAllItems(self):
-    if self._getAllItemsCb:
-      return self._getAllItemsCb()
-    else:
-      raise NotImplementedError("WorkerThreadBase._getAllItems not implemented")
+    raise NotImplementedError("WorkerThreadBase._getAllItems not implemented")
 
   def _applyToItem(self, item):
-    if self._applyToItemCb:
-      return self._applyToItemCb(item)
-    else:
-      raise NotImplementedError("WorkerThreadBase._applyToItem not implemented")
+    raise NotImplementedError("WorkerThreadBase._applyToItem not implemented")
     
   def run(self):
     """ obfuscation for the win!! wow. this is madness. sorry """

@@ -14,11 +14,10 @@ from common import outputFormat
 from common import utils
 
 import interfaces
-import config
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputWidget(interfaces.LoadWidgetInterface):
-  """ Widget allowing for the configuration of output """
+  """ Widget allowing for the configuration of output settings """
   renameSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
   
@@ -111,9 +110,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       self.specificDirectoryEdit.setText(folder)
 
   def getConfig(self):
-    outputDir = utils.toString(self.specificDirectoryEdit.text())
-    if self.useSourceDirectoryRadio.isChecked():
-      outputDir = config.USE_SOURCE_DIRECTORY    
+    outputDir = "" if self.useSourceDirectoryRadio.isChecked() else utils.toString(self.specificDirectoryEdit.text())
     data = {"format" : utils.toString(self.formatEdit.text()),
             "folder" : outputDir,
             "move" : self.moveRadio.isChecked(),
@@ -124,12 +121,11 @@ class OutputWidget(interfaces.LoadWidgetInterface):
   def setConfig(self, data):
     fmt = data.get("format", self._fmt.defaultFormatStr())
     self.formatEdit.setText(fmt)
-    outputDir = data.get("folder", config.USE_SOURCE_DIRECTORY)
-    if outputDir == config.USE_SOURCE_DIRECTORY:
-      self.specificDirectoryEdit.setText("")
+    outputDir = data.get("folder", "")
+    self.specificDirectoryEdit.setText(outputDir)
+    if not outputDir:
       self.useSourceDirectoryRadio.setChecked(True)
     else:
-      self.specificDirectoryEdit.setText(outputDir)
       self.useSpecificDirectoryRadio.setChecked(True)      
     self.moveRadio.setChecked(data.get("move", True))
     self.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))

@@ -10,6 +10,7 @@ from PyQt4 import QtGui
 from PyQt4 import uic
 
 from common import fileHelper
+from common import infoClient
 from common import thread 
 from common import utils
 from movie import movieManager
@@ -20,6 +21,8 @@ import searchResultsWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetMovieThread(thread.WorkerThread):
+  """ search for movie from sources """
+  
   def __init__(self, searchParams, isLucky):
     super(GetMovieThread, self).__init__("movie search")
     self._searchParams = searchParams
@@ -35,9 +38,7 @@ class GetMovieThread(thread.WorkerThread):
 # --------------------------------------------------------------------------------------------------------------------
 class EditMovieWidget(QtGui.QDialog):
   showEditSourcesSignal = QtCore.pyqtSignal()
-  """
-  The widget allows the user to select a movie info. Needs interactive search...
-  """
+  """ The widget allows the user to search and modify movie info. """
   def __init__(self, parent=None):
     super(EditMovieWidget, self).__init__(parent)
     uic.loadUi("ui/ui_ChangeMovie.ui", self)
@@ -135,14 +136,13 @@ class EditMovieWidget(QtGui.QDialog):
     if not data:
       return
     
-    info, sourceName = data
     if self._isLucky:
-      self._setMovieInfo(info)
+      self._setMovieInfo(data.info)
     else:
       if not self._foundData:
         self._searchResults.clear()
-        self._searchResults.addItem(self._getMovieInfo(), "current")
-      self._searchResults.addItem(info, sourceName)
+        self._searchResults.addItem(infoClient.ResultHolder(self._getMovieInfo(), "current"))
+      self._searchResults.addItem(data)
       self._showResults()
     self._foundData = True
     

@@ -39,8 +39,8 @@ class BaseWorkBenchModel(object):
     raise NotImplementedError("BaseWorkBenchModel.getDeleteItem not implemented")
   
   def getAvailableActions(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.getAvailableActions not implemented")  
-   
+    raise NotImplementedError("BaseWorkBenchModel.getAvailableActions not implemented")
+  
 # --------------------------------------------------------------------------------------------------------------------
 class _ActionHolder:
   def __init__(self, button, parent, cb, shortcut, index):
@@ -56,6 +56,7 @@ class _ActionHolder:
       
 # --------------------------------------------------------------------------------------------------------------------
 class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
+  """ hacky and horrible base workbench widget """
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
   showEditSourcesSignal = QtCore.pyqtSignal()
   

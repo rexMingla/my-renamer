@@ -3,14 +3,17 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Prompt with remember answer for next time 
+# Purpose of document: don't show this again prompt
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-#source: http://qt-project.org/forums/viewthread/21705
 # --------------------------------------------------------------------------------------------------------------------
 class _DontShowAgainDialog(QtGui.QDialog):
+  """ 
+  displays dialog with 'don't show this message again' checkbox.
+  source: http://qt-project.org/forums/viewthread/21705 
+  """  
   def __init__(self, title, text, options=QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, parent=None):
     super(_DontShowAgainDialog, self).__init__(parent)
 
@@ -36,6 +39,7 @@ class _DontShowAgainDialog(QtGui.QDialog):
   
 # --------------------------------------------------------------------------------------------------------------------
 class DontShowManager:
+  """ displays 'don't show this message again' dialog if previously not shown, otherwise returns result """
   _dontShows = {}
   
   @classmethod

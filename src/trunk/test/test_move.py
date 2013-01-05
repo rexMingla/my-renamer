@@ -105,164 +105,164 @@ class BasicMoveTest(unittest.TestCase):
 # --------------------------------------------------------------------------------------------------------------------
 class MoveItemCandidateTest(unittest.TestCase):
   def test_basic(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = "basicMoveSrc.txt"
     dest = "basicMoveDest.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
-    res = mover.performAction(src, dest)
+    res = mover.performAction()
     self.assertFalse(fileHelper.FileHelper.fileExists(src))
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SUCCESS)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SUCCESS)
     fileHelper.FileHelper.removeFile(dest)
     
   def test_sameLocation(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = "sameLocation.txt"
     dest = "sameLocation.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
-    res = mover.performAction(src, dest)
+    res = mover.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SUCCESS)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SUCCESS)
     fileHelper.FileHelper.removeFile(dest)
   
   def test_overwrite(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = "moveOverwriteSrc.txt"
     dest = "moveOverwriteDest.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
     createTestFile(dest)
-    res = mover.performAction(src, dest)
+    res = mover.performAction()
     self.assertFalse(fileHelper.FileHelper.fileExists(src))
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SUCCESS)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SUCCESS)
     fileHelper.FileHelper.removeFile(dest)
 
   def test_noOverwrite(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=False, keepSource=False)
     src = "moveOverwriteSrc.txt"
     dest = "moveOverwriteDest.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=False, keepSource=False)
     createTestFile(src)
     createTestFile(dest)
-    res = mover.performAction(src, dest)
+    res = mover.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(src))
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.COULD_NOT_OVERWRITE)
+    self.assertEqual(res, moveItemActioner.FileRenamer.COULD_NOT_OVERWRITE)
     fileHelper.FileHelper.removeFile(src)
     fileHelper.FileHelper.removeFile(dest)
 
   def test_badFilename(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = "src.txt"
     dest = "dest?.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
-    res = mover.performAction(src, dest)
+    res = mover.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(src))
     self.assertFalse(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.INVALID_FILENAME)
+    self.assertEqual(res, moveItemActioner.FileRenamer.INVALID_FILENAME)
     fileHelper.FileHelper.removeFile(dest)
     
   def test_badFilename2(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = "src.txt"
     dest = "dest:.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
-    res = mover.performAction(src, dest)
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.INVALID_FILENAME)
+    res = mover.performAction()
+    self.assertEqual(res, moveItemActioner.FileRenamer.INVALID_FILENAME)
     fileHelper.FileHelper.removeFile(src)
     
   def test_badFilename3(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = "src.txt"
     dest = "c:/src/dest:.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
-    res = mover.performAction(src, dest)
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.INVALID_FILENAME)
+    res = mover.performAction()
+    self.assertEqual(res, moveItemActioner.FileRenamer.INVALID_FILENAME)
     fileHelper.FileHelper.removeFile(src)
 
   def test_badFilename4(self):
-    mover = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = "src.txt"
     dest = "c:/wtf:src/dest.txt"
+    mover = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
-    res = mover.performAction(src, dest)
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.INVALID_FILENAME)
+    res = mover.performAction()
+    self.assertEqual(res, moveItemActioner.FileRenamer.INVALID_FILENAME)
     fileHelper.FileHelper.removeFile(src)
 
   def test_badSource(self):
-    copier = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=False)
     src = ""
     dest = "dest.txt"
-    res = copier.performAction(src, dest)
+    copier = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
+    res = copier.performAction()
     self.assertFalse(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SOURCE_DOES_NOT_EXIST)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SOURCE_DOES_NOT_EXIST)
 
 # --------------------------------------------------------------------------------------------------------------------
 class CopyItemTest(unittest.TestCase):
   def test_basic(self):
-    copier = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=True)
     src = "basicDest.txt"
     dest = "basicDest.txt"
+    copier = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     createTestFile(src)
-    res = copier.performAction(src, dest)
+    res = copier.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(src))
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SUCCESS)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SUCCESS)
     fileHelper.FileHelper.removeFile(dest)
     
   def test_sameLocation(self):
-    copier = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=True)
     src = "sameLocation.txt"
     dest = "sameLocation.txt"
+    copier = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     createTestFile(src)
-    res = copier.performAction(src, dest)
+    res = copier.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SUCCESS)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SUCCESS)
     fileHelper.FileHelper.removeFile(dest)
   
   def test_overwrite(self):
-    copier = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=True)
     src = "overwriteSrc.txt"
     dest = "overwriteDest.txt"
+    copier = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     createTestFile(src)
     createTestFile(dest)
-    res = copier.performAction(src, dest)
+    res = copier.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(src))
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SUCCESS)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SUCCESS)
     fileHelper.FileHelper.removeFile(dest)
 
   def test_noOverwrite(self):
-    copier = moveItemActioner.MoveItemActioner(canOverwrite=False, keepSource=True)
     src = "overwriteSrc.txt"
     dest = "overwriteDest.txt"
+    copier = moveItemActioner.FileRenamer(src, dest, canOverwrite=False, keepSource=True)
     createTestFile(src)
     createTestFile(dest)
-    res = copier.performAction(src, dest)
+    res = copier.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(src))
     self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.COULD_NOT_OVERWRITE)
+    self.assertEqual(res, moveItemActioner.FileRenamer.COULD_NOT_OVERWRITE)
     fileHelper.FileHelper.removeFile(src)
     fileHelper.FileHelper.removeFile(dest)
     
   def test_badFilename(self):
-    copier = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=True)
     src = "src.txt"
     dest = "dest?.txt"
+    copier = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     createTestFile(src)
-    res = copier.performAction(src, dest)
+    res = copier.performAction()
     self.assertTrue(fileHelper.FileHelper.fileExists(src))
     self.assertFalse(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.INVALID_FILENAME)
+    self.assertEqual(res, moveItemActioner.FileRenamer.INVALID_FILENAME)
     fileHelper.FileHelper.removeFile(src)
     fileHelper.FileHelper.removeFile(dest)
 
   def test_badSource(self):
-    copier = moveItemActioner.MoveItemActioner(canOverwrite=True, keepSource=True)
     src = ""
     dest = "dest.txt"
-    res = copier.performAction(src, dest)
+    copier = moveItemActioner.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
+    res = copier.performAction()
     self.assertFalse(fileHelper.FileHelper.fileExists(dest))
-    self.assertEqual(res, moveItemActioner.MoveItemActioner.SOURCE_DOES_NOT_EXIST)
+    self.assertEqual(res, moveItemActioner.FileRenamer.SOURCE_DOES_NOT_EXIST)
     
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__': 
