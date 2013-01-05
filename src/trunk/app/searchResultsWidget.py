@@ -16,16 +16,11 @@ from common import outputFormat
 from common import utils
 from tv import episode
 from tv import moveItemCandidate
-from tv import season
-
-# --------------------------------------------------------------------------------------------------------------------
-class _ResultHolder:
-  def __init__(self, obj, source):
-    self.obj = obj
-    self.source = source
+from tv import season 
     
 # --------------------------------------------------------------------------------------------------------------------
 class SearchResultsWidget(QtGui.QDialog):
+  """ lists search results found in an info widget """
   itemSelectedSignal = QtCore.pyqtSignal(object)
   
   def __init__(self, parent=None):
@@ -39,16 +34,16 @@ class SearchResultsWidget(QtGui.QDialog):
     self.resultsWidget.clearContents()
     self.resultsWidget.setRowCount(0)
     
-  def addItem(self, obj, source):
-    self._items.append(_ResultHolder(obj, source))
+  def addItem(self, resultHolder):
+    self._items.append(resultHolder)
     rc = self.resultsWidget.rowCount()
     self.resultsWidget.insertRow(rc)
     
-    w = QtGui.QTableWidgetItem(str(obj))
+    w = QtGui.QTableWidgetItem(str(resultHolder.info))
     w.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
     self.resultsWidget.setItem(rc, 0, w)
     
-    w = QtGui.QTableWidgetItem(source)
+    w = QtGui.QTableWidgetItem(resultHolder.sourceName)
     w.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
     self.resultsWidget.setItem(rc, 1, w)
     
@@ -56,6 +51,6 @@ class SearchResultsWidget(QtGui.QDialog):
     if self.resultsWidget.selectedItems():
       row = self.resultsWidget.selectedItems()[0].row()
       holder = self._items[row]
-      self.itemSelectedSignal.emit(holder.obj)
+      self.itemSelectedSignal.emit(holder.info)
   
   

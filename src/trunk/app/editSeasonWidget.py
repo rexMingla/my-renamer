@@ -11,6 +11,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import infoClient
 from common import fileHelper
 from common import thread
 from common import utils
@@ -38,9 +39,7 @@ class GetSeasonThread(thread.WorkerThread):
 # --------------------------------------------------------------------------------------------------------------------
 class EditSeasonWidget(QtGui.QDialog):
   showEditSourcesSignal = QtCore.pyqtSignal()
-  """
-  The widget allows the user to select an show name and season number for a given folder containing files.
-  """
+  """ The widget allows the user to search and modify tv info. """
   def __init__(self, parent=None):
     super(QtGui.QDialog, self).__init__(parent)
     uic.loadUi("ui/ui_ChangeSeason.ui", self)
@@ -142,14 +141,13 @@ class EditSeasonWidget(QtGui.QDialog):
     if not data:
       return
     
-    epMap, sourceName = data
     if self._isLucky:
-      self._setEpisodeMap(info)
+      self._setEpisodeMap(data.info)
     else:
       if not self._foundData:
         self._searchResults.clear()
-        self._searchResults.addItem(self.data().destination, "current")
-      self._searchResults.addItem(epMap, sourceName)
+        self._searchResults.addItem(infoClient.ResultHolder(self.data().destination, "current"))
+      self._searchResults.addItem(data)
       self._showResults()
     self._foundData = True
     

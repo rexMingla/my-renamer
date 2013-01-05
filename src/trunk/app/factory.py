@@ -26,6 +26,8 @@ import renamerModule
 
 # --------------------------------------------------------------------------------------------------------------------
 class Factory:
+  """ creates components for the application based on mode value """
+  
   @staticmethod
   def getRenamerModule(mode, parent=None):
     return renamerModule.RenamerModule(mode, parent) 

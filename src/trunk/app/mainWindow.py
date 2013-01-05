@@ -25,7 +25,7 @@ import app
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
-  """ Window widget for the application. """
+  """ main window for the app """
   def __init__(self, configFile="config.txt", cacheFile="cache.txt", logFile="log.txt", parent = None):
     super(QtGui.QMainWindow, self).__init__(parent)
     self.setWindowIcon(QtGui.QIcon("img/icon.ico"))
@@ -99,6 +99,7 @@ class MainWindow(QtGui.QMainWindow):
           "<p>Special thanks to the following:</p>\n{}"
           "<p>The wand icon come from <a href=\"{}\">{}</a></p>\n"
           "<p>Button images come from <a href=\"{}\">{}</a></p>\n"
+          "<p>For (slightly) more information go to <a href=\"http://code.google.com/p/my-renamer/\">google code</a>"
           "</html>").format(app.__NAME__, "\n\n".join(text), 
                             "http://www.designkindle.com/2011/10/07/build-icons/", "Umar Irshad",
                             "http://www.smashingmagazine.com/2011/12/29/freebie-free-vector-web-icons-91-icons/", "Tomas Gajar")

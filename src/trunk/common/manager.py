@@ -17,6 +17,7 @@ from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseManager(object):
+  """ uses cache and BaseHolder to retrieve BaseInfo data """
   def __init__(self, holder):
     super(BaseManager, self).__init__()
     self._cache = {}
@@ -41,7 +42,7 @@ class BaseManager(object):
     return self._cache
   
   def getItem(self, searchParams, useCache=True):
-    """ retrieves season from cache or tvdb if not present """
+    """ retrieves season from cache or holder's InfoClients if not present """
     item = None
     
     cacheKey = searchParams.getKey()

@@ -16,10 +16,10 @@ from common import fileHelper
 from common import utils
 
 jsonpickle.set_encoder_options("simplejson", indent=2)
-USE_SOURCE_DIRECTORY = "" #TODO: why is this here?
 
 # --------------------------------------------------------------------------------------------------------------------
 class ConfigManager(object):
+  """ serializes / deserializes jsonpickle to / from file """
 
   def __init__(self):
     self._data = {}

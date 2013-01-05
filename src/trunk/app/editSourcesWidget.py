@@ -100,9 +100,7 @@ class SourceModel(QtCore.QAbstractTableModel):
           
 # --------------------------------------------------------------------------------------------------------------------
 class EditSourcesWidget(QtGui.QDialog):
-  """
-  Allows the user to prioritise the search order for information sources and set keys
-  """
+  """ Allows the user to prioritise the search order for information sources and set keys """
   def __init__(self, mode, store, parent=None):
     super(QtGui.QDialog, self).__init__(parent)
     uic.loadUi("ui/ui_EditSources.ui", self)

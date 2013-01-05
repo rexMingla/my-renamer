@@ -58,7 +58,7 @@
        <item row="0" column="1">
         <widget class="QLineEdit" name="formatEdit">
          <property name="toolTip">
-          <string>Output file format</string>
+          <string>Format of your filename after conversion</string>
          </property>
         </widget>
        </item>
@@ -156,7 +156,7 @@ p, li { white-space: pre-wrap; }
             <item>
              <widget class="QRadioButton" name="useSpecificDirectoryRadio">
               <property name="toolTip">
-               <string>Specify a specific output folder. This can be a partial or absolute path.</string>
+               <string>Specify a specific output folder</string>
               </property>
               <property name="text">
                <string>Use specific folder</string>
@@ -307,6 +307,9 @@ p, li { white-space: pre-wrap; }
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>Stop renaming action(s)</string>
            </property>
            <property name="text">
             <string>Stop</string>

@@ -135,11 +135,13 @@ class FileHelper:
     utils.verifyType(dest, str)
     
     def safeMoveFile(source, dest):
+      ret = False
       try:
         shutil.move(source, dest)
         ret = True
       except shutil.Error:
         pass
+      return ret
       
     def unsafeMoveFile(source, dest, progressCb):
       ret = FileHelper.copyFile(source, dest, progressCb) and FileHelper.removeFile(source)
@@ -162,6 +164,7 @@ class FileHelper:
     utils.verifyType(dest, str)
 
     def unsafeCopyFile(s, d, progressCb):
+      """ bitwise copy so that we can be more responsive to user cancels etc. """
       assert(progressCb)
       copied = 0
       ret = False
@@ -176,7 +179,8 @@ class FileHelper:
                 break
               copied += len(chunk)
               dest.write(chunk)
-              if not progressCb(int(100.0 * copied / sourceSize)):
+              # why 90%? closing of file handles can take a while after
+              if not progressCb(int(90.0 * copied / sourceSize)): 
                 break
             ret = FileHelper.getFileSize(d) == sourceSize
       except os.error:
@@ -186,11 +190,13 @@ class FileHelper:
       return ret
       
     def safeCopyFile(source, dest):
+      ret = False
       try:
         shutil.copy2(source, dest)
         ret = True
       except shutil.Error:
-        pass    
+        pass 
+      return ret
     
     ret = False
     if FileHelper.fileExists(source):

@@ -8,7 +8,8 @@
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
-class BaseInfo(object):  
+class BaseInfo(object):
+  """ objects retrieved from InfoClients """
   def toSearchParams(self):
     raise NotImplementedError("BaseInfo.toSearchParams not implemented")
   
@@ -17,6 +18,7 @@ class BaseInfo(object):
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClientSearchParams(object):
+  """ objects sent to the InfoClients so to retrieve BaseInfo objects """
   def getKey(self):
     raise NotImplementedError("BaseInfoClientSearchParams.getKey not implemented")
   
@@ -25,6 +27,8 @@ class BaseInfoClientSearchParams(object):
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoStoreHolder(object):
+  """ container for all of the InfoClients """
+  
   def __init__(self):
     self.stores = []
   
@@ -67,14 +71,14 @@ class BaseInfoStoreHolder(object):
         
   """ get info api  """
   def getInfo(self, searchParams, default=None):
-    return next(self.getInfos(searchParams), (default, ""))[0]
+    return next(self.getInfos(searchParams), ResultHolder(default, "")).info
   
   def getInfos(self, searchParams):
-    """ returns an iterator """
+    """ returns an iterator to ResultHolder objects """
     for store in self.stores:
       if store.isActive():
         for info in store.getInfos(searchParams):
-          yield (info, store.sourceName)  
+          yield ResultHolder(info, store.sourceName)  
 
   def _getInfo(self, searchParams):
     infos = self._getInfos(searchParams)
@@ -82,9 +86,17 @@ class BaseInfoStoreHolder(object):
   
   def _getInfos(self, searchParams):
     raise NotImplementedError("BaseMovieInfoClient._getInfos not implemented")  
-  
+
+# --------------------------------------------------------------------------------------------------------------------
+class ResultHolder:
+  def __init__(self, info, sourceName):
+    self.info = info
+    self.sourceName = sourceName
+    
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClient(object):
+  """ class to retrieve information from an online (or other) resource """
+  
   def __init__(self, displayName, sourceName, url, hasLib, requiresKey):
     super(BaseInfoClient, self).__init__()
     self.displayName = displayName #lib used

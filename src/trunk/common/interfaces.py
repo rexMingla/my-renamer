@@ -9,6 +9,7 @@ from PyQt4 import QtGui
 
 # --------------------------------------------------------------------------------------------------------------------
 class Mode:
+  """ modes of operation for the app """
   MOVIE_MODE = "movie"
   TV_MODE = "tv"
   
@@ -26,6 +27,7 @@ class WorkBenchActions:
 
 # --------------------------------------------------------------------------------------------------------------------
 class LoadWidgetInterface(QtGui.QWidget):
+  """ all the input, output and work bench widgets must implement these interfaces """
   
   def __init__(self, configName, parent=None):
     super(LoadWidgetInterface, self).__init__()

@@ -13,7 +13,7 @@ from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogWidget(QtGui.QWidget):
-  """ Widget allowing for the configuration of output """
+  """ Widget to display log messages to the user """
   def __init__(self, parent=None):
     super(QtGui.QWidget, self).__init__(parent)
     uic.loadUi("ui/ui_LogWidget.ui", self)

@@ -38,6 +38,7 @@ except ImportError:
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInfo(infoClient.BaseInfo):
+  """ info retrieved from movie clients """ 
   def __init__(self, title="", year=None, genres=None, series=""):
     super(MovieInfo, self).__init__()
     self.title = title
@@ -56,6 +57,7 @@ class MovieInfo(infoClient.BaseInfo):
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieSearchParams(infoClient.BaseInfoClientSearchParams):
+  """ class used to query info clients """
   def __init__(self, title, year=""):
     self.title = title
     self.year = year
