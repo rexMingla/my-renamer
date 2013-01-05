@@ -1,9 +1,0 @@
-#summary Everything that didn't fit in the main page
-
-== File Resolution ==
-
-== Edit Metadata ==
-
-== Output Metadata ==
-
-== Output Format =
