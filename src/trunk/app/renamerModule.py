@@ -43,20 +43,15 @@ class SearchThread(thread.AdvancedWorkerThread):
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvSearchThread(SearchThread):
-  """ 
-  Class responsible for the input, output, working and logging components.
-  This class manages all interactions required between the components.
-  """  
+  """ class that performs a search for tv folders and their episode files """  
   def __init__(self, manager, config):
     super(TvSearchThread, self).__init__(interfaces.Mode.TV_MODE, manager, config)  
     
   def _getAllItems(self):
-    return self._manager.getFolders(self._config["folder"], self._config["recursive"])
+    return self._manager.getFolders(self._config.folder, self._config.recursive)
     
   def _applyToItem(self, item):
-    ext = extension.FileExtensions(["*"] if self._config["allExtensions"] else self._config["extensions"].split())
-    minSize = 0 if self._config["allFileSizes"] else self._config["minFileSizeBytes"]
-    season = self._manager.getSeasonForFolder(item, ext, minSize) 
+    season = self._manager.getSeasonForFolder(item, self._config.getExtensions(), self._config.getMinFileSizeBytes()) 
     ret = None
     if season:
       ret = thread.WorkItem(season, season.resultStr(season.status))
@@ -64,17 +59,15 @@ class TvSearchThread(SearchThread):
   
 # --------------------------------------------------------------------------------------------------------------------
 class MovieSearchThread(SearchThread):
-  """ 
-  Class responsible for the input, output, working and logging components.
-  This class manages all interactions required between the components.
-  """  
+  """ class that performs a search for movie files """  
   def __init__(self, manager, config):
     super(MovieSearchThread, self).__init__(interfaces.Mode.MOVIE_MODE, manager, config)
    
   def _getAllItems(self):
-    ext = extension.FileExtensions(["*"] if self._config["allExtensions"] else self._config["extensions"].split())
-    minSize = 0 if self._config["allFileSizes"] else self._config["minFileSizeBytes"]
-    return self._manager.helper.getFiles(self._config["folder"], ext, self._config["recursive"], minSize)
+    return self._manager.helper.getFiles(self._config.folder, 
+                                         self._config.getExtensions(), 
+                                         self._config.recursive, 
+                                         self._config.getMinFileSizeBytes())
     
   def _applyToItem(self, item):
     item = self._manager.processFile(item)

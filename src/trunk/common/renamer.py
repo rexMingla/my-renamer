@@ -42,18 +42,17 @@ class MovieRenameItemGenerator(BaseRenameItemGenerator):
   """ builds list of rename items for movie mode """
   def _getRenameItems(self, movie):
     ret = []
-    oFormat = outputFormat.OutputFormat(self.config["format"])
-    outputFolder = self.config["folder"] or fileHelper.FileHelper.dirname(movie.filename)
+    oFormat = outputFormat.OutputFormat(self.config.format)
+    outputFolder = self.config.getOutputFolder() or fileHelper.FileHelper.dirname(movie.filename)
     genre = movie.genre("unknown")
     im = outputFormat.MovieInputMap(fileHelper.FileHelper.replaceSeparators(movie.title), 
                                     movie.year, 
                                     fileHelper.FileHelper.replaceSeparators(genre), movie.part, movie.series)
     newName = oFormat.outputToString(im, movie.ext, outputFolder)
     newName = fileHelper.FileHelper.sanitizeFilename(newName)
-    ext = [] if not self.config["actionSubtitles"] else self.config["subtitleExtensions"].split()
-    ret.append(FileRenamer(movie.filename, newName, canOverwrite=not self.config["dontOverwrite"], 
-                                                    keepSource=not self.config["move"],
-                                                    subtitleExtensions=ext))
+    ret.append(FileRenamer(movie.filename, newName, canOverwrite=not self.config.dontOverwrite, 
+                                                    keepSource=not self.config.isMove,
+                                                    subtitleExtensions=self.config.getSubtitles()))
     return ret   
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -61,9 +60,8 @@ class TvRenameItemGenerator(BaseRenameItemGenerator):
   """ builds list of rename items for tv mode """
   def _getRenameItems(self, tv):
     ret = []
-    outputFolder = self.config["folder"] or tv.inputFolder
-    oFormat = outputFormat.OutputFormat(self.config["format"])
-    ext = [] if not self.config["actionSubtitles"] else self.config["subtitleExtensions"].split()
+    outputFolder = self.config.getOutputFolder() or tv.inputFolder
+    oFormat = outputFormat.OutputFormat(self.config.format)
     for ep in tv.moveItemCandidates:
       if ep.performMove:
         im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(tv.seasonName), 
@@ -72,9 +70,9 @@ class TvRenameItemGenerator(BaseRenameItemGenerator):
                                      fileHelper.FileHelper.replaceSeparators(ep.destination.epName))
         newName = oFormat.outputToString(im, ep.source.ext, outputFolder)
         newName = fileHelper.FileHelper.sanitizeFilename(newName)
-        ret.append(FileRenamer(ep.source.filename, newName, canOverwrite=not self.config["dontOverwrite"], 
-                                                            keepSource=not self.config["move"],
-                                                            subtitleExtensions=ext))
+        ret.append(FileRenamer(ep.source.filename, newName, canOverwrite=not self.config.dontOverwrite, 
+                                                            keepSource=not self.config.isMove,
+                                                            subtitleExtensions=self.config.getSubtitles()))
     return ret    
     
 # --------------------------------------------------------------------------------------------------------------------    
@@ -146,7 +144,7 @@ class FileRenamer(BaseRenamer):
     ret = []
     for ext in self.subtitleExtensions:
       sub = fileHelper.FileHelper.changeExtension(self.source, ext)
-      if sub != source and fileHelper.FileHelper.fileExists(sub):
+      if sub != self.source and fileHelper.FileHelper.fileExists(sub):
         ret.append(sub)
     return ret
   

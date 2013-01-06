@@ -8,6 +8,8 @@
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+from common import config
+from common import renamer
 from common import utils
 from common import workBench
 
@@ -57,19 +59,22 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self._onSelectionChanged()
      
   def getConfig(self):
-    return {"no_year_as_error" : self.yearCheckBox.isChecked(),
-            "no_genre_as_error" : self.genreCheckBox.isChecked(),
-            "duplicate_as_error" : self.duplicateCheckBox.isChecked(),
-            "state" : utils.toString(self.movieView.horizontalHeader().saveState().toBase64()),
-            "series_list" : self._changeMovieWidget.getSeriesList()  }
+    ret = config.MovieWorkBenchConfig()
+    ret.noYearAsError = self.yearCheckBox.isChecked()
+    ret.noGenreAsError = self.genreCheckBox.isChecked()
+    ret.duplicateAsError = self.duplicateCheckBox.isChecked()
+    ret.state = utils.toString(self.movieView.horizontalHeader().saveState().toBase64())
+    ret.seriesList = self._changeMovieWidget.getSeriesList()
+    return ret
   
   def setConfig(self, data):
-    utils.verifyType(data, dict)
-    self.yearCheckBox.setChecked(data.get("no_year_as_error", True))
-    self.genreCheckBox.setChecked(data.get("no_genre_as_error", True))
-    self.duplicateCheckBox.setChecked(data.get("duplicate_as_error", True)),
-    self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "AAAA/wAAAAAAAAABAAAAAQAAAAABAAAAAAAAAAAAAAAAAAAAAAAAA14AAAAJAAEAAQAAAAAAAAAAAAAAAGT/////AAAAhAAAAAAAAAAJAAAAGQAAAAEAAAACAAAAmQAAAAEAAAAAAAAA4wAAAAEAAAAAAAAAQgAAAAEAAAAAAAAAPwAAAAEAAAAAAAAAZAAAAAEAAAAAAAAAUAAAAAEAAAAAAAAARQAAAAEAAAAAAAAATwAAAAEAAAAA")))
-    self._changeMovieWidget.setSeriesList(data.get("series_list", []))
+    data = data or config.MovieWorkBenchConfig()
+
+    self.yearCheckBox.setChecked(data.noYearAsError)
+    self.genreCheckBox.setChecked(data.noGenreAsError)
+    self.duplicateCheckBox.setChecked(data.duplicateAsError)
+    self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.state))
+    self._changeMovieWidget.setSeriesList(data.seriesList)
     
   def _showItem(self):    
     self._editMovie()

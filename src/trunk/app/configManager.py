@@ -12,6 +12,7 @@ import traceback
 
 from PyQt4 import QtGui
 
+from common import config
 from common import fileHelper
 from common import utils
 

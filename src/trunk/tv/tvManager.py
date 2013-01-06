@@ -67,17 +67,6 @@ class TvHelper:
         epMap.addItem(episode.SourceEpisode(indexes[- i - 1] if i < len(indexes) else episode.UNRESOLVED_KEY, f))
       epMaps.append(epMap)
     return max(epMaps, key=lambda epMap: len(epMap.matches))
-  
-  @staticmethod
-  def getFolders(rootFolder, isRecursive):
-    utils.verifyType(rootFolder, str)
-    utils.verifyType(isRecursive, bool)
-    folders = []
-    for root, dirs, files in os.walk(fileHelper.FileHelper.replaceSeparators(rootFolder, os.sep)):
-      folders.append(root)      
-      if not isRecursive:
-        break
-    return folders  
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvManager(manager.BaseManager):
