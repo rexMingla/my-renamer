@@ -8,7 +8,7 @@
 from PyQt4 import QtCore
 
 from common import interfaces
-from common import moveItemActioner
+from common import renamer
 from common import outputFormat
 
 from tv import tvManager
@@ -58,9 +58,9 @@ class Factory:
   @staticmethod
   def getRenameItemGenerator(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return moveItemActioner.MovieRenameItemGenerator() 
+      return renamer.MovieRenameItemGenerator() 
     else:
-      return moveItemActioner.TvRenameItemGenerator()
+      return renamer.TvRenameItemGenerator()
   
   @staticmethod
   def getStoreHolder(mode):

@@ -11,10 +11,10 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import config
 from common import extension
 from common import utils
 
-import config
 import interfaces
       
 # --------------------------------------------------------------------------------------------------------------------
@@ -85,33 +85,34 @@ class InputWidget(interfaces.LoadWidgetInterface):
       self.folderEdit.setText(folder)
       
   def getConfig(self):
-    data = {"folder" : utils.toString(self.folderEdit.text()),
-            "recursive" : self.isRecursiveCheckBox.isChecked(),
-            "allExtensions" : self.anyExtRadioButton.isChecked(),
-            "extensions" : extension.FileExtensions(utils.toString(self.fileExtensionEdit.text())).extensionString(),
-            "allFileSizes" : self.anySizeRadioButton.isChecked(),
-            "minFileSizeBytes" :
-              utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText())),
-            "sources" : self._store.getConfig()}
+    data = config.InputConfig()
+    data.folder = utils.toString(self.folderEdit.text())
+    data.recursive = self.isRecursiveCheckBox.isChecked()
+    data.allExtensions = self.anyExtRadioButton.isChecked()
+    data.extensions = extension.FileExtensions(utils.toString(self.fileExtensionEdit.text())).extensionString()
+    data.allFileSizes = self.anySizeRadioButton.isChecked()
+    data.minFileSizeBytes = utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText()))
+    data.sources = self._store.getConfig()
     return data
   
   def setConfig(self, data):
-    self.folderEdit.setText(data.get("folder", "") or os.path.abspath(os.path.curdir))
-    self.isRecursiveCheckBox.setChecked(data.get("recursive", True))
-    if data.get("allExtensions", False):
+    data = data or config.InputConfig()
+    
+    self.folderEdit.setText(data.folder or os.path.abspath(os.path.curdir))
+    self.isRecursiveCheckBox.setChecked(data.recursive)
+    if data.allExtensions:
       self.anyExtRadioButton.setChecked(True)
     else:
       self.restrictedExtRadioButton.setChecked(True)
-    if data.get("allFileSizes", False):
+    if data.allFileSizes:
       self.anySizeRadioButton.setChecked(True)
     else:
       self.restrictedSizeRadioButton.setChecked(True)
-    self.fileExtensionEdit.setText(data.get("extensions", "") or extension.DEFAULT_VIDEO_EXTENSIONS.extensionString())
-    fileSize, fileDenom = utils.bytesToString(data.get("minFileSizeBytes", utils.MIN_VIDEO_SIZE_BYTES)).split()
+    self.fileExtensionEdit.setText(data.extensions)
+    fileSize, fileDenom = utils.bytesToString(data.minFileSizeBytes).split()
     self.sizeSpinBox.setValue(int(float(fileSize)))
     self.sizeComboBox.setCurrentIndex(self.sizeComboBox.findText(fileDenom))
-    sources = data.get("sources", {})
-    self._store.setConfig(sources)
+    self._store.setConfig(data.sources or [])
     self.onSourcesWidgetFinished()
     
   def onSourcesWidgetFinished(self):

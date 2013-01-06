@@ -9,6 +9,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import config
 from common import extension
 from common import fileHelper
 from common import outputFormat
@@ -112,33 +113,32 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       self.specificDirectoryEdit.setText(folder)
 
   def getConfig(self):
-    outputDir = "" if self.useSourceDirectoryRadio.isChecked() else utils.toString(self.specificDirectoryEdit.text())
-    data = {"format" : utils.toString(self.formatEdit.text()),
-            "folder" : outputDir,
-            "move" : self.moveRadio.isChecked(),
-            "dontOverwrite" : self.doNotOverwriteCheckBox.isChecked(),
-            "showHelp" : self.helpGroupBox.isVisible(),
-            "actionSubtitles" : self.subtitleCheckBox.isChecked(),
-            "subtitleExtensions" : extension.FileExtensions(
-              utils.toString(self.subtitleExtensionsEdit.text())).extensionString()}
+    data = config.OutputConfig()
+    data.format = utils.toString(self.formatEdit.text())
+    data.folder = utils.toString(self.specificDirectoryEdit.text())
+    data.useSource = self.useSourceDirectoryRadio.isChecked()
+    data.isMove = self.moveRadio.isChecked()
+    data.dontOverwrite = self.doNotOverwriteCheckBox.isChecked()
+    data.showHelp = self.helpGroupBox.isVisible()
+    data.actionSubtitles = self.subtitleCheckBox.isChecked()
+    data.subtitleExtensions = extension.FileExtensions(utils.toString(self.subtitleExtensionsEdit.text())).extensionString()
     return data
   
   def setConfig(self, data):
-    fmt = data.get("format", self._fmt.defaultFormatStr())
-    self.formatEdit.setText(fmt)
-    outputDir = data.get("folder", "")
-    self.specificDirectoryEdit.setText(outputDir)
-    if not outputDir:
+    data = data or config.OutputConfig()
+    
+    self.formatEdit.setText(data.format or self._fmt.defaultFormatStr())
+    self.specificDirectoryEdit.setText(data.folder)
+    if data.useSource:
       self.useSourceDirectoryRadio.setChecked(True)
     else:
       self.useSpecificDirectoryRadio.setChecked(True)      
-    self.moveRadio.setChecked(data.get("move", True))
-    self.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))
-    subtitleExtensions = data.get("subtitleExtensions", "") or extension.DEFAULT_SUBTITLE_EXTENSIONS.extensionString()
-    self.subtitleExtensionsEdit.setText(subtitleExtensions)
-    self.subtitleCheckBox.setChecked(data.get("actionSubtitles", True))
+    self.moveRadio.setChecked(data.isMove)
+    self.doNotOverwriteCheckBox.setChecked(data.dontOverwrite)
+    self.subtitleExtensionsEdit.setText(data.subtitleExtensions)
+    self.subtitleCheckBox.setChecked(data.actionSubtitles)
     
-    if data.get("showHelp", True):
+    if data.showHelp:
       self._showHelp()
     else:
       self._hideHelp()

@@ -11,10 +11,11 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 from PyQt4 import uic
 
+from common import config
 from common import fileHelper
 from common import utils
 
-import config
+import configManager
 import dontShowAgainWidget
 import factory
 import logWidget
@@ -51,8 +52,8 @@ class MainWindow(QtGui.QMainWindow):
     self._addDockWidget(self._outputStackWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
     self._addDockWidget(self._logWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
-    self._configManager = config.ConfigManager()
-    self._cacheManager = config.ConfigManager()
+    self._configManager = configManager.ConfigManager()
+    self._cacheManager = configManager.ConfigManager()
     
     self._modeToModule = {}
     for mode in interfaces.VALID_MODES:
@@ -77,6 +78,7 @@ class MainWindow(QtGui.QMainWindow):
     self.actionToolBar.addAction(self.actionMovieMode)
     self.actionToolBar.addAction(self.actionTvMode)
     
+    self._restoringDefaults = False # used to check we aren't recursively trying to restore defaults
     self._loadSettings()
     
   def _showAbout(self):
@@ -179,11 +181,14 @@ class MainWindow(QtGui.QMainWindow):
     self._saveCache()
   
   def _saveSettingsConfig(self):
-    self._configManager.setData("mw/geometry", utils.toString(self.saveGeometry().toBase64()))
-    self._configManager.setData("mw/windowState", utils.toString(self.saveState().toBase64()))
-    self._configManager.setData("mw/mode", self._mode)
-    self._configManager.setData("mw/autoStart", self._autoStart)
-    self._configManager.setData("mw/dontShow", dontShowAgainWidget.DontShowManager.getConfig())
+    data = config.MainWindowConfig()
+    data.geo = utils.toString(self.saveGeometry().toBase64())
+    data.state = utils.toString(self.saveState().toBase64())
+    data.mode = self._mode
+    data.autoStart = self._autoStart
+    data.dontShows = dontShowAgainWidget.DontShowManager.getConfig()
+    data.configVersion = config.CONFIG_VERSION
+    self._configManager.setData("mw", data)
 
     for m in self._modeToModule.values():
       for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
@@ -202,21 +207,26 @@ class MainWindow(QtGui.QMainWindow):
     
   def _loadSettingsConfig(self):
     self._configManager.loadConfig(self._configFile)
-    
-    geo = self._configManager.getData("mw/geometry", "AdnQywABAAAAAABbAAAACQAABEsAAALmAAAAYwAAACcAAARDAAAC3gAAAAAAAA==")
-    state = self._configManager.getData("mw/windowState", "AAAA/wAAAAD9AAAAAgAAAAIAAAPhAAAAsvwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAAD4QAAAKMA////AAAAAwAAA+EAAADU/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAnIAAAGIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAJ2AAABawAAAHsA////AAAD4QAAAPMAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABoAYQBjAHQAaQBvAG4AVABvAG8AbABCAGEAcgEAAAAA/////wAAAAAAAAAA")
-    self.restoreGeometry(QtCore.QByteArray.fromBase64(geo))
-    self.restoreState(QtCore.QByteArray.fromBase64(state))
-    dontShowAgainWidget.DontShowManager.setConfig(self._configManager.getData("mw/dontShow", {}))
-    mode = self._configManager.getData("mw/mode")
-    if not mode in interfaces.VALID_MODES:
-      mode = interfaces.Mode.TV_MODE
-    self._setMode(mode)
-    self._autoStart = bool(self._configManager.getData("mw/autoStart", False))
-    
-    for m in self._modeToModule.values():
-      for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
-        w.setConfig(self._configManager.getData(w.configName, {}))    
+  
+    try:
+      data = self._configManager.getData("mw", config.MainWindowConfig())
+      self.restoreGeometry(QtCore.QByteArray.fromBase64(data.geo))
+      self.restoreState(QtCore.QByteArray.fromBase64(data.state))
+      dontShowAgainWidget.DontShowManager.setConfig(data.dontShows)
+      if not data.mode in interfaces.VALID_MODES:
+        data.mode = interfaces.Mode.TV_MODE
+      self._setMode(data.mode)
+      self._autoStart = data.autoStart
+      
+      for m in self._modeToModule.values():
+        for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
+          w.setConfig(self._configManager.getData(w.configName, None))    
+    except (AttributeError, KeyError) as e:
+      utils.logWarning("Unable to load config file. reason: {}".format(e))
+      if not self._restoringDefaults:
+        self._restoreDefaults()
+      else:
+        QtGui.QMessageBox.warning(self, "Config error", "Default config is in a bad state. Fix me!")
           
   def _loadCache(self):
     self._cacheManager.loadConfig(self._cacheFile)
@@ -224,8 +234,10 @@ class MainWindow(QtGui.QMainWindow):
       factory.Factory.getManager(m).setCache(self._cacheManager.getData("cache/{}".format(m), {}))    
   
   def _restoreDefaults(self):
+    self._restoringDefaults = True
     fileHelper.FileHelper.removeFile(self._configFile)
     self._loadSettingsConfig()
+    self._restoringDefaults = False
     
   def _clearCache(self):
     fileHelper.FileHelper.removeFile(self._cacheFile)

@@ -8,6 +8,7 @@
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+from common import config
 from common import utils
 from common import workBench
 
@@ -48,11 +49,13 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self._onSelectionChanged()
     
   def getConfig(self):
-    return {"state" : utils.toString(self.tvView.header().saveState().toBase64()) }
+    ret = config.TvWorkBenchConfig()
+    ret.state = utils.toString(self.tvView.header().saveState().toBase64())
+    return ret
   
   def setConfig(self, data):
-    utils.verifyType(data, dict)
-    self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.get("state", "AAAA/wAAAAAAAAABAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA14AAAAFAQAAAQAAAAAAAAAAAAAAAGT/////AAAAgQAAAAAAAAAFAAABJQAAAAEAAAAAAAAAVgAAAAEAAAAAAAAA7QAAAAEAAAAAAAAAVwAAAAEAAAAAAAAAnwAAAAEAAAAA")))
+    data = data or config.TvWorkBenchConfig()
+    self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.state))
     
   def stopExploring(self):
     super(TvWorkBenchWidget, self).stopExploring()
