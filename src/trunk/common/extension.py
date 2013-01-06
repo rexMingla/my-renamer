@@ -22,7 +22,10 @@ class FileExtensions:
   
   def __init__(self, extensions):
     utils.verifyType(extensions, list)
-    self.setExtensionsFromList(extensions)
+    if isinstance(extensions, basestring):
+      self.setExtensionsFromString(extensions)
+    else:
+      self.setExtensionsFromList(extensions)
   
   @staticmethod
   def delimiter():
@@ -69,5 +72,6 @@ class FileExtensions:
   def __eq__(self, other):
     return utils.listCompare(self._extensions_, other._extensions_)
 
-ALL_FILE_EXTENSIONS      = FileExtensions([FileExtensions.ALL_FILES])
-DEFAULT_VIDEO_EXTENSIONS = FileExtensions([".avi", ".divx", ".mkv", ".mpg", ".mp4", ".vob", ".wmv"])
+ALL_FILE_EXTENSIONS         = FileExtensions([FileExtensions.ALL_FILES])
+DEFAULT_VIDEO_EXTENSIONS    = FileExtensions([".avi", ".divx", ".mkv", ".mpg", ".mp4", ".vob", ".wmv"])
+DEFAULT_SUBTITLE_EXTENSIONS = FileExtensions([".sub", ".srt", ".rar", ".sfv"])

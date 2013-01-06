@@ -5,6 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: main entry point of the program
 # --------------------------------------------------------------------------------------------------------------------
+import os
 import sys
 
 from app import commandLine
@@ -16,12 +17,12 @@ def _runGUI(cl):
   from app import mainWindow
   
   try:
-    # HACK: for py2exe so it won't show "See log for details" message on shutdown
-    # http://www.py2exe.org/index.cgi/StderrLog
-    sys.stdout = open("my_stdout.log", "w")
-    sys.stderr = open("my_stderr.log", "w")    
+    if __name__ != "__main__":
+      # HACK: for py2exe so it won't show "See log for details" message on shutdown
+      # http://www.py2exe.org/index.cgi/StderrLog
+      sys.stdout = open("my_stdout.log", "w")
+      sys.stderr = open("my_stderr.log", "w")    
     
-    import os
     dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dir)
   except NameError:
@@ -31,29 +32,6 @@ def _runGUI(cl):
   
   mw = mainWindow.MainWindow()
   mw.show()
-  
-  # --------------------------------------------------------------------------------------------------------------------
-  """from app import editMovieWidget
-  from app import editSourcesWidget
-  from movie import movieInfoClient
-
-  cm = editMovieWidget.EditMovieWidget(None)
-  cm.show()
-  
-  es = editSourcesWidget.EditSourcesWidget(movieInfoClient.getStoreHolder(), cm)
-  cm.showEditSourcesSignal.connect(es.show)"""
-  
-  # --------------------------------------------------------------------------------------------------------------------
-  """from app import editSeasonWidget
-  from app import editSourcesWidget
-  from tv import tvInfoClient
-
-  cs = editSeasonWidget.EditSeasonWidget(None)
-  cs.show()
-  
-  es = editSourcesWidget.EditSourcesWidget(tvInfoClient.getStoreHolder(), cs)
-  cs.showEditSourcesSignal.connect(es.show)"""
-
   app.exec_()
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -73,14 +51,13 @@ def _runTests():
   
 # --------------------------------------------------------------------------------------------------------------------
 def main(argv):
+  utils.initLogging("log.txt")
   cl = commandLine.CommandLineParser(argv)
   if cl.showHelp:
-    utils.initLogging("log.txt")
     utils.logError(cl.usageMessage())
     return
   
   if cl.testOnly:
-    #utils.initLogging("log_unit_test.txt")
     _runTests()
   else:
     _runGUI(cl)

@@ -13,6 +13,7 @@ import unicodedata
 
 import utils
 
+_BLOCK_SIZE = pow(2, 15)
 _VALID_BASENAME_CHARACTERS = "".join([string.ascii_letters,
                                       string.digits,
                                       " !#$%&'()+,-.\\/;=@[\]^_`{}~"]) # string.punctuation without :?"<>| 
@@ -128,6 +129,10 @@ class FileHelper:
       except os.error:
         ret = False
     return ret
+  
+  @staticmethod
+  def changeExtension(f, ext):
+    return "{}{}".format(os.path.splitext(f)[0], ext)
 
   @staticmethod
   def moveFile(source, dest, progressCb=None):
@@ -151,7 +156,7 @@ class FileHelper:
     if FileHelper.fileExists(source):
       destFolder = FileHelper.dirname(dest)
       if not destFolder or FileHelper.createDir(destFolder):
-        if os.path.commonprefix([source, dest]) or not progressCb:         
+        if os.path.commonprefix([source, dest]) or not progressCb or FileHelper.getFileSize(source) < _BLOCK_SIZE:         
           ret = safeMoveFile(source, dest)
         else:
           ret = unsafeMoveFile(source, dest, progressCb)
@@ -169,12 +174,12 @@ class FileHelper:
       copied = 0
       ret = False
       try:
-        sourceSize = os.stat(s).st_size
+        sourceSize = FileHelper.getFileSize(s)
         with open(s, "rb") as source:
           with open(d, "wb") as dest:
             chunk = ""
             while True:
-              chunk = source.read(pow(2, 15))
+              chunk = source.read(_BLOCK_SIZE)
               if not chunk:
                 break
               copied += len(chunk)
@@ -202,7 +207,7 @@ class FileHelper:
     if FileHelper.fileExists(source):
       destFolder = FileHelper.dirname(dest)
       if not destFolder or FileHelper.createDir(destFolder):
-        if not progressCb:         
+        if FileHelper.getFileSize(source) < _BLOCK_SIZE or not progressCb:         
           ret = safeCopyFile(source, dest)
         else:
           ret = unsafeCopyFile(source, dest, progressCb)
