@@ -6,6 +6,6 @@
 # Purpose of document: Season renamer application module
 # --------------------------------------------------------------------------------------------------------------------
 
-__VERSION__ = "1.1"
+__VERSION__ = "1.2"
 __APP_NAME__ = "MyRenamer"
 __NAME__ = "{} v{}".format(__APP_NAME__, __VERSION__)

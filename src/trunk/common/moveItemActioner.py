@@ -50,8 +50,10 @@ class MovieRenameItemGenerator(BaseRenameItemGenerator):
                                     fileHelper.FileHelper.replaceSeparators(genre), movie.part, movie.series)
     newName = oFormat.outputToString(im, movie.ext, outputFolder)
     newName = fileHelper.FileHelper.sanitizeFilename(newName)
+    ext = [] if not self.config["actionSubtitles"] else self.config["subtitleExtensions"].split()
     ret.append(FileRenamer(movie.filename, newName, canOverwrite=not self.config["dontOverwrite"], 
-                                                    keepSource=not self.config["move"]))
+                                                    keepSource=not self.config["move"],
+                                                    subtitleExtensions=ext))
     return ret   
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -61,6 +63,7 @@ class TvRenameItemGenerator(BaseRenameItemGenerator):
     ret = []
     outputFolder = self.config["folder"] or tv.inputFolder
     oFormat = outputFormat.OutputFormat(self.config["format"])
+    ext = [] if not self.config["actionSubtitles"] else self.config["subtitleExtensions"].split()
     for ep in tv.moveItemCandidates:
       if ep.performMove:
         im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(tv.seasonName), 
@@ -70,7 +73,8 @@ class TvRenameItemGenerator(BaseRenameItemGenerator):
         newName = oFormat.outputToString(im, ep.source.ext, outputFolder)
         newName = fileHelper.FileHelper.sanitizeFilename(newName)
         ret.append(FileRenamer(ep.source.filename, newName, canOverwrite=not self.config["dontOverwrite"], 
-                                                            keepSource=not self.config["move"]))
+                                                            keepSource=not self.config["move"],
+                                                            subtitleExtensions=ext))
     return ret    
     
 # --------------------------------------------------------------------------------------------------------------------    
@@ -101,16 +105,21 @@ class FileRenamer(BaseRenamer):
       utils.verify(res == FileRenamer.SUCCESS, "Invalid res")
       return "Success"
 
-  def __init__(self, source, dest, canOverwrite, keepSource):
+  def __init__(self, source, dest, canOverwrite, keepSource, subtitleExtensions=None):
     super(FileRenamer, self).__init__()
     self.source = source
     self.dest = dest
     self.canOverwrite = canOverwrite
     self.keepSource = keepSource
+    self.subtitleExtensions = subtitleExtensions or []
     
   def resultToLogItem(self, res):
     longText = "{} -> {}".format(self.source, self.dest) 
     shortText = "{} -> {}".format(fileHelper.FileHelper.basename(self.source), fileHelper.FileHelper.basename(self.dest))
+    numExtFiles = len(self._extensionFiles())
+    if res == FileRenamer.SUCCESS and numExtFiles:
+      longText += " #subtitle files:{}".format(numExtFiles)
+      shortText += " #subtitle files:{}".format(numExtFiles)
     level = logModel.LogLevel.INFO
     if res != FileRenamer.SUCCESS:
       level = logModel.LogLevel.ERROR
@@ -132,15 +141,29 @@ class FileRenamer(BaseRenamer):
       return self._copyFile(progressCb)
     else:
       return self._moveFile(progressCb)    
+    
+  def _extensionFiles(self):
+    ret = []
+    for ext in self.subtitleExtensions:
+      sub = fileHelper.FileHelper.changeExtension(self.source, ext)
+      if sub != source and fileHelper.FileHelper.fileExists(sub):
+        ret.append(sub)
+    return ret
   
   def _moveFile(self, progressCb):
     if fileHelper.FileHelper.moveFile(self.source, self.dest, progressCb):
+      for sub in self._extensionFiles():
+        fileHelper.FileHelper.moveFile(sub, fileHelper.FileHelper.changeExtension(self.dest, 
+                                                                                  fileHelper.FileHelper.extension(sub)))
       return FileRenamer.SUCCESS
     else:
       return FileRenamer.FAILED
     
   def _copyFile(self, progressCb):
     if fileHelper.FileHelper.copyFile(self.source, self.dest, progressCb):
+      for sub in self._extensionFiles():
+        fileHelper.FileHelper.copyFile(sub, fileHelper.FileHelper.changeExtension(self.dest, 
+                                                                                  fileHelper.FileHelper.extension(sub)))
       return FileRenamer.SUCCESS
     else:
       return FileRenamer.FAILED

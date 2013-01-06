@@ -18,7 +18,6 @@ from common import utils
 
 import movieInfoClient
 
-#_SUBTITLE_EXTENSIONS = (".sub", ".srt", ".rar", ".sfv")
 _PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
 _MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
 _MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
@@ -120,9 +119,6 @@ class MovieHelper:
         title = title.replace(".", " ")
       title = re.sub(r"[\(\[\{\s]+$", "", title) #clean end
       title = re.sub(r"^\w+\-", "", title) #strip anywords at the start before a - character
-      #todo: fix subs...
-      #subsFiles = [change_ext(filename, e) for e in _SUBTITLE_EXTENSIONS
-      #              if os.path.exists(change_ext(filename, e)) ]
     movie = Movie(filename, title, part, year)
     movie.result = result
     return movie  

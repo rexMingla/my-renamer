@@ -9,6 +9,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from common import extension
 from common import fileHelper
 from common import outputFormat
 from common import utils
@@ -38,6 +39,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self.formatEdit.textChanged.connect(self._updatePreviewText)
     self.showHelpLabel.linkActivated.connect(self._showHelp)
     self.hideHelpLabel.linkActivated.connect(self._hideHelp)
+    self.subtitleCheckBox.toggled.connect(self.subtitleExtensionsEdit.setEnabled)
     
     completer = QtGui.QCompleter(self)
     fsModel = QtGui.QFileSystemModel(completer)
@@ -115,7 +117,10 @@ class OutputWidget(interfaces.LoadWidgetInterface):
             "folder" : outputDir,
             "move" : self.moveRadio.isChecked(),
             "dontOverwrite" : self.doNotOverwriteCheckBox.isChecked(),
-            "showHelp" : self.helpGroupBox.isVisible()}
+            "showHelp" : self.helpGroupBox.isVisible(),
+            "actionSubtitles" : self.subtitleCheckBox.isChecked(),
+            "subtitleExtensions" : extension.FileExtensions(
+              utils.toString(self.subtitleExtensionsEdit.text())).extensionString()}
     return data
   
   def setConfig(self, data):
@@ -129,6 +134,10 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       self.useSpecificDirectoryRadio.setChecked(True)      
     self.moveRadio.setChecked(data.get("move", True))
     self.doNotOverwriteCheckBox.setChecked(data.get("dontOverwrite", True))
+    subtitleExtensions = data.get("subtitleExtensions", "") or extension.DEFAULT_SUBTITLE_EXTENSIONS.extensionString()
+    self.subtitleExtensionsEdit.setText(subtitleExtensions)
+    self.subtitleCheckBox.setChecked(data.get("actionSubtitles", True))
+    
     if data.get("showHelp", True):
       self._showHelp()
     else:

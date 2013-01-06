@@ -32,7 +32,6 @@ class MainWindow(QtGui.QMainWindow):
     self._configFile = configFile
     self._cacheFile = cacheFile
     
-    utils.initLogging(logFile)
     utils.logInfo("Starting app")    
     
     uic.loadUi("ui/ui_MainWindow.ui", self)
@@ -78,18 +77,19 @@ class MainWindow(QtGui.QMainWindow):
     self.actionToolBar.addAction(self.actionMovieMode)
     self.actionToolBar.addAction(self.actionTvMode)
     
-    
     self._loadSettings()
     
   def _showAbout(self):
+    def href(link, title=""):
+      return "<a href=\"{}\">{}</a>".format(link, title or link)
+    
     def getText(mode):
       info = []
       holder = factory.Factory.getStoreHolder(mode)
       for s in holder.stores:
-        info.append("<li><a href=\"{0}\">{1}</a> "
-                    "(interface to <a href=\"{2}\">{2}</a>)</li>".format(s.url, s.displayName, s.sourceName))
+        info.append("<li>{} (interface to {})</li>".format(href(s.url, s.displayName), href(s.sourceName)))
       info.append("</ul>")
-      return "{} libraries:<ul>{}</ul>".format(mode, "\n".join(info))
+      return "{} libraries:<ul>{}</ul>".format(mode.capitalize(), "\n".join(info))
     
     text = []
     for mode in interfaces.VALID_MODES:
@@ -97,12 +97,14 @@ class MainWindow(QtGui.QMainWindow):
     
     msg = ("<html><p>{} is written in python with PyQt.<p/>\n"
           "<p>Special thanks to the following:</p>\n{}"
-          "<p>The wand icon come from <a href=\"{}\">{}</a></p>\n"
-          "<p>Button images come from <a href=\"{}\">{}</a></p>\n"
-          "<p>For (slightly) more information go to <a href=\"http://code.google.com/p/my-renamer/\">google code</a>"
+          "<p>The wand icon come from {}</p>\n"
+          "<p>Button images come from {}</p>\n"
+          "<p>For (slightly) more information go to {}"
           "</html>").format(app.__NAME__, "\n\n".join(text), 
-                            "http://www.designkindle.com/2011/10/07/build-icons/", "Umar Irshad",
-                            "http://www.smashingmagazine.com/2011/12/29/freebie-free-vector-web-icons-91-icons/", "Tomas Gajar")
+                            href("http://www.designkindle.com/2011/10/07/build-icons/", "Umar Irshad"),
+                            href("http://www.smashingmagazine.com/2011/12/29/freebie-free-vector-web-icons-91-icons/", 
+                                 "Tomas Gajar"),
+                            href("http://code.google.com/p/my-renamer/", "google code"))
     QtGui.QMessageBox.about(self, "About {}".format(app.__NAME__), msg)
     
   def _addModule(self, module):

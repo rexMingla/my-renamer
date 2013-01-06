@@ -88,7 +88,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
     data = {"folder" : utils.toString(self.folderEdit.text()),
             "recursive" : self.isRecursiveCheckBox.isChecked(),
             "allExtensions" : self.anyExtRadioButton.isChecked(),
-            "extensions" : utils.toString(self.fileExtensionEdit.text()),
+            "extensions" : extension.FileExtensions(utils.toString(self.fileExtensionEdit.text())).extensionString(),
             "allFileSizes" : self.anySizeRadioButton.isChecked(),
             "minFileSizeBytes" :
               utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText())),
@@ -106,7 +106,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
       self.anySizeRadioButton.setChecked(True)
     else:
       self.restrictedSizeRadioButton.setChecked(True)
-    self.fileExtensionEdit.setText(data.get("extensions", extension.DEFAULT_VIDEO_EXTENSIONS.extensionString()))
+    self.fileExtensionEdit.setText(data.get("extensions", "") or extension.DEFAULT_VIDEO_EXTENSIONS.extensionString())
     fileSize, fileDenom = utils.bytesToString(data.get("minFileSizeBytes", utils.MIN_VIDEO_SIZE_BYTES)).split()
     self.sizeSpinBox.setValue(int(float(fileSize)))
     self.sizeComboBox.setCurrentIndex(self.sizeComboBox.findText(fileDenom))
