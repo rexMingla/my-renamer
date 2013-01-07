@@ -15,11 +15,9 @@ from common import utils
 from common import extension
 from common import outputFormat
 
-from tv import episode
-from tv import moveItemCandidate
-from tv import season
-from tv import tvManager
+from tv import tvImpl
 from tv import tvInfoClient
+from tv import tvManager
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
@@ -40,35 +38,35 @@ class SeriesTest(unittest.TestCase):
 
   def test_seasonFromFolderNameMoMatch(self):
     searchParams = tvManager.TvHelper.seasonFromFolderName("c:/folder/Show Seaso 1")
-    self.assertEqual(searchParams.showName, episode.UNRESOLVED_NAME)
-    self.assertEqual(searchParams.seasonNum, episode.UNRESOLVED_KEY)
+    self.assertEqual(searchParams.showName, tvImpl.UNRESOLVED_NAME)
+    self.assertEqual(searchParams.seasonNum, tvImpl.UNRESOLVED_KEY)
 
   def test_episodeMapFromFilenamesGood(self):
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"b02.avi"), \
-                    "3":episode.SourceEpisode(3,"c03.avi")}
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"b02.avi"), \
+                    "3":tvImpl.SourceEpisode(3,"c03.avi")}
     act = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
     self.assertEqual(act, exp)
 
   def test_episodeMapFromFilenamesDuplicate(self):
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c01.avi")]
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"b02.avi")}
+    exp.unresolved = [tvImpl.SourceEpisode(tvImpl.UNRESOLVED_KEY,"c01.avi")]
     act = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
     self.assertEqual(act, exp)
 
   def test_getDestinationEpisodeMapFromTVDB(self):
-    exp = episode.DestinationEpisodeMap("Entourage", 1)
-    exp.matches = {"1":episode.DestinationEpisode(1,"Entourage (Pilot)"), \
-                    "2":episode.DestinationEpisode(2,"The Review"), \
-                    "3":episode.DestinationEpisode(3,"Talk Show"), \
-                    "4":episode.DestinationEpisode(4,"Date Night"), \
-                    "5":episode.DestinationEpisode(5,"The Script and the Sherpa"), \
-                    "6":episode.DestinationEpisode(6,"Busey and the Beach"), \
-                    "7":episode.DestinationEpisode(7,"The Scene"), \
-                    "8":episode.DestinationEpisode(8,"New York")}
+    exp = tvImpl.DestinationEpisodeMap("Entourage", 1)
+    exp.matches = {"1":tvImpl.DestinationEpisode(1,"Entourage (Pilot)"), \
+                    "2":tvImpl.DestinationEpisode(2,"The Review"), \
+                    "3":tvImpl.DestinationEpisode(3,"Talk Show"), \
+                    "4":tvImpl.DestinationEpisode(4,"Date Night"), \
+                    "5":tvImpl.DestinationEpisode(5,"The Script and the Sherpa"), \
+                    "6":tvImpl.DestinationEpisode(6,"Busey and the Beach"), \
+                    "7":tvImpl.DestinationEpisode(7,"The Scene"), \
+                    "8":tvImpl.DestinationEpisode(8,"New York")}
     act = tvInfoClient.TvdbClient().getInfo(tvInfoClient.TvSearchParams("Entourage", 1))
     #self.assertEqual(act, exp) # take out for now
     
@@ -78,32 +76,32 @@ class SeriesTest(unittest.TestCase):
     self.assertEqual(act, exp)  
     
   def test_getSourceEpisodeMapFromFilenames(self):
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"a02.avi"), \
-                    "3":episode.SourceEpisode(3,"a03.avi"), \
-                    "4":episode.SourceEpisode(4,"a04x01.avi")}
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"a02.avi"), \
+                    "3":tvImpl.SourceEpisode(3,"a03.avi"), \
+                    "4":tvImpl.SourceEpisode(4,"a04x01.avi")}
     act = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "a02.avi", "a03.avi", "a04x01.avi"])
     self.assertEqual(act, exp)
 
   def test_getSourceEpisodeMapFromFilenames2(self):
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"xxx-a02.avi"), \
-                    "3":episode.SourceEpisode(3,"xxx-a03.avi"), \
-                    "4":episode.SourceEpisode(4,"xxx-a04.avi")}
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"xxx-a02.avi"), \
+                    "3":tvImpl.SourceEpisode(3,"xxx-a03.avi"), \
+                    "4":tvImpl.SourceEpisode(4,"xxx-a04.avi")}
     act = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "xxx-a02.avi", "xxx-a03.avi", "xxx-a04.avi"])
     self.assertEqual(act, exp)
     
 # --------------------------------------------------------------------------------------------------------------------
 class RealDataTest(unittest.TestCase):  
   def test_1(self):
-    exp = episode.SourceEpisodeMap()
+    exp = tvImpl.SourceEpisodeMap()
     folder = ""
-    exp.matches = {"1":episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
-                    "2":episode.SourceEpisode(2, folder + '02 - Flight 1.avi'),
-                    "3":episode.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
-                    "4":episode.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
+    exp.matches = {"1":tvImpl.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
+                    "2":tvImpl.SourceEpisode(2, folder + '02 - Flight 1.avi'),
+                    "3":tvImpl.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
+                    "4":tvImpl.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
     source = [folder + '01 - For Those Who Think Young.avi',
               folder + '02 - Flight 1.avi',
               folder + '03 - The Benefactor.avi', 
@@ -112,12 +110,12 @@ class RealDataTest(unittest.TestCase):
     self.assertEqual(act, exp)
 
   def test_2(self):
-    exp = episode.SourceEpisodeMap()
+    exp = tvImpl.SourceEpisodeMap()
     folder = "Season 1/"
-    exp.matches = {"1":episode.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
-                    "2":episode.SourceEpisode(2, folder + '02 - Flight 1.avi'),
-                    "3":episode.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
-                    "4":episode.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
+    exp.matches = {"1":tvImpl.SourceEpisode(1, folder + '01 - For Those Who Think Young.avi'),
+                    "2":tvImpl.SourceEpisode(2, folder + '02 - Flight 1.avi'),
+                    "3":tvImpl.SourceEpisode(3, folder + '03 - The Benefactor.avi'),
+                    "4":tvImpl.SourceEpisode(4, folder + '04 - Three Sundays.avi')}
     source = [folder + '01 - For Those Who Think Young.avi', 
               folder + '02 - Flight 1.avi', 
               folder + '03 - The Benefactor.avi', 
@@ -127,19 +125,19 @@ class RealDataTest(unittest.TestCase):
 
   def test_3(self):
     #test were first two files in dir are not that good a match
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"2":episode.SourceEpisode(2, 'Mad.Men.S04E02.avi'),
-                "3":episode.SourceEpisode(3, 'Mad.Men.S04E03.360p.HDTV.XviD.avi'),
-                "4":episode.SourceEpisode(4, 'Mad.Men.S04E04.360p.HDTV.XviD.avi'),
-                "5":episode.SourceEpisode(5, 'Mad.Men.S04E05.320p.HDTV.H264.mp4'),
-                "6":episode.SourceEpisode(6, 'Mad.Men.S04E06.320p.HDTV.H264.mp4'),
-                "7":episode.SourceEpisode(7, 'Mad.Men.S04E07.320p.HDTV.H264.mp4'),
-                "8":episode.SourceEpisode(8, 'Mad.Men.S04E08.320p.HDTV.H264.mp4'),
-                "9":episode.SourceEpisode(9, 'Mad.Men.S04E09.320p.HDTV.H264.mp4'),
-                "10":episode.SourceEpisode(10, 'Mad.Men.S04E10.320p.HDTV.H264.mp4'),
-                "11":episode.SourceEpisode(11, 'Mad.Men.S04E11.320p.HDTV.H264.mp4'),
-                "12":episode.SourceEpisode(12, 'Mad.Men.S04E12.480p.HDTV.H264.mp4'),
-                "13":episode.SourceEpisode(13, 'Mad.Men.S04E13.480p.HDTV.H264.mp4')}
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"2":tvImpl.SourceEpisode(2, 'Mad.Men.S04E02.avi'),
+                "3":tvImpl.SourceEpisode(3, 'Mad.Men.S04E03.360p.HDTV.XviD.avi'),
+                "4":tvImpl.SourceEpisode(4, 'Mad.Men.S04E04.360p.HDTV.XviD.avi'),
+                "5":tvImpl.SourceEpisode(5, 'Mad.Men.S04E05.320p.HDTV.H264.mp4'),
+                "6":tvImpl.SourceEpisode(6, 'Mad.Men.S04E06.320p.HDTV.H264.mp4'),
+                "7":tvImpl.SourceEpisode(7, 'Mad.Men.S04E07.320p.HDTV.H264.mp4'),
+                "8":tvImpl.SourceEpisode(8, 'Mad.Men.S04E08.320p.HDTV.H264.mp4'),
+                "9":tvImpl.SourceEpisode(9, 'Mad.Men.S04E09.320p.HDTV.H264.mp4'),
+                "10":tvImpl.SourceEpisode(10, 'Mad.Men.S04E10.320p.HDTV.H264.mp4'),
+                "11":tvImpl.SourceEpisode(11, 'Mad.Men.S04E11.320p.HDTV.H264.mp4'),
+                "12":tvImpl.SourceEpisode(12, 'Mad.Men.S04E12.480p.HDTV.H264.mp4'),
+                "13":tvImpl.SourceEpisode(13, 'Mad.Men.S04E13.480p.HDTV.H264.mp4')}
     source = ['Mad.Men.S04E02.avi',
               'Mad.Men.S04E03.360p.HDTV.XviD.avi', 
               'Mad.Men.S04E04.360p.HDTV.XviD.avi', 
@@ -157,11 +155,11 @@ class RealDataTest(unittest.TestCase):
 
   def test_4(self):
     #test were filename match is found but is not the best match. ie. starting from 1. 
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1, '01 - Chapter 7.avi'),
-                    "2":episode.SourceEpisode(2, '02 - Chapter 8.avi'),
-                    "3":episode.SourceEpisode(3, '03 - Chapter 9.avi'),
-                    "4":episode.SourceEpisode(4, '04 - Chapter 10.avi')}
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1, '01 - Chapter 7.avi'),
+                    "2":tvImpl.SourceEpisode(2, '02 - Chapter 8.avi'),
+                    "3":tvImpl.SourceEpisode(3, '03 - Chapter 9.avi'),
+                    "4":tvImpl.SourceEpisode(4, '04 - Chapter 10.avi')}
     source = ['01 - Chapter 7.avi',
               '02 - Chapter 8.avi',
               '03 - Chapter 9.avi',
@@ -172,32 +170,32 @@ class RealDataTest(unittest.TestCase):
 # --------------------------------------------------------------------------------------------------------------------
 class MoveTest(unittest.TestCase):
   def setUp(self):
-    self.readySrc = episode.SourceEpisode(1,"01 - Ready.avi")
-    self.missingNewSrc = episode.SourceEpisode(3,"Missing New.avi")
+    self.readySrc = tvImpl.SourceEpisode(1,"01 - Ready.avi")
+    self.missingNewSrc = tvImpl.SourceEpisode(3,"Missing New.avi")
 
-    self.readyDest = episode.DestinationEpisode(1,"Ready")
-    self.missingOldDest = episode.DestinationEpisode(2,"Missing Old.avi")
+    self.readyDest = tvImpl.DestinationEpisode(1,"Ready")
+    self.missingOldDest = tvImpl.DestinationEpisode(2,"Missing Old.avi")
     
-    source = episode.SourceEpisodeMap()
+    source = tvImpl.SourceEpisodeMap()
     source.matches = { 1:self.readySrc, 3:self.missingNewSrc }
 
-    destination = episode.DestinationEpisodeMap()
+    destination = tvImpl.DestinationEpisodeMap()
     destination.matches = {1:self.readyDest, 2:self.missingOldDest }
     
-    self.season = season.Season("Test", 1, source, destination, "")
+    self.season = tvImpl.Season("Test", 1, source, destination, "")
    
   def test_ready(self):
-    item = moveItemCandidate.MoveItemCandidate(self.readySrc, self.readyDest)
+    item = tvImpl.MoveItemCandidate(self.readySrc, self.readyDest)
     exists = item in self.season.moveItemCandidates
     self.assertTrue(exists)
   
   def test_missingNew(self):
-    item = moveItemCandidate.MoveItemCandidate(self.missingNewSrc, episode.DestinationEpisode.createUnresolvedDestination())
+    item = tvImpl.MoveItemCandidate(self.missingNewSrc, tvImpl.DestinationEpisode.createUnresolvedDestination())
     exists = item in self.season.moveItemCandidates
     self.assertTrue(exists)
   
   def test_missingOld(self):
-    item = moveItemCandidate.MoveItemCandidate(episode.SourceEpisode.createUnresolvedSource(), self.missingOldDest)
+    item = tvImpl.MoveItemCandidate(tvImpl.SourceEpisode.createUnresolvedSource(), self.missingOldDest)
     exists = item in self.season.moveItemCandidates
     self.assertTrue(exists)
       
@@ -211,20 +209,20 @@ class SwitchFilesTest(unittest.TestCase):
   
   def test_switchResolvedKeyForNewResolvedKey(self):
     before = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"b02.avi"), \
-                    "4":episode.SourceEpisode(4,"c03.avi")}
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"b02.avi"), \
+                    "4":tvImpl.SourceEpisode(4,"c03.avi")}
     act = copy.copy(before)
     act.setKeyForFilename(4, "c03.avi")
     self.assertEqual(act, exp)
 
   def test_switchResolvedKeyForExistingResolvedKey(self):
     before = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"c03.avi")}
-    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"b02.avi")]
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"c03.avi")}
+    exp.unresolved = [tvImpl.SourceEpisode(tvImpl.UNRESOLVED_KEY,"b02.avi")]
     act = copy.copy(before)
     act.setKeyForFilename(2, "c03.avi")
     self.assertEqual(act, exp)
@@ -237,45 +235,45 @@ class SwitchFilesTest(unittest.TestCase):
 
   def test_switchResolvedKeyForUnresolvedKey(self):
     act = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"c03.avi")]
-    act.setKeyForFilename(episode.UNRESOLVED_KEY, "c03.avi")
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"b02.avi")}
+    exp.unresolved = [tvImpl.SourceEpisode(tvImpl.UNRESOLVED_KEY,"c03.avi")]
+    act.setKeyForFilename(tvImpl.UNRESOLVED_KEY, "c03.avi")
     self.assertEqual(act, exp)
     
   def test_switchResolvedKeyForUnresolvedKey2(self):
     before = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "a01b.avi", "b02.avi"])
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01b.avi"),
-                       episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")] #maybe you would want this to get resolve now but for now not 
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"2":tvImpl.SourceEpisode(2,"b02.avi")}
+    exp.unresolved = [tvImpl.SourceEpisode(tvImpl.UNRESOLVED_KEY,"a01b.avi"),
+                       tvImpl.SourceEpisode(tvImpl.UNRESOLVED_KEY,"a01.avi")] #maybe you would want this to get resolve now but for now not 
     act = copy.copy(before)
-    act.setKeyForFilename(episode.UNRESOLVED_KEY, "a01.avi")
+    act.setKeyForFilename(tvImpl.UNRESOLVED_KEY, "a01.avi")
     self.assertEqual(act, exp)
 
   def test_switchUnresolvedKeyForNewResolvedKey(self):
     act = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"a01.avi"), \
-                    "2":episode.SourceEpisode(2,"b02.avi"), \
-                    "3":episode.SourceEpisode(3,"c01.avi")}
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"a01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"b02.avi"), \
+                    "3":tvImpl.SourceEpisode(3,"c01.avi")}
     act.setKeyForFilename(3, "c01.avi")
     self.assertEqual(act, exp)
     
   def test_switchUnresolvedKeyForExistingResolvedKey(self):
     act = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
-    exp = episode.SourceEpisodeMap()
-    exp.matches = {"1":episode.SourceEpisode(1,"c01.avi"), \
-                    "2":episode.SourceEpisode(2,"b02.avi")}
-    exp.unresolved = [episode.SourceEpisode(episode.UNRESOLVED_KEY,"a01.avi")]
+    exp = tvImpl.SourceEpisodeMap()
+    exp.matches = {"1":tvImpl.SourceEpisode(1,"c01.avi"), \
+                    "2":tvImpl.SourceEpisode(2,"b02.avi")}
+    exp.unresolved = [tvImpl.SourceEpisode(tvImpl.UNRESOLVED_KEY,"a01.avi")]
     act.setKeyForFilename(1, "c01.avi")
     self.assertEqual(act, exp)
 
   def test_switchUnresolvedKeyForUnresolvedKey(self):
     before = tvManager.TvHelper.getSourceEpisodeMapFromFilenames(["a01.avi", "b02.avi", "c03.avi", "xxx.avi"])
     after = copy.copy(before)
-    after.setKeyForFilename(episode.UNRESOLVED_KEY, "xxx.avi")
+    after.setKeyForFilename(tvImpl.UNRESOLVED_KEY, "xxx.avi")
     self.assertEqual(before, after)
 
 # --------------------------------------------------------------------------------------------------------------------

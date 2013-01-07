@@ -41,6 +41,9 @@ class BaseWorkBenchModel(object):
   def getAvailableActions(self, index):
     raise NotImplementedError("BaseWorkBenchModel.getAvailableActions not implemented")
   
+  def getMoveItem(self, index):
+    raise NotImplementedError("BaseWorkBenchModel.getMoveItem not implemented")  
+  
 # --------------------------------------------------------------------------------------------------------------------
 class _ActionHolder:
   def __init__(self, button, parent, cb, shortcut, index):
@@ -210,6 +213,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     for action, isEnabled in self._model.getAvailableActions(self._currentIndex).items():
       self._actions[action].button.setEnabled(isEnabled)
       self._actions[action].action.setEnabled(isEnabled)
+    
     
   def _deleteLocation(self, location):
     isDel = False

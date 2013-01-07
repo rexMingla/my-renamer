@@ -14,9 +14,7 @@ from common import fileHelper
 from common import utils
 from common import workBench
 
-import episode
-import moveItemCandidate
-import season
+import tvImpl
 import tvManager
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -31,20 +29,20 @@ class SeriesDelegate(QtGui.QStyledItemDelegate):
       return None
 
     season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+    if ep.matchType() == tvImpl.MoveItemCandidate.MISSING_OLD:
       return None
 
     if index.column() == Columns.COL_NEW_NAME:
       comboBox = QtGui.QComboBox(parent)
       
-      comboBox.addItem("Not set", episode.UNRESOLVED_KEY)
+      comboBox.addItem("Not set", tvImpl.UNRESOLVED_KEY)
       comboBox.insertSeparator(1)
       # fill it
 
       moveItemCandidates = copy.copy(season.moveItemCandidates)
       moveItemCandidates = sorted(moveItemCandidates, key=lambda item: item.destination.epNum)
       for mi in moveItemCandidates:
-        if mi.destination.epName != episode.UNRESOLVED_NAME:
+        if mi.destination.epName != tvImpl.UNRESOLVED_NAME:
           displayName = "{}: {}".format(mi.destination.epNum, mi.destination.epName)
           comboBox.addItem(displayName, mi.destination.epNum)
       comboBox.setCurrentIndex(comboBox.findData(ep.source.epNum))
@@ -59,7 +57,7 @@ class SeriesDelegate(QtGui.QStyledItemDelegate):
       return None
 
     season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+    if ep.matchType() == tvImpl.MoveItemCandidate.MISSING_OLD:
       return None
 
     if index.column() == Columns.COL_NEW_NAME:
@@ -72,7 +70,7 @@ class SeriesDelegate(QtGui.QStyledItemDelegate):
       return None
 
     season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+    if ep.matchType() == tvImpl.MoveItemCandidate.MISSING_OLD:
       return None
 
     if index.column() == Columns.COL_NEW_NAME:
@@ -126,7 +124,7 @@ class TreeItem(object):
       return None
 
     if self.isMoveItemCandidate():
-      if role == QtCore.Qt.ForegroundRole and self.raw.matchType() == moveItemCandidate.MoveItemCandidate.MISSING_NEW:
+      if role == QtCore.Qt.ForegroundRole and self.raw.matchType() == tvImpl.MoveItemCandidate.MISSING_NEW:
         return QtGui.QBrush(QtCore.Qt.red)       
       if column == Columns.COL_OLD_NAME:
         if role == QtCore.Qt.ToolTipRole:
@@ -134,19 +132,19 @@ class TreeItem(object):
         else:
           return fileHelper.FileHelper.basename(self.raw.source.filename)
       elif column == Columns.COL_NEW_NUM:
-        if self.raw.destination.epNum == episode.UNRESOLVED_KEY:
+        if self.raw.destination.epNum == tvImpl.UNRESOLVED_KEY:
           return None
         else:
           return self.raw.destination.epNum
       elif column == Columns.COL_NEW_NAME:
         return self.raw.destination.epName
       elif column == Columns.COL_STATUS:
-        return moveItemCandidate.MoveItemCandidate.typeStr(self.raw.matchType())
+        return tvImpl.MoveItemCandidate.typeStr(self.raw.matchType())
       elif column == Columns.COL_FILE_SIZE:
-        if self.raw.matchType() != moveItemCandidate.MoveItemCandidate.MISSING_OLD:
+        if self.raw.matchType() != tvImpl.MoveItemCandidate.MISSING_OLD:
           return utils.bytesToString(self.raw.source.fileSize) 
     elif self.isSeason():
-      isResolved = self.raw.seasonNum == episode.UNRESOLVED_KEY
+      isResolved = self.raw.seasonNum == tvImpl.UNRESOLVED_KEY
       if role == QtCore.Qt.ForegroundRole and isResolved:
         return QtGui.QBrush(QtCore.Qt.red)      
       elif column == Columns.COL_OLD_NAME:
@@ -168,10 +166,10 @@ class TreeItem(object):
     return 0
 
   def isSeason(self):
-    return isinstance(self.raw, season.Season)
+    return isinstance(self.raw, tvImpl.Season)
 
   def isMoveItemCandidate(self):
-    return isinstance(self.raw, moveItemCandidate.MoveItemCandidate)
+    return isinstance(self.raw, tvImpl.MoveItemCandidate)
 
   def canCheck(self):
     if self.isMoveItemCandidate():
@@ -431,7 +429,7 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     return parent.childCount()
 
   def addItem(self, s):
-    utils.verifyType(s, season.Season)
+    utils.verifyType(s, tvImpl.Season)
     #check if already in list
     self.beginInsertRows(QtCore.QModelIndex(), len(self._seasons), len(self._seasons))
     ti = TreeItem(s, self.rootItem)

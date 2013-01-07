@@ -12,7 +12,7 @@ from common import config
 from common import utils
 from common import workBench
 
-import season
+import tvImpl
 import tvModel
 import tvManager
 
@@ -103,7 +103,7 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     
   def _onChangeSeasonFinished(self):
     data = self._changeSeasonWidget.data()
-    utils.verifyType(data, season.Season)
+    utils.verifyType(data, tvImpl.Season)
     self._manager.setItem(data.itemToInfo())
     self._model.setData(self._currentIndex, data, tvModel.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)
