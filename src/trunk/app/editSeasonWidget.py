@@ -15,11 +15,12 @@ from common import infoClient
 from common import fileHelper
 from common import thread
 from common import utils
-from tv import episode
-from tv import season
+
+from tv import tvImpl
 from tv import tvInfoClient
 
 import searchResultsWidget
+
 _TITLE_COLUMN = 0
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -45,7 +46,7 @@ class EditSeasonWidget(QtGui.QDialog):
     uic.loadUi("ui/ui_ChangeSeason.ui", self)
     self.setWindowModality(True)
     self._workerThread = None
-    self._data = season.Season("", 1, episode.SourceEpisodeMap(), episode.DestinationEpisodeMap(), "")
+    self._data = tvImpl.Season("", 1, tvImpl.SourceEpisodeMap(), tvImpl.DestinationEpisodeMap(), "")
     
     self.searchButton.clicked.connect(self._search)
     self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
@@ -202,7 +203,7 @@ class EditSeasonWidget(QtGui.QDialog):
   
   def setData(self, s):
     """ Fill the dialog with the data prior to being shown """
-    utils.verifyType(s, season.Season)
+    utils.verifyType(s, tvImpl.Season)
     self._data = s
     self.folderEdit.setText(fileHelper.FileHelper.basename(s.inputFolder))    
     self.folderEdit.setToolTip(s.inputFolder)    
@@ -210,7 +211,7 @@ class EditSeasonWidget(QtGui.QDialog):
     self.seasonEdit.selectAll()    
     
   def _setEpisodeMap(self, episodeMap):
-    utils.verifyType(episodeMap, episode.DestinationEpisodeMap)
+    utils.verifyType(episodeMap, tvImpl.DestinationEpisodeMap)
     self.seasonEdit.setText(episodeMap.showName)
     self.seasonSpin.setValue(episodeMap.seasonNum)    
     self.episodeTable.clearContents()
@@ -229,11 +230,11 @@ class EditSeasonWidget(QtGui.QDialog):
     self._onSelectionChanged()
     
   def data(self):   
-    destMap = episode.DestinationEpisodeMap(utils.toString(self.seasonEdit.text()), self.seasonSpin.value()) 
+    destMap = tvImpl.DestinationEpisodeMap(utils.toString(self.seasonEdit.text()), self.seasonSpin.value()) 
     startIndex = self.indexSpinBox.value()
     for i in range(self.episodeTable.rowCount()):
       epName = self.episodeTable.item(i, _TITLE_COLUMN)
-      destMap.addItem(episode.DestinationEpisode(i + startIndex, utils.toString(epName.text())))
+      destMap.addItem(tvImpl.DestinationEpisode(i + startIndex, utils.toString(epName.text())))
     self._data.updateDestination(destMap)
     return copy.copy(self._data)
   
