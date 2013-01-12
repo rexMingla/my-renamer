@@ -298,7 +298,6 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
   def __init__(self, parent=None):
     super(QtCore.QAbstractItemModel, self).__init__(parent)
     super(workBench.BaseWorkBenchModel, self).__init__()
-    self._seasons = []
     self.rootItem = None
     self._bulkProcessing = False
     self.clear()
@@ -453,19 +452,18 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
   def addItem(self, s):
     utils.verifyType(s, tvImpl.Season)
     #check if already in list
-    self.beginInsertRows(QtCore.QModelIndex(), len(self._seasons), len(self._seasons))
+    rowCount = self.rowCount(QtCore.QModelIndex())
+    self.beginInsertRows(QtCore.QModelIndex(), rowCount, rowCount)
     ti = ContainerItem(s, self.rootItem)
     self.rootItem.appendChild(ti)
     for mi in s.episodeMoveItems:
       ti.appendChild(LeafItem(mi, ti))
-    self._seasons.append(s)
     self.endInsertRows()     
     if not self._bulkProcessing:
       self._emitWorkBenchChanged()    
 
   def clear(self):
     self.beginResetModel()
-    self._seasons = []
     self.rootItem = ContainerItem(("",))  
     self.endResetModel()
     if not self._bulkProcessing:
@@ -528,7 +526,6 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     if item.isSeason():
       self.beginRemoveRows(index.parent(), row, row)
       self.rootItem.childItems.pop(row)
-      self._seasons.pop(row)
       self.endRemoveRows()
     else:
       parentItem = item.parent
