@@ -44,28 +44,28 @@ class TvHelper:
     return tvInfoClient.TvSearchParams(show, seriesNum)
   
   @staticmethod
-  def getSourceEpisodeMapFromFilenames(filenames):
+  def getSourcesFromFilenames(filenames):
     def getCandidateEpisodeNumsFromFilename(filename):
       """ returns a list of numbers for the filename """
       return [int(m[-2:]) for m in re.findall("\d+", fileHelper.FileHelper.basename(filename))] or [tvImpl.UNRESOLVED_KEY]
 
     if not filenames:
-      return tvImpl.SourceEpisodeMap()
+      return tvImpl.SourceFiles()
     
     eps = [(f, getCandidateEpisodeNumsFromFilename(f)) for f in filenames]
     maxIndexes = max(len(ep[1]) for ep in eps)
-    epMaps = []
+    ret = []
     for i in range(maxIndexes):
-      epMap = tvImpl.SourceEpisodeMap()
+      sources = tvImpl.SourceFiles()
       for f, indexes in eps:
-        epMap.addItem(tvImpl.SourceEpisode(indexes[i] if i < len(indexes) else tvImpl.UNRESOLVED_KEY, f))
-      epMaps.append(epMap)
+        sources.append(tvImpl.SourceFile(indexes[i] if i < len(indexes) else tvImpl.UNRESOLVED_KEY, f))
+      ret.append(sources)
     for i in range(maxIndexes):
-      epMap = tvImpl.SourceEpisodeMap()
+      sources = tvImpl.SourceFiles()
       for f, indexes in eps:
-        epMap.addItem(tvImpl.SourceEpisode(indexes[- i - 1] if i < len(indexes) else tvImpl.UNRESOLVED_KEY, f))
-      epMaps.append(epMap)
-    return max(epMaps, key=lambda epMap: len(epMap.matches))
+        sources.append(tvImpl.SourceFile(indexes[- i - 1] if i < len(indexes) else tvImpl.UNRESOLVED_KEY, f))
+      ret.append(sources)
+    return max(ret, key=lambda sources: len([source for source in sources if source.epNum != tvImpl.UNRESOLVED_KEY]))
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvManager(manager.BaseManager):
@@ -93,12 +93,11 @@ class TvManager(manager.BaseManager):
     files = [f for f in tempFiles if fileHelper.FileHelper.isFile(f) and fileHelper.FileHelper.getFileSize(f) > minFileSizeBytes]
     s = None
     if not searchParams.showName == tvImpl.UNRESOLVED_NAME or len(files):
-      sourceMap = TvHelper.getSourceEpisodeMapFromFilenames(files)
-      destMap = tvImpl.DestinationEpisodeMap(searchParams.showName, searchParams.seasonNum)
+      sources = TvHelper.getSourcesFromFilenames(files)
+      info = tvImpl.SeasonInfo(searchParams.showName, searchParams.seasonNum)
       if searchParams.showName != tvImpl.UNRESOLVED_NAME:
-        destMap = self.getItem(searchParams)
-      s = tvImpl.Season(searchParams.showName, searchParams.seasonNum, sourceMap, destMap, folder)
-      s.inputFolder = folder
+        info = self.getItem(searchParams)
+      s = tvImpl.Season(folder, info, sources)
     return s 
 
 _MANAGER = None  

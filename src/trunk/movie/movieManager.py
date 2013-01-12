@@ -42,9 +42,9 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
                  Result.FOUND)
 
 # --------------------------------------------------------------------------------------------------------------------
-class Movie(renamer.BaseRenameItem):
+class MovieRenameItem(renamer.BaseRenameItem):
   def __init__(self, filename, title, part="", year="", subsFiles=None, series=""):
-    super(Movie, self).__init__()
+    super(MovieRenameItem, self).__init__()
     self.filename = filename #utils.toString(filename)
     self.fileSize = fileHelper.FileHelper.getFileSize(filename)
     self.ext = fileHelper.FileHelper.extension(filename)
@@ -61,7 +61,7 @@ class Movie(renamer.BaseRenameItem):
     return self.genres[0] if self.genres else valueIfNull
    
   def __copy__(self):
-    ret = Movie(self.filename, self.title, self.part, self.year, series=self.series)
+    ret = MovieRenameItem(self.filename, self.title, self.part, self.year, series=self.series)
     ret.result = self.result
     ret.genres = list(self.genres)
     return ret
@@ -116,7 +116,7 @@ class MovieHelper:
         title = title.replace(".", " ")
       title = re.sub(r"[\(\[\{\s]+$", "", title) #clean end
       title = re.sub(r"^\w+\-", "", title) #strip anywords at the start before a - character
-    movie = Movie(filename, title, part, year)
+    movie = MovieRenameItem(filename, title, part, year)
     movie.result = result
     return movie  
     

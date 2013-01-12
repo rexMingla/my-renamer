@@ -71,16 +71,16 @@ class LogModel(QtCore.QAbstractTableModel):
     if role == QtCore.Qt.ForegroundRole and item.logLevel >= LogLevel.ERROR:
       return QtGui.QBrush(QtCore.Qt.red)      
     elif role == LogModel.LOG_LEVEL_ROLE:
-      return QtCore.QVariant(item.logLevel)
+      return item.logLevel
     #if index.column() == LogColumns.COL_LEVEL: 
     #  return logging.getLevelName(item.logLevel)
     if index.column() == LogColumns.COL_ACTION:
-      return QtCore.QVariant(item.action)
+      return item.action
     elif index.column() == LogColumns.COL_MESSAGE: 
       if role == QtCore.Qt.DisplayRole:
-        return QtCore.QVariant(item.shortMessage)
+        return item.shortMessage
       else:
-        return QtCore.QVariant(item.longMessage)
+        return item.longMessage
     else: 
       return None  
   
@@ -91,9 +91,9 @@ class LogModel(QtCore.QAbstractTableModel):
     #if section == LogColumns.COL_LEVEL: 
     #  return "Type"
     if section == LogColumns.COL_ACTION:
-      return QtCore.QVariant("Action")
+      return "Action"
     elif section == LogColumns.COL_MESSAGE: 
-      return QtCore.QVariant("Message")
+      return "Message"
     
   def addItem(self, item):
     utils.verifyType(item, LogItem)

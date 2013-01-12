@@ -43,7 +43,7 @@ def _runTests():
 
   suite = unittest.TestSuite([
     unittest.TestLoader().loadTestsFromModule(test_renamer),
-    #unittest.TestLoader().loadTestsFromModule(test_move)
+    unittest.TestLoader().loadTestsFromModule(test_move)
   ])
   
   runner = unittest.TextTestRunner(verbosity=2)

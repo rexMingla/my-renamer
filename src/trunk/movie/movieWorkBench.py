@@ -87,13 +87,13 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
       
   def _editMovie(self):
     movie = self._model.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
-    utils.verifyType(movie, movieManager.Movie)
+    utils.verifyType(movie, movieManager.MovieRenameItem)
     self._changeMovieWidget.setData(movie)
     self._changeMovieWidget.show()    
       
   def _onChangeMovieFinished(self):
     data = self._changeMovieWidget.data()    
-    utils.verifyType(data, movieManager.Movie)
+    utils.verifyType(data, movieManager.MovieRenameItem)
     self._manager.setItem(data.itemToInfo())
     self._model.setData(self._currentIndex, data, tvModel.RAW_DATA_ROLE)
     

@@ -53,7 +53,7 @@ _OK = "Ok"
 class MovieItem(object):
   def __init__(self, movie, index):
     super(MovieItem, self).__init__()
-    utils.verifyType(movie, movieManager.Movie)
+    utils.verifyType(movie, movieManager.MovieRenameItem)
     self.movie = movie
     self.index = index
     self.wantToMove = True
@@ -169,7 +169,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
       return False
     
     if role == RAW_DATA_ROLE:
-      utils.verifyType(value, movieManager.Movie)
+      utils.verifyType(value, movieManager.MovieRenameItem)
       item = self._movies[index.row()]
       newMovie = copy.copy(value)
       if item.movie != newMovie:
@@ -235,7 +235,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
       self._emitWorkBenchChanged()    
   
   def addItem(self, m):
-    utils.verifyType(m, movieManager.Movie)
+    utils.verifyType(m, movieManager.MovieRenameItem)
     #check if already in list
     count = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
