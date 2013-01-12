@@ -33,22 +33,22 @@ class EditEpisodeWidget(QtGui.QDialog):
   def setData(self, ssn, ep):
     """ Fill the dialog with the data prior to being shown """
     utils.verifyType(ssn, tvImpl.Season)
-    utils.verifyType(ep, tvImpl.MoveItemCandidate)
+    utils.verifyType(ep, tvImpl.EpisodeRenameItem)
     self.episodeComboBox.clear()
-    moveItemCandidates = copy.copy(ssn.moveItemCandidates)
-    moveItemCandidates = sorted(moveItemCandidates, key=lambda item: item.destination.epNum)
-    for mi in moveItemCandidates:
-      if mi.destination.epName != tvImpl.UNRESOLVED_NAME:
-        displayName = "{}: {}".format(mi.destination.epNum, mi.destination.epName)
-        self.episodeComboBox.addItem(displayName, mi.destination.epNum)
-    index = self.episodeComboBox.findData(ep.source.epNum)
+    episodeMoveItems = copy.copy(ssn.episodeMoveItems)
+    episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
+    for mi in episodeMoveItems:
+      if mi.info.epName != tvImpl.UNRESOLVED_NAME:
+        displayName = "{}: {}".format(mi.info.epNum, mi.info.epName)
+        self.episodeComboBox.addItem(displayName, mi.info.epNum)
+    index = self.episodeComboBox.findData(ep.info.epNum)
     if index != -1:
       self.pickFromListRadio.setChecked(True)
       self.episodeComboBox.setCurrentIndex(index)
     else:
       self.ignoreRadio.setChecked(True)
-    self.filenameEdit.setText(fileHelper.FileHelper.basename(ep.source.filename))
-    self.filenameEdit.setToolTip(ep.source.filename)
+    self.filenameEdit.setText(fileHelper.FileHelper.basename(ep.filename))
+    self.filenameEdit.setToolTip(ep.filename)
     self.episodeComboBox.setEnabled(index != -1)
     
   def episodeNumber(self):
@@ -59,5 +59,5 @@ class EditEpisodeWidget(QtGui.QDialog):
     if self.ignoreRadio.isChecked():
       return tvImpl.UNRESOLVED_KEY
     else:
-      return self.episodeComboBox.itemData(self.episodeComboBox.currentIndex())
+      return self.episodeComboBox.itemData(self.episodeComboBox.currentIndex()).toInt()[0]
    

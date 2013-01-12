@@ -46,7 +46,7 @@ class EditSeasonWidget(QtGui.QDialog):
     uic.loadUi("ui/ui_ChangeSeason.ui", self)
     self.setWindowModality(True)
     self._workerThread = None
-    self._data = tvImpl.Season("", 1, tvImpl.SourceEpisodeMap(), tvImpl.DestinationEpisodeMap(), "")
+    self._data = tvImpl.Season("", tvImpl.SeasonInfo(), tvImpl.SourceFiles())
     
     self.searchButton.clicked.connect(self._search)
     self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
@@ -66,7 +66,7 @@ class EditSeasonWidget(QtGui.QDialog):
     self.seasonSpin.installEventFilter(self)
 
     self._searchResults = searchResultsWidget.SearchResultsWidget(self)
-    self._searchResults.itemSelectedSignal.connect(self._setEpisodeMap)
+    self._searchResults.itemSelectedSignal.connect(self._setSeasonInfo)
     lo = QtGui.QVBoxLayout()
     lo.setContentsMargins(0, 0, 0, 0)
     self.placeholderWidget.setLayout(lo)
@@ -143,11 +143,11 @@ class EditSeasonWidget(QtGui.QDialog):
       return
     
     if self._isLucky:
-      self._setEpisodeMap(data.info)
+      self._setSeasonInfo(data.info)
     else:
       if not self._foundData:
         self._searchResults.clear()
-        self._searchResults.addItem(infoClient.ResultHolder(self.data().destination, "current"))
+        self._searchResults.addItem(infoClient.ResultHolder(self.data().info, "current"))
       self._searchResults.addItem(data)
       self._showResults()
     self._foundData = True
@@ -207,35 +207,35 @@ class EditSeasonWidget(QtGui.QDialog):
     self._data = s
     self.folderEdit.setText(fileHelper.FileHelper.basename(s.inputFolder))    
     self.folderEdit.setToolTip(s.inputFolder)    
-    self._setEpisodeMap(s.destination)
+    self._setSeasonInfo(s.info)
     self.seasonEdit.selectAll()    
     
-  def _setEpisodeMap(self, episodeMap):
-    utils.verifyType(episodeMap, tvImpl.DestinationEpisodeMap)
-    self.seasonEdit.setText(episodeMap.showName)
-    self.seasonSpin.setValue(episodeMap.seasonNum)    
+  def _setSeasonInfo(self, info):
+    utils.verifyType(info, tvImpl.SeasonInfo)
+    self.seasonEdit.setText(info.showName)
+    self.seasonSpin.setValue(info.seasonNum)    
     self.episodeTable.clearContents()
     
-    minValue = min(map(int, episodeMap.matches) or [0])
-    maxValue = max(map(int, episodeMap.matches) or [-1])
+    minValue = min([ep.epNum for ep in info.episodes] or [0])
+    maxValue = max([ep.epNum for ep in info.episodes] or [-1])
     self.indexSpinBox.setValue(minValue)
     
     epNums = map(str, range(minValue, maxValue + 1))
     self.episodeTable.setRowCount(len(epNums))
     for i, epNum in enumerate(epNums):
-      ep = episodeMap.matches.get(epNum, "")
+      ep = info.episodes[i]
       item = QtGui.QTableWidgetItem(ep.epName)
       item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)
       self.episodeTable.setItem(i, _TITLE_COLUMN, item)
     self._onSelectionChanged()
     
   def data(self):   
-    destMap = tvImpl.DestinationEpisodeMap(utils.toString(self.seasonEdit.text()), self.seasonSpin.value()) 
+    info = tvImpl.SeasonInfo(utils.toString(self.seasonEdit.text()), self.seasonSpin.value()) 
     startIndex = self.indexSpinBox.value()
     for i in range(self.episodeTable.rowCount()):
       epName = self.episodeTable.item(i, _TITLE_COLUMN)
-      destMap.addItem(tvImpl.DestinationEpisode(i + startIndex, utils.toString(epName.text())))
-    self._data.updateDestination(destMap)
+      info.episodes.append(tvImpl.EpisodeInfo(i + startIndex, utils.toString(epName.text())))
+    self._data.updateSeasonInfo(info)
     return copy.copy(self._data)
   
   def _showResults(self):

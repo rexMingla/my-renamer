@@ -21,7 +21,6 @@ class FileExtensions:
   ALL_FILES = ".*"
   
   def __init__(self, extensions):
-    utils.verifyType(extensions, list)
     if isinstance(extensions, basestring):
       self.setExtensionsFromString(extensions)
     else:

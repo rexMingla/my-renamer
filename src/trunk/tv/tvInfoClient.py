@@ -37,7 +37,7 @@ class TvSearchParams(infoClient.BaseInfoClientSearchParams):
     return utils.sanitizeString("{} ({})".format(self.showName, self.seasonNum))
 
   def toInfo(self):
-    return tvImpl.DestinationEpisodeMap(self.showName, self.seasonNum)
+    return tvImpl.SeasonInfo(self.showName, self.seasonNum)
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvInfo(infoClient.BaseInfo):
@@ -48,7 +48,7 @@ class TvInfo(infoClient.BaseInfo):
     
   def toDestEpisodeMap(self):
     #hack: this should be the same class
-    ret = tvImpl.DestinationEpisodeMap(self.showName, self.seasonNum)
+    ret = tvImpl.SeasonInfo(self.showName, self.seasonNum)
     for epNum, name in self.episodes.items():
       ret.matches[key] = copy.copy(value)
     return ret
@@ -84,13 +84,13 @@ class TvdbClient(BaseTvInfoClient):
     try:
       tv = tvdb_api.Tvdb()
       season = tv[searchParams.showName][searchParams.seasonNum]
-      eps = tvImpl.DestinationEpisodeMap(utils.sanitizeString(tv[searchParams.showName]["seriesname"], "") or 
+      eps = tvImpl.SeasonInfo(utils.sanitizeString(tv[searchParams.showName]["seriesname"], "") or 
                                           searchParams.showName, searchParams.seasonNum)
       ret.append(eps)
       for i in season:
         ep = season[i]
-        show = tvImpl.DestinationEpisode(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
-        eps.addItem(show)
+        show = tvImpl.EpisodeInfo(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
+        eps.episodes.append(show)
     except tvdb_exceptions.tvdb_exception as e:
       utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 
                                                                             searchParams.seasonNum, type(e), e), 
@@ -109,11 +109,11 @@ class TvRageClient(BaseTvInfoClient):
     try:
       tv = tvrage.api.Show(searchParams.showName)
       season = tv.season(searchParams.seasonNum)
-      eps = tvImpl.DestinationEpisodeMap(utils.sanitizeString(tv.name) or searchParams.showName, searchParams.seasonNum)
+      eps = tvImpl.SeasonInfo(utils.sanitizeString(tv.name) or searchParams.showName, searchParams.seasonNum)
       ret.append(eps)
       for ep in season.values():
-        show = tvImpl.DestinationEpisode(int(ep.number), utils.sanitizeString(ep.title))
-        eps.addItem(show)
+        show = tvImpl.EpisodeInfo(int(ep.number), utils.sanitizeString(ep.title))
+        eps.episodes.append(show)
     except tvrage.exceptions.BaseError as e:
       utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 
                                                                             searchParams.seasonNum, type(e), e), 

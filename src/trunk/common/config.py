@@ -32,7 +32,7 @@ class InputConfig(BaseConfig):
     return extension.ALL_FILE_EXTENSIONS if self.allExtensions else extension.FileExtensions(self.extensions.split())
 
   def getMinFileSizeBytes(self):
-    minSize = 0 if self.allFileSizes else self.minFileSizeBytes
+    return 0 if self.allFileSizes else self.minFileSizeBytes
 
 # --------------------------------------------------------------------------------------------------------------------
 class WorkbenchConfig(BaseConfig):

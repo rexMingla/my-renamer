@@ -171,7 +171,7 @@ class EditMovieWidget(QtGui.QDialog):
   
   def setData(self, item):
     """ Fill the dialog with the data prior to being shown """
-    utils.verifyType(item, movieManager.Movie)
+    utils.verifyType(item, movieManager.MovieRenameItem)
     self._item = item  
     self.filenameEdit.setText(fileHelper.FileHelper.basename(item.filename))
     self.filenameEdit.setToolTip(item.filename)

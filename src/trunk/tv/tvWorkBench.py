@@ -70,8 +70,8 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
   def _showItem(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
     if isMoveItemCandidate:
-      if (isMoveItemCandidate and moveItemCandidateData.canEdit and 
-          bool(self._model.data(self._currentIndex.parent(), tvModel.RAW_DATA_ROLE)[0].destination.matches)):
+      if (isMoveItemCandidate and moveItemCandidateData.canEdit and True):
+          #HACK bool(self._model.data(self._currentIndex.parent(), tvModel.RAW_DATA_ROLE)[0].destination.matches)):
         self._editEpisode()
       else:
         QtGui.QMessageBox.information(self, "Can not edit Episode", 
@@ -97,8 +97,7 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
       self._changeEpisodeWidget.show()
       
   def _onChangeEpisodeFinished(self):
-    newKey = self._changeEpisodeWidget.episodeNumber()
-    self._model.setData(self._currentIndex, QtCore.QVariant(newKey), tvModel.RAW_DATA_ROLE)
+    self._model.setData(self._currentIndex, self._changeEpisodeWidget.episodeNumber(), tvModel.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex.parent())
     
   def _onChangeSeasonFinished(self):

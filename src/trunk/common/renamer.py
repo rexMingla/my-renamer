@@ -62,15 +62,15 @@ class TvRenameItemGenerator(BaseRenameItemGenerator):
     ret = []
     outputFolder = self.config.getOutputFolder() or tv.inputFolder
     oFormat = outputFormat.OutputFormat(self.config.format)
-    for ep in tv.moveItemCandidates:
+    for ep in tv.episodeMoveItems:
       if ep.performMove:
-        im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(tv.seasonName), 
-                                     tv.seasonNum, 
-                                     ep.destination.epNum, 
-                                     fileHelper.FileHelper.replaceSeparators(ep.destination.epName))
-        newName = oFormat.outputToString(im, ep.source.ext, outputFolder)
+        im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(tv.info.showName), 
+                                     tv.info.seasonNum, 
+                                     ep.info.epNum, 
+                                     fileHelper.FileHelper.replaceSeparators(ep.info.epName))
+        newName = oFormat.outputToString(im, ep.ext, outputFolder)
         newName = fileHelper.FileHelper.sanitizeFilename(newName)
-        ret.append(FileRenamer(ep.source.filename, newName, canOverwrite=not self.config.dontOverwrite, 
+        ret.append(FileRenamer(ep.filename, newName, canOverwrite=not self.config.dontOverwrite, 
                                                             keepSource=not self.config.isMove,
                                                             subtitleExtensions=self.config.getSubtitles()))
     return ret    
