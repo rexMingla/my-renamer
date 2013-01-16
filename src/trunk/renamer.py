@@ -52,7 +52,7 @@ def _runTests():
 # --------------------------------------------------------------------------------------------------------------------
 def main(argv):
   utils.initLogging("log.txt")
-  cl = commandLine.CommandLineParser(argv)
+  cl = commandLine.CommandLineParser()
   if cl.showHelp:
     utils.logError(cl.usageMessage())
     return

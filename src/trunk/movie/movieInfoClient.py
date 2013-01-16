@@ -39,18 +39,26 @@ except ImportError:
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInfo(infoClient.BaseInfo):
   """ info retrieved from movie clients """ 
-  def __init__(self, title="", year=None, genres=None, series=""):
+  def __init__(self, title="", year=None, genres=None, series="", disc=None):
     super(MovieInfo, self).__init__()
     self.title = title
     self.year = year
     self.genres = genres or []
     self.series = series
+    self.disc = disc
     
   def __copy__(self):
     return MovieInfo(self.title, self.year, list(self.genres), self.series)
   
   def __str__(self):
     return self.title if not self.year else "{} ({})".format(self.title, self.year)
+  
+  def __eq__(self, other):
+    return (self.title == other.title and self.year == other.year and 
+            self.part == other.part and self.movie.getGenre() == other.getGenre())
+  
+  def getGenre(self, default=""):
+    return self.genres[0] if self.genres else default
   
   def toSearchParams(self):
     return MovieSearchParams(self.title, self.year)

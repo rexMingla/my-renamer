@@ -35,10 +35,10 @@ class EditEpisodeWidget(QtGui.QDialog):
     utils.verifyType(ssn, tvImpl.Season)
     utils.verifyType(ep, tvImpl.EpisodeRenameItem)
     self.episodeComboBox.clear()
-    episodeMoveItems = copy.copy(ssn.episodeMoveItems)
-    episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
-    for mi in episodeMoveItems:
-      if mi.info.epName != tvImpl.UNRESOLVED_NAME:
+    #episodeMoveItems = copy.copy(ssn.episodeMoveItems)
+    #episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
+    for mi in ssn.episodeMoveItems:
+      if mi.info.epNum != tvImpl.UNRESOLVED_KEY:
         displayName = "{}: {}".format(mi.info.epNum, mi.info.epName)
         self.episodeComboBox.addItem(displayName, mi.info.epNum)
     index = self.episodeComboBox.findData(ep.info.epNum)

@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Website:             http://code.google.com/p/dps-x509/
+# Website:             http://code.google.com/p/my-renamer/
 # Purpose of document: All the generic functions that don't have a more appropriate home
 # --------------------------------------------------------------------------------------------------------------------
 import logging
@@ -76,16 +76,6 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
                                                                   type(obj))
     logNotSet(text, title="utils.verifyType")
     #raise AssertionError(text)
-
-# --------------------------------------------------------------------------------------------------------------------
-def listCompare(left, right):
-  """ 
-  Compare two lists (both assumed to already be sorted). 
-  Returns False if the lists are different sizes or their contents do not match up and True othewise. """
-  verifyType(left, list)
-  verifyType(right, list)
-  isSame = len(left) == len(right) and all(l == r for l, r in zip(left, right))
-  return isSame
 
 # --------------------------------------------------------------------------------------------------------------------
 def dictCompare(left, right):

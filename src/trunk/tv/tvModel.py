@@ -12,10 +12,11 @@ from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
-from common import workBench
 
-import tvImpl
-import tvManager
+from app import workBenchWidget #HACK: wtf
+
+from tv import tvImpl
+from tv import tvManager
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesDelegate(QtGui.QStyledItemDelegate):
@@ -131,7 +132,7 @@ class BaseItem(object):
   def isSeason(self):
     return isinstance(self.raw, tvImpl.Season)
 
-  def isMoveItemCandidate(self):
+  def isEpisode(self):
     return isinstance(self.raw, tvImpl.EpisodeRenameItem)
   
   def setData(self, model, index, value, role):
@@ -148,6 +149,9 @@ class BaseItem(object):
 
   def setCheckState(self, cs):
     raise NotImplementedError("BaseItem.setCheckState not implemented")
+
+  def canEdit(self):
+    return False
 
 # --------------------------------------------------------------------------------------------------------------------
 class ContainerItem(BaseItem):
@@ -201,7 +205,7 @@ class ContainerItem(BaseItem):
     return any(c.canCheck() for c in self.childItems)
 
   def checkState(self):
-    cs = QtCore.Qt.Checked
+    cs = None
     checkedItems = [c.checkState() == QtCore.Qt.Checked for c in self.childItems if c.canCheck()]
     if not checkedItems or all(not c for c in checkedItems):
       cs = QtCore.Qt.Unchecked
@@ -225,8 +229,11 @@ class LeafItem(BaseItem):
       return None
 
     column = index.column()
-    if role == QtCore.Qt.ForegroundRole and self.raw.matchType() == tvImpl.EpisodeRenameItem.MISSING_NEW:
-      return QtGui.QBrush(QtCore.Qt.red)       
+    if role == QtCore.Qt.ForegroundRole:
+      if self.raw.matchType() == tvImpl.EpisodeRenameItem.MISSING_NEW:
+        return QtGui.QBrush(QtCore.Qt.red)       
+      elif self.raw.matchType() == tvImpl.EpisodeRenameItem.MISSING_OLD:
+        return QtGui.QBrush(QtCore.Qt.gray)       
     if column == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.ToolTipRole:
         return self.raw.filename
@@ -266,7 +273,7 @@ class LeafItem(BaseItem):
     elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       self.setCheckState(value)
       model.dataChanged.emit(index, index)
-      model.dataChanged.emit(index.parent(), index.parent())
+      #model.dataChanged.emit(index.parent(), index.parent())
       ret = True
     return ret
 
@@ -274,13 +281,19 @@ class LeafItem(BaseItem):
     return self.raw.canMove
 
   def checkState(self):
-    return QtCore.Qt.Checked if self.canCheck() and self.raw.performMove else QtCore.Qt.Unchecked
+    cs = None
+    if self.canCheck():
+      cs = QtCore.Qt.Checked if self.raw.performMove else QtCore.Qt.Unchecked
+    return cs
 
   def setCheckState(self, cs):    
     self.raw.performMove = cs == QtCore.Qt.Checked
 
+  def canEdit(self):
+    return bool(self.raw.filename)
+
 # --------------------------------------------------------------------------------------------------------------------
-class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
+class TvModel(QtCore.QAbstractItemModel, workBenchWidget.BaseWorkBenchModel):
   """ 
   Represents 0 or more tv seasons. Each folder (season) contains a collection of moveItemCandiates. 
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
@@ -289,15 +302,15 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
   beginUpdateSignal = QtCore.pyqtSignal()
   endUpdateSignal = QtCore.pyqtSignal()  
   
-  ALL_ACTIONS = (workBench.BaseWorkBenchModel.ACTION_DELETE,
-                 workBench.BaseWorkBenchModel.ACTION_LAUNCH,
-                 workBench.BaseWorkBenchModel.ACTION_OPEN,
-                 workBench.BaseWorkBenchModel.ACTION_EPISODE,
-                 workBench.BaseWorkBenchModel.ACTION_SEASON)
+  ALL_ACTIONS = (workBenchWidget.BaseWorkBenchModel.ACTION_DELETE,
+                 workBenchWidget.BaseWorkBenchModel.ACTION_LAUNCH,
+                 workBenchWidget.BaseWorkBenchModel.ACTION_OPEN,
+                 workBenchWidget.BaseWorkBenchModel.ACTION_EPISODE,
+                 workBenchWidget.BaseWorkBenchModel.ACTION_SEASON)
 
   def __init__(self, parent=None):
     super(QtCore.QAbstractItemModel, self).__init__(parent)
-    super(workBench.BaseWorkBenchModel, self).__init__()
+    super(workBenchWidget.BaseWorkBenchModel, self).__init__()
     self.rootItem = None
     self._bulkProcessing = False
     self.clear()
@@ -310,9 +323,9 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     if not index.isValid():
       return None
 
-    item = index.internalPointer()
+    item = self._getItem(index)
     ret = ""
-    if item.isMoveItemCandidate():
+    if item.isEpisode():
       ret = item.raw.filename 
     return ret
   
@@ -320,9 +333,9 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     if not index.isValid():
       return None
 
-    item = index.internalPointer()
+    item = self._getItem(index)
     ret = ""
-    if item.isMoveItemCandidate():
+    if item.isEpisode():
       ret = fileHelper.FileHelper.dirname(item.raw.filename)
     else:
       ret = item.raw.inputFolder
@@ -332,41 +345,46 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     if not index.isValid():
       return None
 
-    item = index.internalPointer()
+    item = self._getItem(index)
     ret = ""
-    if item.isMoveItemCandidate():
+    if item.isEpisode():
       ret = item.raw.filename
     else:
       ret = item.raw.inputFolder
     return ret
   
+  def canEdit(self, index):
+    if not index.isValid():
+      return False
+    return self._getItem(index).canEdit()
+  
+  def getMoveItem(self, index):
+    if not index.isValid():
+      return None
+    item = self._getItem(index)
+    return item.raw if item.isEpisode() and item.canCheck() else None
+  
   def getAvailableActions(self, index):
-    canEditEp = False
-    if index.isValid():
-      item = index.internalPointer()
-      moveItemCandidateData, isMoveItemCandidate = self.data(index, RAW_DATA_ROLE)
-      #filthy. check if parent has season info
-      canEditEp = (isMoveItemCandidate and moveItemCandidateData.canEdit and 
-                   True) #bool(self.data(index.parent(), RAW_DATA_ROLE)[0].info.matches))
+    canEditEp = self.canEdit(index)
     canLaunch = bool(self.getFile(index))
     canOpen = bool(self.getFolder(index))
     canDelete = bool(self.getDeleteItem(index))
     
     ret = {}
-    ret[workBench.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
-    ret[workBench.BaseWorkBenchModel.ACTION_SEASON] = canOpen
-    ret[workBench.BaseWorkBenchModel.ACTION_OPEN] = canOpen
-    ret[workBench.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
-    ret[workBench.BaseWorkBenchModel.ACTION_DELETE] = canDelete
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_SEASON] = canOpen
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_OPEN] = canOpen
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_DELETE] = canDelete
     return ret
 
   def data(self, index, role):
     if not index.isValid():
       return None
 
-    item = index.internalPointer()
+    item = self._getItem(index)
     if role == RAW_DATA_ROLE:
-      return (copy.copy(item.raw), item.isMoveItemCandidate()) #wow. this is confusing as hell..
+      return (copy.copy(item.raw), item.isEpisode()) #wow. this is confusing as hell..
 
     if role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_OLD_NAME:
       return item.checkState()
@@ -377,7 +395,7 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     if not index.isValid():
       return False
     
-    item = index.internalPointer()
+    item = self._getItem(index)
     ret = item.setData(self, index, value, role)
     
     if ret and not self._bulkProcessing:   
@@ -388,13 +406,11 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     if not index.isValid():
       return QtCore.Qt.NoItemFlags
 
-    item = index.internalPointer()
+    item = self._getItem(index)
 
-    f = QtCore.Qt.ItemIsSelectable
-    if item.canCheck() or index.column() == Columns.COL_OLD_NAME:
+    f = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+    if item.canCheck() and index.column() == Columns.COL_OLD_NAME:
       f |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsTristate
-    if item.canCheck() or not item.isMoveItemCandidate() or item.raw.canEdit:
-      f |= QtCore.Qt.ItemIsEnabled       
     return f
 
   def headerData(self, section, orientation, role):
@@ -430,7 +446,7 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     if not index.isValid():
       return QtCore.QModelIndex()
 
-    childItem = index.internalPointer()
+    childItem = self._getItem(index)
     p = childItem.parent
 
     if p == self.rootItem:
@@ -470,14 +486,12 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
       self._emitWorkBenchChanged()    
 
   def items(self):
-    seasons = []
-    for i in range(self.rootItem.childCount()):
-      seasonItem = self.rootItem.child(i)
-      utils.verify(seasonItem.isSeason(), "Not a Season")
-      raw = seasonItem.raw
-      if seasonItem.checkState() != QtCore.Qt.Unchecked:
-        seasons.append(raw)
-    return seasons
+    ret = []
+    for seasonItem in [self.rootItem.child(i) for i in range(self.rootItem.childCount())]:
+      for epItem in [seasonItem.child(i) for i in range(seasonItem.childCount())]:
+        if epItem.checkState() == QtCore.Qt.Checked:
+          ret.append(epItem.raw)
+    return ret
 
   def overallCheckedState(self):
     filteredItems = [i for i in self.rootItem.childItems if i.canCheck()]
@@ -515,6 +529,9 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
   def endUpdate(self):
     self._bulkProcessing = False
     self.endUpdateSignal.emit()
+    
+  def _getItem(self, index):
+    return index.internalPointer()
         
   def delete(self, index):
     if not index.isValid():
@@ -522,7 +539,7 @@ class TvModel(QtCore.QAbstractItemModel, workBench.BaseWorkBenchModel):
     
     oldCheckedState = self.overallCheckedState()
     row = index.row()
-    item = index.internalPointer()
+    item = self._getItem(index)
     if item.isSeason():
       self.beginRemoveRows(index.parent(), row, row)
       self.rootItem.childItems.pop(row)

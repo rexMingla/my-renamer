@@ -18,12 +18,13 @@ import factory
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenameThread(thread.AdvancedWorkerThread):  
-  def __init__(self, name, renameVisitor):
+  def __init__(self, name, renamer, items):
     super(RenameThread, self).__init__(name)
-    self._renameVisitor = renameVisitor
+    self._renamer = renamer
+    self._items = items
     
   def _getAllItems(self):
-    return self._renameVisitor.getRenamerItems()
+    return [self._renamer.getRenameItem(item) for item in self._items]
    
   def _applyToItem(self, item):
     ret = item.performAction(self._onPercentageComplete)
@@ -97,12 +98,13 @@ class RenamerModule(QtCore.QObject):
     self.outputWidget = factory.Factory.getOutputWidget(mode, parent)
     self.workBenchWidget = factory.Factory.getWorkBenchWidget(mode, parent)
     self._manager = factory.Factory.getManager(mode)
-    self._renamerItemGenerator = factory.Factory.getRenameItemGenerator(mode)
+    self._renamer = factory.Factory.getRenameItemGenerator(mode)
     self._widgets = (self.inputWidget, self.outputWidget, self.workBenchWidget)
     
     self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
     self.outputWidget.renameSignal.connect(self._rename)
     self.outputWidget.stopSignal.connect(self._stopRename)
+    self.workBenchWidget.renameItemChangedSignal.connect(self.outputWidget._onRenameItemChanged)    
     self.workBenchWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
     self.inputWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
     self.editSourcesWidget.accepted.connect(self.inputWidget.onSourcesWidgetFinished)
@@ -132,12 +134,6 @@ class RenamerModule(QtCore.QObject):
     self._workerThread.terminated.connect(self._onThreadFinished)    
     self._workerThread.start()
     
-  def _getExploreItems(self):
-    raise NotImplementedError("RenamerModule._getExploreItems not implemented")
-    
-  def _transformExploreItem(self, item):
-    raise NotImplementedError("RenamerModule._transformExploreItem not implemented")
-    
   def _rename(self):
     if self._workerThread and self._workerThread.isRunning():
       return
@@ -145,9 +141,8 @@ class RenamerModule(QtCore.QObject):
     for w in self._widgets:
       w.startActioning()
 
-    self._renamerItemGenerator.config = self.outputWidget.getConfig()
-    self._renamerItemGenerator.items = self.workBenchWidget.actionableItems()
-    self._workerThread = RenameThread("rename {}".format(self.mode), self._renamerItemGenerator)
+    self._renamer.config = self.outputWidget.getConfig()
+    self._workerThread = RenameThread("rename {}".format(self.mode), self._renamer, self.workBenchWidget.actionableItems())
     self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
     self._workerThread.logSignal.connect(self.logSignal)
     self._workerThread.finished.connect(self._onThreadFinished)

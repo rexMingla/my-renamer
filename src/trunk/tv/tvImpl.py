@@ -42,6 +42,20 @@ class EpisodeInfo(object):
 
   def __copy__(self):
     return EpisodeInfo(self.epNum, self.epName)
+
+# --------------------------------------------------------------------------------------------------------------------
+class AdvancedEpisodeInfo(EpisodeInfo):
+  """ Information about an output file """
+  def __init__(self, showName, seasonNum, epNum, epName):
+    super(AdvancedEpisodeInfo, self).__init__(epNum, epName)
+    self.showName = showName
+    self.seasonNum = seasonNum
+    
+  def __str__(self):
+    return "<AdvancedEpisodeInfo: #:{} name:{}>".format(self.epNum, self.epName)   
+
+  def __copy__(self):
+    return AdvancedEpisodeInfo(self.showName, self.seasonNum, self.epNum, self.epName)
   
 # -----------------------------------------------------------------------------------
 class EpisodeRenameItem(renamer.BaseRenameItem):
@@ -89,6 +103,9 @@ class EpisodeRenameItem(renamer.BaseRenameItem):
                                        self.info.epNum, 
                                        self.info.epName,
                                        EpisodeRenameItem.typeStr(self.matchType()) )
+  
+  def getInfo(self):
+    return self.info
 
 # -----------------------------------------------------------------------------------
 class SourceFile(object):
@@ -139,7 +156,7 @@ class SourceFiles(list):
   def _sort(self):
     #HACK: only really relevant for testing, but the sort is done primarily on key if possible then on filename
     self.sort(key=lambda s: "{}".format(s.epNum).zfill(3) if s.epNum != UNRESOLVED_KEY else "999{}".format(s.filename))
-
+    
 # -----------------------------------------------------------------------------------
 class SeasonInfo(infoClient.BaseInfo):
   """ contains list of """
@@ -170,7 +187,10 @@ class SeasonInfo(infoClient.BaseInfo):
 
   def toSearchParams(self):
     return tvInfoClient.TvSearchParams(self.showName, self.seasonNum)
-
+  
+  def hasData(self):
+    return bool(self.episodes)
+  
 # --------------------------------------------------------------------------------------------------------------------
 class Season:
   """ Creates a list of episodeMoveItems given a source and destination input map. """
@@ -213,7 +233,7 @@ class Season:
   def removeSourceFile(self, f):
     utils.verifyType(f, basestring)
     self.sources.removeFile(f)
-    self.updateSource(self.source)
+    self.updateSource(self.sources)
     
   def updateSeasonInfo(self, info):
     utils.verifyType(info, SeasonInfo)
@@ -238,10 +258,12 @@ class Season:
         if destEp.epNum != UNRESOLVED_KEY:
           tempSeasonInfo.episodes.remove(destEp)
         takenKeys.append(source.epNum)
+      destEp = AdvancedEpisodeInfo(self.info.showName, self.info.seasonNum, destEp.epNum, destEp.epName)
       self.episodeMoveItems.append(EpisodeRenameItem(source.filename, destEp))
       
-    for episode in tempSeasonInfo.episodes:
-      self.episodeMoveItems.append(EpisodeRenameItem("", episode))
+    for ep in tempSeasonInfo.episodes:
+      self.episodeMoveItems.append(EpisodeRenameItem("", AdvancedEpisodeInfo(self.info.showName, self.info.seasonNum, 
+                                                                             ep.epNum, ep.epName)))
         
     self.episodeMoveItems = sorted(self.episodeMoveItems, key=lambda item: item.info.epNum)
           
@@ -257,8 +279,9 @@ class Season:
     self.sources.setEpisodeForFilename(key, filename)
     self.updateSource(self.sources)
       
-  def itemToInfo(self):
+  def getInfo(self):
     return self.info
 
-  
+  def isValid(self):
+    return self.info.hasData()
  

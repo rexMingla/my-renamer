@@ -5,13 +5,16 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module that connects to movie info sources
 # --------------------------------------------------------------------------------------------------------------------
-from common import utils
+import abc
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfo(object):
   """ objects retrieved from InfoClients """
+  __metaclass__ = abc.ABCMeta
+  
+  @abc.abstractmethod
   def toSearchParams(self):
-    raise NotImplementedError("BaseInfo.toSearchParams not implemented")
+    pass
   
   def hasData(self):
     return True
@@ -19,12 +22,17 @@ class BaseInfo(object):
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClientSearchParams(object):
   """ objects sent to the InfoClients so to retrieve BaseInfo objects """
-  def getKey(self):
-    raise NotImplementedError("BaseInfoClientSearchParams.getKey not implemented")
   
+  __metaclass__ = abc.ABCMeta
+    
+  @abc.abstractmethod
+  def getKey(self):
+    pass
+  
+  @abc.abstractmethod
   def toInfo(self):
-    raise NotImplementedError("BaseInfoClientSearchParams.toInfo not implemented")
-
+    pass
+    
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoStoreHolder(object):
   """ container for all of the InfoClients """
@@ -79,14 +87,7 @@ class BaseInfoStoreHolder(object):
       if store.isActive():
         for info in store.getInfos(searchParams):
           yield ResultHolder(info, store.sourceName)  
-
-  def _getInfo(self, searchParams):
-    infos = self._getInfos(searchParams)
-    return infos[0] if infos else None
   
-  def _getInfos(self, searchParams):
-    raise NotImplementedError("BaseMovieInfoClient._getInfos not implemented")  
-
 # --------------------------------------------------------------------------------------------------------------------
 class ResultHolder:
   def __init__(self, info, sourceName):
@@ -96,6 +97,7 @@ class ResultHolder:
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClient(object):
   """ class to retrieve information from an online (or other) resource """
+  __metaclass__ = abc.ABCMeta
   
   def __init__(self, displayName, sourceName, url, hasLib, requiresKey):
     super(BaseInfoClient, self).__init__()
@@ -127,6 +129,6 @@ class BaseInfoClient(object):
     infos = self._getInfos(searchParams)
     return infos[0] if infos else None
   
+  @abc.abstractmethod
   def _getInfos(self, searchParams):
-    raise NotImplementedError("BaseMovieInfoClient.getInfos not implemented")
-  
+    pass

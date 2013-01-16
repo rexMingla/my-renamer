@@ -3,16 +3,17 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Generates an output filename based on TvInputMap attributes
+# Purpose of document: Generates an output filename based on TvInputValues attributes
 # --------------------------------------------------------------------------------------------------------------------
+import abc
+import re
+
 from common import utils
 from fileHelper import FileHelper
 
-import re
-
-_CONDITIONAL_START = "%("
-_CONDITIONAL_END = ")%"
-_RE_CONDITIONAL = re.compile("({}.*?{})".format(re.escape(_CONDITIONAL_START), re.escape(_CONDITIONAL_END)))
+CONDITIONAL_START = "%("
+CONDITIONAL_END = ")%"
+_RE_CONDITIONAL = re.compile("({}.*?{})".format(re.escape(CONDITIONAL_START), re.escape(CONDITIONAL_END)))
 
 def _leftPad(val, places=2):
   ret = utils.toString(val).zfill(places)
@@ -22,117 +23,98 @@ def _wrapReplaceStr(val):
   return "<{}>".format(val)
 
 # --------------------------------------------------------------------------------------------------------------------
-class InputMap(object):
-  def __init__(self):
-    super(InputMap, self).__init__()
-    self.data = {}
-    
-  @staticmethod
-  def helpInputMap():
-    raise NotImplementedError("InputMap.helpInputMap not implemented")
-
-  @staticmethod
-  def exampleInputMap():
-    raise NotImplementedError("InputMap.exampleInputMap not implemented")
+class InputValues(object):
+  __metaclass__ = abc.ABCMeta
   
-  @staticmethod
-  def defaultFormatStr():
-    raise NotImplementedError("InputMap.defaultFormatStr not implemented")
+  DEFAULT_FORMAT_STR = ""
+  
+  def __init__(self, info=None):
+    super(InputValues, self).__init__()
+    self.info = info
+    
+  @abc.abstractmethod
+  def getValues(self, info=None):
+    pass
     
 # --------------------------------------------------------------------------------------------------------------------
-class TvInputMap(InputMap):
+class TvInputValues(InputValues):
   """ Configurable attributes for output. """
   KEY_SHOW_NAME  = _wrapReplaceStr("show")
   KEY_SERIES_NUM = _wrapReplaceStr("s_num")
   KEY_EP_NUM     = _wrapReplaceStr("ep_num") 
   KEY_EP_NAME    = _wrapReplaceStr("ep_name")  
+  DEFAULT_FORMAT_STR = "<show> - S<s_num>E<ep_num> - <ep_name>"
 
-  def __init__(self, showName, seriesNum, epNum, epName):
-    super(TvInputMap, self).__init__()
-    utils.verifyType(showName, str)
-    utils.verify(isinstance(seriesNum, str) or isinstance(seriesNum, int), "str or int")
-    utils.verify(isinstance(epNum, str) or isinstance(epNum, int), "str or int")
-    utils.verifyType(epName, basestring)
-    self.data = {TvInputMap.KEY_SHOW_NAME:  showName,
-                 TvInputMap.KEY_SERIES_NUM: _leftPad(seriesNum),
-                 TvInputMap.KEY_EP_NUM:     _leftPad(epNum),
-                 TvInputMap.KEY_EP_NAME:    epName}
-
-  @staticmethod
-  def helpInputMap():
-    return TvInputMap("Show Name", "Series Number", "Episode Number", "Episode Name")
-
-  @staticmethod
-  def exampleInputMap():
-    return TvInputMap("Entourage", 1, 7, "The Scene")
-  
-  @staticmethod
-  def defaultFormatStr():
-    return "<show> - S<s_num>E<ep_num> - <ep_name>"
-  
+  def __init__(self, info=None):
+    super(TvInputValues, self).__init__(info)    
+    
+  def getValues(self, info=None):
+    ret = {}
+    info = info or self.info
+    if info:
+      ret = {TvInputValues.KEY_SHOW_NAME:  info.showName,
+             TvInputValues.KEY_SERIES_NUM: _leftPad(info.seasonNum),
+             TvInputValues.KEY_EP_NUM:     _leftPad(info.epNum),
+             TvInputValues.KEY_EP_NAME:    info.epName}  
+    return ret
+    
 # --------------------------------------------------------------------------------------------------------------------
-class MovieInputMap(InputMap):
+class MovieInputValues(InputValues):
   """ Configurable attributes for output. """
   KEY_TITLE  = _wrapReplaceStr("t")
   KEY_YEAR   = _wrapReplaceStr("y")
   KEY_GENRE  = _wrapReplaceStr("g")  
   KEY_DISC   = _wrapReplaceStr("p")  
-  KEY_SERIES = _wrapReplaceStr("s")  
+  KEY_SERIES = _wrapReplaceStr("s")
+  DEFAULT_FORMAT_STR = "<g>/%(<s> - )%<t> (<y>)%( - Disc <p>)%"
 
-  def __init__(self, title, year, genre, disc, series):
-    super(MovieInputMap, self).__init__()
-    utils.verifyType(title, str)
-    utils.verifyType(genre, str)
-    self.data = {MovieInputMap.KEY_TITLE: title,
-                 MovieInputMap.KEY_YEAR:  str(year),
-                 MovieInputMap.KEY_GENRE: genre,
-                 MovieInputMap.KEY_DISC: str(disc or ""),
-                 MovieInputMap.KEY_SERIES: series}
+  def __init__(self, info=None):
+    super(MovieInputValues, self).__init__(info)
+    
+  def getValues(self, info=None):
+    ret = {}
+    info = info or self.info
+    if info:
+      ret = {MovieInputValues.KEY_TITLE: info.title,
+             MovieInputValues.KEY_YEAR:  str(info.year),
+             MovieInputValues.KEY_GENRE: info.getGenre(""),
+             MovieInputValues.KEY_DISC: str(info.disc or ""),
+             MovieInputValues.KEY_SERIES: info.series}
+    return ret
 
-  @staticmethod
-  def helpInputMap():
-    return MovieInputMap("Title", "Year", "Genre", "Part", "Series")
-
-  @staticmethod
-  def exampleInputMap():
-    return MovieInputMap("The Twin Towers", 2002, "action", 1, "LOTR")
-  
-  @staticmethod
-  def defaultFormatStr():
-    return "<g>/%(<s> - )%<t> (<y>)%( - Disc <p>)%"
-      
 # --------------------------------------------------------------------------------------------------------------------
-class OutputFormat:
+class OutputFormat(object):
   """ 
   Resolution of input map to create output filename. 
   Eg. 
-  input_map.data_ = {"<show_name>":  "Entourage", 
-                     "<season_num>": 1, 
-                     "<ep_num>":     7, 
-                     "<ep_name>":    "The Scene"}
-  output_format = OutputFormat("<show_name> S<season_num>E<ep_num> <ep_name>)
-  output_format.outputToString(input_map, ".mpg")
-  Resolves to "Entourage S01E07 The Scene.mpg"
+  >>> inputValues = tvImpl.AdvancedEpisodeInfo("Entourage", 1, 7, "The Scene")
+  >>> outputFormat = OutputFormat("<show_name> S<season_num>E<ep_num> <ep_name>)
+  >>> outputFormat.outputToString(inputValues, ".mpg")
+  Entourage S01E07 The Scene.mpg
+  
   """
+  
   def __init__(self, formatStr):
+    super(OutputFormat, self).__init__()
     utils.verifyType(formatStr, str)
     self.formatStr = formatStr
     
   def outputToString(self, inputs, ext="", path=""):
-    utils.verifyType(inputs, InputMap)
+    utils.verifyType(inputs, InputValues)
     utils.verifyType(ext, str)
     ret = self.formatStr
+    keyValues = inputs.getValues().items()
     for match in _RE_CONDITIONAL.finditer(ret):
       text = match.group(1)
       newText = ""
-      if any(key in text and value for key, value in inputs.data.items()):
-        childFormat = OutputFormat(text[len(_CONDITIONAL_START):-len(_CONDITIONAL_END)]) #strip delimiters
+      if any(key in text and value for key, value in keyValues):
+        childFormat = OutputFormat(text[len(CONDITIONAL_START):-len(CONDITIONAL_END)]) #strip delimiters
         newText = childFormat.outputToString(inputs)
       ret = ret.replace(text, newText, 1)
     if path:
       ret = FileHelper.joinPath(path, ret)
-    for key, value in inputs.data.items(): #todo: fix this. i'm sure there is a built in function for this.
-      ret = ret.replace(key, value)
-    return ret + ext
+    for key, value in keyValues: #TODO: fix this. i'm sure there is a built in function for this.
+      ret = ret.replace(key, str(value))
+    return "".join([ret, ext])
 
   

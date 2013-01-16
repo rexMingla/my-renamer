@@ -175,29 +175,30 @@ class EditMovieWidget(QtGui.QDialog):
     self._item = item  
     self.filenameEdit.setText(fileHelper.FileHelper.basename(item.filename))
     self.filenameEdit.setToolTip(item.filename)
-    self.titleEdit.setText(item.title)
-    self.searchEdit.setText(item.title)
+    info = item.info
+    self.titleEdit.setText(info.title)
+    self.searchEdit.setText(info.title)
     self.searchEdit.selectAll()
-    self.yearEdit.setText(item.year or "")
-    self.genreEdit.setText(item.genre())
-    self.seriesEdit.setText(item.series)
-    if item.part:
-      self.partSpinBox.setValue(int(item.part))
-    self.partCheckBox.setChecked(bool(item.part))
+    self.yearEdit.setText(info.year or "")
+    self.genreEdit.setText(info.getGenre(""))
+    self.seriesEdit.setText(info.series)
+    if info.disc:
+      self.partSpinBox.setValue(int(info.disc))
+    self.partCheckBox.setChecked(bool(info.disc))
     
   def data(self):
-    self._item.title = utils.toString(self.titleEdit.text())
-    self._item.year = utils.toString(self.yearEdit.text())
+    self._item.info.title = utils.toString(self.titleEdit.text())
+    self._item.info.year = utils.toString(self.yearEdit.text())
     genre = utils.toString(self.genreEdit.text()).strip()
     if genre:
       genre = [genre]
     else:
       genre = []
-    self._item.genres = genre
-    self._item.part = None
+    self._item.info.genres = genre
+    self._item.info.part = None
     if self.partCheckBox.isChecked():
-      self._item.part = self.partSpinBox.value()
-    self._item.series = utils.toString(self.seriesEdit.text()).strip()
+      self._item.info.part = self.partSpinBox.value()
+    self._item.info.series = utils.toString(self.seriesEdit.text()).strip()
     return self._item
   
   def _showResults(self):

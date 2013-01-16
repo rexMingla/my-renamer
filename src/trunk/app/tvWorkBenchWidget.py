@@ -10,18 +10,18 @@ from PyQt4 import QtGui
 
 from common import config
 from common import utils
-from common import workBench
 
-import tvImpl
-import tvModel
-import tvManager
+from tv import tvImpl
+from tv import tvManager
+from tv import tvModel
 
-from app import editEpisodeWidget
-from app import editSeasonWidget
-from app import interfaces
+import editEpisodeWidget
+import editSeasonWidget
+import interfaces
+import workBenchWidget
 
 # --------------------------------------------------------------------------------------------------------------------
-class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
+class TvWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
   def __init__(self, manager, parent=None):
     super(TvWorkBenchWidget, self).__init__(interfaces.Mode.TV_MODE, manager, parent)
     self._setModel(tvModel.TvModel(self.tvView))
@@ -62,16 +62,16 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self.tvView.expandAll()
             
   def _onSelectionChanged(self, selection=None):
-    selection = selection or QtGui.QItemSelection()
+    selection = selection or self.tvView.selectionModel().selection()
     indexes = selection.indexes()
     self._currentIndex = indexes[0] if indexes else QtCore.QModelIndex()
     self._updateActions()
+    self.renameItemChangedSignal.emit(self._model.getMoveItem(self._currentIndex)) #HACK: consistent naming!
     
   def _showItem(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
     if isMoveItemCandidate:
-      if (isMoveItemCandidate and moveItemCandidateData.canEdit and True):
-          #HACK bool(self._model.data(self._currentIndex.parent(), tvModel.RAW_DATA_ROLE)[0].destination.matches)):
+      if self._model.canEdit(self._currentIndex):
         self._editEpisode()
       else:
         QtGui.QMessageBox.information(self, "Can not edit Episode", 
@@ -99,11 +99,12 @@ class TvWorkBenchWidget(workBench.BaseWorkBenchWidget):
   def _onChangeEpisodeFinished(self):
     self._model.setData(self._currentIndex, self._changeEpisodeWidget.episodeNumber(), tvModel.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex.parent())
+    self._onSelectionChanged()
     
   def _onChangeSeasonFinished(self):
     data = self._changeSeasonWidget.data()
     utils.verifyType(data, tvImpl.Season)
-    self._manager.setItem(data.itemToInfo())
+    self._manager.setItem(data.getInfo())
     self._model.setData(self._currentIndex, data, tvModel.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)
     

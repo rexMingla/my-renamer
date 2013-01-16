@@ -11,18 +11,19 @@ from common import interfaces
 from common import renamer
 from common import outputFormat
 
-from tv import tvManager
+from tv import tvImpl
 from tv import tvInfoClient
-from tv import tvWorkBench
+from tv import tvManager
 
 from movie import movieManager
 from movie import movieInfoClient
-from movie import movieWorkBench
 
 import editSourcesWidget
 import inputWidget
+import movieWorkBenchWidget
 import outputWidget
 import renamerModule
+import tvWorkBenchWidget
 
 # --------------------------------------------------------------------------------------------------------------------
 class Factory:
@@ -44,24 +45,37 @@ class Factory:
     
   @staticmethod
   def getOutputWidget(mode, parent=None):
-    fmt = Factory.getOutputFormat(mode)    
-    return outputWidget.OutputWidget(mode, fmt, parent)
+    manager = Factory.getInputValueManager(mode)    
+    return outputWidget.OutputWidget(mode, manager, parent)
+    
+  @staticmethod
+  def getInputValueManager(mode, parent=None):
+    if mode == interfaces.Mode.MOVIE_MODE:
+      return outputWidget.InputValueManager(outputFormat.MovieInputValues(),
+                                            movieInfoClient.MovieInfo("Title", "Year", 
+                                                                       "Genre", "Part", "Series"),
+                                            movieInfoClient.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
+    else:  
+      return outputWidget.InputValueManager(outputFormat.TvInputValues(),
+                                            tvImpl.AdvancedEpisodeInfo("Show Name", "Series Number", 
+                                                                       "Episode Number", "Episode Name"),
+                                            tvImpl.AdvancedEpisodeInfo("Entourage", 9, 3, "The Serenity Now"))
     
   @staticmethod
   def getWorkBenchWidget(mode, parent=None):
     manager = Factory.getManager(mode)
     if mode == interfaces.Mode.MOVIE_MODE:
-      return movieWorkBench.MovieWorkBenchWidget(manager, parent) 
+      return movieWorkBenchWidget.MovieWorkBenchWidget(manager, parent) 
     else:
-      return tvWorkBench.TvWorkBenchWidget(manager, parent)
+      return tvWorkBenchWidget.TvWorkBenchWidget(manager, parent)
     
   @staticmethod
   def getRenameItemGenerator(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return renamer.MovieRenameItemGenerator() 
-    else:
-      return renamer.TvRenameItemGenerator()
-  
+      return renamer.RenameItemGenerator(outputFormat.MovieInputValues())
+    else:  
+      return renamer.RenameItemGenerator(outputFormat.TvInputValues())
+    
   @staticmethod
   def getStoreHolder(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
@@ -81,6 +95,6 @@ class Factory:
     if mode == interfaces.Mode.MOVIE_MODE:
       return outputFormat.MovieInputMap
     else:
-      return outputFormat.TvInputMap
+      return outputFormat.TvInputValues
     
     

@@ -6,9 +6,7 @@
 # Purpose of document: Command line arguments for the program
 # --------------------------------------------------------------------------------------------------------------------
 import getopt
-import os
-
-from common import utils
+import sys
 
 class CommandLineParser:
   def usageMessage(self):
@@ -18,11 +16,11 @@ class CommandLineParser:
            "  -u --unittest  Run unit tests\n" + \
            "  -g --gui       Run gui (default)"
     if self._errorMessage:
-      ret += "Error: " + utils.toString(self._errorMessage)
+      ret += "Error: " + self._errorMessage
     return ret
 
-  def __init__(self, argv):
-    utils.verifyType(argv, list)
+  def __init__(self):
+    argv = sys.argv
     self._name = argv[0]
     self._errorMessage = ""
     try:
