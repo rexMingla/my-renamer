@@ -12,9 +12,10 @@ from PyQt4 import QtGui
 
 from common import fileHelper
 from common import utils
-from common import workBench
 
 import movieManager
+
+from app import workBenchWidget #HACK: movie importing from app...
 
 # --------------------------------------------------------------------------------------------------------------------
 class SortFilterModel(QtGui.QSortFilterProxyModel):
@@ -62,12 +63,10 @@ class MovieItem(object):
     
   def isMatch(self, other):
     utils.verifyType(other, MovieItem)
-    return (self.movie.result == movieManager.Result.FOUND and self.movie.result == other.movie.result and
-            self.movie.title == other.movie.title and self.movie.year == other.movie.year and 
-            self.movie.part == other.movie.part and self.movie.genre() == other.movie.genre())
+    return self.movie.result == movieManager.Result.FOUND and self.movie.info == other.movie.info
   
 # --------------------------------------------------------------------------------------------------------------------
-class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
+class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel):
   """ 
   Represents 0 or more movies
   """
@@ -75,14 +74,14 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
   beginUpdateSignal = QtCore.pyqtSignal()
   endUpdateSignal = QtCore.pyqtSignal() 
   
-  ALL_ACTIONS = (workBench.BaseWorkBenchModel.ACTION_DELETE,
-                 workBench.BaseWorkBenchModel.ACTION_LAUNCH,
-                 workBench.BaseWorkBenchModel.ACTION_OPEN,
-                 workBench.BaseWorkBenchModel.ACTION_MOVIE)  
+  ALL_ACTIONS = (workBenchWidget.BaseWorkBenchModel.ACTION_DELETE,
+                 workBenchWidget.BaseWorkBenchModel.ACTION_LAUNCH,
+                 workBenchWidget.BaseWorkBenchModel.ACTION_OPEN,
+                 workBenchWidget.BaseWorkBenchModel.ACTION_MOVIE)  
   
   def __init__(self, parent=None):
     super(QtCore.QAbstractTableModel, self).__init__(parent)
-    super(workBench.BaseWorkBenchModel, self).__init__()
+    super(workBenchWidget.BaseWorkBenchModel, self).__init__()
     self._movies = []
     self._bulkProcessing = False
     self._requireYear = True
@@ -90,11 +89,8 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
     self._flagDuplicates = True
     
   def getFile(self, index):
-    if not index.isValid():
-      return None
-  
-    item = self._movies[index.row()]    
-    return item.movie.filename
+    item = self.getMoveItem(index)
+    return item.movie.filename if item else ""
   
   def getFolder(self, index):
     ret = self.getFile(index)
@@ -104,15 +100,18 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
   
   def getDeleteItem(self, index):
     return self.getFile(index)
+  
+  def getMoveItem(self, index):
+    return self._movies[index.row()].movie if index.isValid() else None    
     
   def getAvailableActions(self, index):
     hasIndex = index.isValid()
     
     ret = {}
-    ret[workBench.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
-    ret[workBench.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
-    ret[workBench.BaseWorkBenchModel.ACTION_OPEN] = hasIndex
-    ret[workBench.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_OPEN] = hasIndex
+    ret[workBenchWidget.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
     return ret
     
   def columnCount(self, parent):
@@ -132,6 +131,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
     
     item = self._movies[index.row()]    
     movie = item.movie
+    info = movie.info
     if role == RAW_DATA_ROLE:
       return copy.copy(movie)
     
@@ -150,19 +150,19 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
       else:
         return movie.filename
     elif col == Columns.COL_NEW_NAME:
-      return movie.title
+      return info.title
     elif col == Columns.COL_DISC:
-      return movie.part
+      return info.disc
     elif col == Columns.COL_STATUS:
       return item.cachedStatusText
     elif col == Columns.COL_YEAR:
-      return movie.year
+      return info.year
     elif col == Columns.COL_GENRE:
-      return movie.genre()
+      return info.getGenre()
     elif col == Columns.COL_FILE_SIZE:
       return utils.bytesToString(movie.fileSize) if movie.result == movieManager.Result.FOUND else ""
     elif col == Columns.COL_SERIES:
-      return movie.series
+      return info.series
        
   def setData(self, index, value, role):
     if not index.isValid() or role not in (QtCore.Qt.CheckStateRole, RAW_DATA_ROLE):
@@ -262,12 +262,12 @@ class MovieModel(QtCore.QAbstractTableModel, workBench.BaseWorkBenchModel):
   def _updateItemStatusText(self, item):
     ret = ""
     if item.movie.result != movieManager.Result.FOUND:
-      ret = movieManager.Result.resultStr(self.movie.result)
+      ret = movieManager.Result.resultStr(item.movie.result)
     elif item.duplicates:
       ret = _DUPLICATE
-    elif self._requireYear and not item.movie.year:
+    elif self._requireYear and not item.movie.info.year:
       ret = _MISSING_YEAR
-    elif self._requireGenre and not item.movie.genres:
+    elif self._requireGenre and not item.movie.info.genres:
       ret = _MISSING_GENRE
     else:
       ret = _OK

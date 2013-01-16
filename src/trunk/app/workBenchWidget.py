@@ -62,6 +62,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   """ hacky and horrible base workbench widget """
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
   showEditSourcesSignal = QtCore.pyqtSignal()
+  renameItemChangedSignal = QtCore.pyqtSignal(object)
   
   def __init__(self, mode, manager, parent=None):
     super(BaseWorkBenchWidget, self).__init__("workBench/{}".format(mode), parent)
@@ -163,6 +164,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   def startExploring(self):
     self._model.clear()
     self._disable()
+    self._onSelectionChanged()
     self._model.beginUpdate()
   
   def stopExploring(self):

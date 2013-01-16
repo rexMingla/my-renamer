@@ -5,14 +5,18 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-import sys 
-import os
-sys.path.insert(0, os.path.abspath(__file__+"/../../"))
+if __name__ == "__main__":
+  import sys 
+  import os
+  sys.path.insert(0, os.path.abspath(__file__+"/../../"))
+
 import unittest
 
 from app import outputWidget
-from common import fileHelper, renamer, utils
-from tv import moveItemCandidate
+
+from common import fileHelper
+from common import renamer
+from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 def createTestFile(name):

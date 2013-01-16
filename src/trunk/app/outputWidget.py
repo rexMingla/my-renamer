@@ -16,6 +16,17 @@ from common import outputFormat
 from common import utils
 
 import interfaces
+
+# --------------------------------------------------------------------------------------------------------------------
+class InputValueManager:
+  def __init__(self, inputValues, helpInfo, exampleInfo, previewInfo=None):
+    self.inputValues = inputValues
+    self.helpInfo = helpInfo
+    self.exampleInfo = exampleInfo
+    self.previewInfo = previewInfo
+    
+  def getValues(self, info):
+    return self.inputValues.getValues(info)
       
 # --------------------------------------------------------------------------------------------------------------------
 class OutputWidget(interfaces.LoadWidgetInterface):
@@ -23,11 +34,13 @@ class OutputWidget(interfaces.LoadWidgetInterface):
   renameSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
   
-  def __init__(self, mode, fmt, parent=None):
+  def __init__(self, mode, inputValueManager, parent=None):
     super(OutputWidget, self).__init__("output/{}".format(mode), parent)    
     uic.loadUi("ui/ui_Output.ui", self)
     
-    self._setOutputFormat(fmt)
+    self._inputValueManager = inputValueManager
+    self._initFormat()
+    
     self.renameButton.clicked.connect(self.renameSignal)
     self.renameButton.setIcon(QtGui.QIcon("img/rename.png"))
     self.stopButton.clicked.connect(self.stopSignal)
@@ -77,19 +90,19 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self.renameButton.setVisible(True)
     self.renameButton.setEnabled(True)
     
-  def _setOutputFormat(self, fmt):
+  def _initFormat(self):
     def escapeHtml(text):
       return text.replace("<", "&lt;").replace(">", "&gt;")
     
-    self._fmt = fmt
     if self.formatEdit.text().isEmpty():
-      self.formatEdit.setText(self._fmt.defaultFormatStr())
+      self.formatEdit.setText(self._inputValueManager.inputValues.DEFAULT_FORMAT_STR)
     #tooltip
     
     helpText = ["Available options:"]
-    for key, value in self._fmt.helpInputMap().data.items():
+    helpValues = self._inputValueManager.getValues(self._inputValueManager.helpInfo)
+    for key, value in helpValues.items():
       helpText.append("<b>{}</b>: {}".format(escapeHtml(key), value))
-    if self._fmt.defaultFormatStr().find("%(") != -1:
+    if outputFormat.CONDITIONAL_START in self._inputValueManager.inputValues.DEFAULT_FORMAT_STR:
       helpText += ["", "Enclose text within <b>%( )%</b> to optionally include text is a value is present.",
                    "Eg. <b>%(</b> Disc <b>{}</b> <b>)%</b>".format(escapeHtml("<part>"))]
     self.helpEdit.setText("<html><body>{}</body></html>".format("<br/>".join(helpText)))
@@ -97,13 +110,17 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self._updatePreviewText()
     
   def _updatePreviewText(self):
-    text = utils.toString(self.formatEdit.text())
-    oFormat = outputFormat.OutputFormat(text)
-    formattedText = oFormat.outputToString(self._fmt.exampleInputMap())
+    oFormat = outputFormat.OutputFormat(utils.toString(self.formatEdit.text()))
+    self._inputValueManager.inputValues.info = self._inputValueManager.exampleInfo
+    prefixText = "Example"
+    if self._inputValueManager.previewInfo:
+      prefixText = "Preview"
+      self._inputValueManager.inputValues.info = self._inputValueManager.previewInfo
+    formattedText = oFormat.outputToString(self._inputValueManager.inputValues)
     color = "red"
     if fileHelper.FileHelper.isValidFilename(formattedText):
       color = "black"
-    formattedText = "Example: {}".format(fileHelper.FileHelper.sanitizeFilename(formattedText))
+    formattedText = "{}: {}".format(prefixText, fileHelper.FileHelper.sanitizeFilename(formattedText))
     self.formatExampleLabel.setText(formattedText)
     self.formatExampleLabel.setStyleSheet("QLabel {{ color: {}; }}".format(color))
     
@@ -127,7 +144,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
   def setConfig(self, data):
     data = data or config.OutputConfig()
     
-    self.formatEdit.setText(data.format or self._fmt.defaultFormatStr())
+    self.formatEdit.setText(data.format or self._inputValueManager.inputValues.DEFAULT_FORMAT_STR)
     self.specificDirectoryEdit.setText(data.folder)
     if data.useSource:
       self.useSourceDirectoryRadio.setChecked(True)
@@ -152,4 +169,10 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self.helpGroupBox.setVisible(False)
     self.hideHelpLabel.setVisible(False)
     self.showHelpLabel.setVisible(True)
+    
+  def _onRenameItemChanged(self, item):
+    info = item.getInfo() if item else None
+    if info != self._inputValueManager.previewInfo:
+      self._inputValueManager.previewInfo = info
+      self._updatePreviewText()
     

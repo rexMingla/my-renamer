@@ -68,9 +68,6 @@ class FileExtensions:
       ret = [f for f in files for ext in self._extensions_ if f.lower().endswith(ext)]
     return ret
   
-  def __eq__(self, other):
-    return utils.listCompare(self._extensions_, other._extensions_)
-
 ALL_FILE_EXTENSIONS         = FileExtensions([FileExtensions.ALL_FILES])
 DEFAULT_VIDEO_EXTENSIONS    = FileExtensions([".avi", ".divx", ".mkv", ".mpg", ".mp4", ".vob", ".wmv"])
 DEFAULT_SUBTITLE_EXTENSIONS = FileExtensions([".sub", ".srt", ".rar", ".sfv"])

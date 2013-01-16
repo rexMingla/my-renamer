@@ -43,34 +43,24 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieRenameItem(renamer.BaseRenameItem):
-  def __init__(self, filename, title, part="", year="", subsFiles=None, series=""):
+  def __init__(self, filename, info):
     super(MovieRenameItem, self).__init__()
     self.filename = filename #utils.toString(filename)
     self.fileSize = fileHelper.FileHelper.getFileSize(filename)
     self.ext = fileHelper.FileHelper.extension(filename)
-    self.title = utils.toString(title)
-    #self.subsFiles = subsFiles # not used atm
-    #dynamic properties
-    self.year = utils.toString(year)
-    self.genres = []
-    self.part = part #disc number
-    self.series = series
+    self.info = info
     self.result = None #Filthy, just temporary   
     
-  def genre(self, valueIfNull=""):
-    return self.genres[0] if self.genres else valueIfNull
-   
   def __copy__(self):
-    ret = MovieRenameItem(self.filename, self.title, self.part, self.year, series=self.series)
+    ret = MovieRenameItem(self.filename, copy.copy(self.info))
     ret.result = self.result
-    ret.genres = list(self.genres)
     return ret
   
   def __str__(self):
-    return self.title if not self.year else "{} ({})".format(self.title, self.year)
+    return str(self.info)
     
-  def itemToInfo(self):
-    return movieInfoClient.MovieInfo(self.title, self.year, list(self.genres), self.series)
+  def getInfo(self):
+    return self.info
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
@@ -116,7 +106,7 @@ class MovieHelper:
         title = title.replace(".", " ")
       title = re.sub(r"[\(\[\{\s]+$", "", title) #clean end
       title = re.sub(r"^\w+\-", "", title) #strip anywords at the start before a - character
-    movie = MovieRenameItem(filename, title, part, year)
+    movie = MovieRenameItem(filename, movieInfoClient.MovieInfo(title, year, genres=[], series="", disc=part))
     movie.result = result
     return movie  
     
@@ -130,10 +120,7 @@ class MovieManager(manager.BaseManager):
   def processFile(self, filename):
     movie = MovieHelper.extractMovieFromFile(filename)
     if movie.result == Result.FOUND:
-      info = self.getItem(movieInfoClient.MovieSearchParams(movie.title, movie.year))
-      movie.year = info.year or movie.year
-      movie.genres = info.genres or movie.genres
-      movie.title = info.title or movie.title      
+      movie.info = self.getItem(movieInfoClient.MovieSearchParams(movie.info.title, movie.info.year))
     return movie
 
 _MANAGER = None  

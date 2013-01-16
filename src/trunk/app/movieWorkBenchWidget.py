@@ -11,16 +11,16 @@ from PyQt4 import QtGui
 from common import config
 from common import renamer
 from common import utils
-from common import workBench
 
 from movie import movieModel
 from movie import movieManager
 
-from app import editMovieWidget
-from app import interfaces
+import editMovieWidget
+import interfaces
+import workBenchWidget
   
 # --------------------------------------------------------------------------------------------------------------------
-class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
+class MovieWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
   def __init__(self, manager, parent=None):
     super(MovieWorkBenchWidget, self).__init__(interfaces.Mode.MOVIE_MODE, manager, parent)
     self._setModel(movieModel.MovieModel(self.movieView))
@@ -80,10 +80,12 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
     self._editMovie()
 
   def _onSelectionChanged(self, selection=None):
-    selection = selection or QtGui.QItemSelection()
+    #HACK: rename to _updateWidget perhaps?
+    selection = selection or self.movieView.selectionModel().selection()
     indexes = selection.indexes()
     self._currentIndex = self._sortModel.mapToSource(indexes[0]) if indexes else QtCore.QModelIndex()
     self._updateActions()
+    self.renameItemChangedSignal.emit(self._model.getMoveItem(self._currentIndex)) #HACK: consistent naming!
       
   def _editMovie(self):
     movie = self._model.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
@@ -94,8 +96,9 @@ class MovieWorkBenchWidget(workBench.BaseWorkBenchWidget):
   def _onChangeMovieFinished(self):
     data = self._changeMovieWidget.data()    
     utils.verifyType(data, movieManager.MovieRenameItem)
-    self._manager.setItem(data.itemToInfo())
-    self._model.setData(self._currentIndex, data, tvModel.RAW_DATA_ROLE)
+    self._manager.setItem(data.getInfo())
+    self._model.setData(self._currentIndex, data, movieModel.RAW_DATA_ROLE)
+    self._onSelectionChanged()
     
   def _requireYearChanged(self, requireYear):
     self._disable()

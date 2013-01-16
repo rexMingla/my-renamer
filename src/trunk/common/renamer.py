@@ -5,6 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Class responsible for the moving/copying of files
 # --------------------------------------------------------------------------------------------------------------------
+import abc
+
 import extension
 import fileHelper
 import logModel
@@ -14,75 +16,58 @@ import utils
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItem(object):
   """ stores filename and new metadata used to rename file """
+  __metaclass__ = abc.ABCMeta
+  
   def __init__(self):
     super(BaseRenameItem, self).__init__()
-    
-  def itemToInfo(self):
-    return NotImplementedError("BaseRenameItem.itemToInfo not implemented")      
-    
+  
+  @abc.abstractmethod  
+  def getInfo(self):
+    pass
+
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItemGenerator(object):
-  """ generates list of item actioners """
-  def __init__(self, config=None, items=None):
+  """ converts an item a BaseRenamer object """
+  __metaclass__ = abc.ABCMeta
+  
+  def __init__(self, inputValues=None, config=None):
     super(BaseRenameItemGenerator, self).__init__()
+    self.inputValues = inputValues
     self.config = config or {}
-    self.items = items or []
     
-  def getRenamerItems(self):
-    ret = []
-    for item in self.items:
-      ret.extend(self._getRenameItems(item))
-    return ret
-  
-  def _getRenameItems(self, item):
-    raise NotImplementedError("BaseRenameItemGenerator._getRenameItems not implemented")
-    
+  @abc.abstractmethod
+  def getRenameItem(self, item):
+    pass
+
 # --------------------------------------------------------------------------------------------------------------------
-class MovieRenameItemGenerator(BaseRenameItemGenerator):
-  """ builds list of rename items for movie mode """
-  def _getRenameItems(self, movie):
-    ret = []
-    oFormat = outputFormat.OutputFormat(self.config.format)
-    outputFolder = self.config.getOutputFolder() or fileHelper.FileHelper.dirname(movie.filename)
-    genre = movie.genre("unknown")
-    im = outputFormat.MovieInputMap(fileHelper.FileHelper.replaceSeparators(movie.title), 
-                                    movie.year, 
-                                    fileHelper.FileHelper.replaceSeparators(genre), movie.part, movie.series)
-    newName = oFormat.outputToString(im, movie.ext, outputFolder)
+class RenameItemGenerator(BaseRenameItemGenerator):
+  """ converts an item a BaseRenamer object """
+  
+  def __init__(self, inputValues=None, config=None):
+    super(RenameItemGenerator, self).__init__()
+    self.inputValues = inputValues
+    self.config = config or {}
+    
+  def getRenameItem(self, item):
+    fmt = outputFormat.OutputFormat(self.config.format)
+    outputFolder = self.config.getOutputFolder() or fileHelper.FileHelper.dirname(item.filename)
+    self.inputValues.info = item.getInfo()
+    newName = fmt.outputToString(self.inputValues, item.ext, outputFolder)
     newName = fileHelper.FileHelper.sanitizeFilename(newName)
-    ret.append(FileRenamer(movie.filename, newName, canOverwrite=not self.config.dontOverwrite, 
-                                                    keepSource=not self.config.isMove,
-                                                    subtitleExtensions=self.config.getSubtitles()))
-    return ret   
-  
-# --------------------------------------------------------------------------------------------------------------------
-class TvRenameItemGenerator(BaseRenameItemGenerator):
-  """ builds list of rename items for tv mode """
-  def _getRenameItems(self, tv):
-    ret = []
-    outputFolder = self.config.getOutputFolder() or tv.inputFolder
-    oFormat = outputFormat.OutputFormat(self.config.format)
-    for ep in tv.episodeMoveItems:
-      if ep.performMove:
-        im = outputFormat.TvInputMap(fileHelper.FileHelper.replaceSeparators(tv.info.showName), 
-                                     tv.info.seasonNum, 
-                                     ep.info.epNum, 
-                                     fileHelper.FileHelper.replaceSeparators(ep.info.epName))
-        newName = oFormat.outputToString(im, ep.ext, outputFolder)
-        newName = fileHelper.FileHelper.sanitizeFilename(newName)
-        ret.append(FileRenamer(ep.filename, newName, canOverwrite=not self.config.dontOverwrite, 
-                                                            keepSource=not self.config.isMove,
-                                                            subtitleExtensions=self.config.getSubtitles()))
-    return ret    
+    return FileRenamer(item.filename, newName, canOverwrite=not self.config.dontOverwrite, 
+                                               keepSource=not self.config.isMove,
+                                               subtitleExtensions=self.config.getSubtitles())
     
 # --------------------------------------------------------------------------------------------------------------------    
 class BaseRenamer(object):
   """ performs rename on file """
+  __metaclass__ = abc.ABCMeta
   def __init__(self):
     super(BaseRenamer, self).__init__()
     
+  @abc.abstractmethod
   def performAction(self, progressCb=None):
-    raise NotImplementedError("BaseRenamer.performAction not implemented")
+    pass
     
 # --------------------------------------------------------------------------------------------------------------------
 class FileRenamer(BaseRenamer):

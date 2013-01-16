@@ -21,6 +21,8 @@ from tv import tvImpl
 from tv import tvInfoClient
 from tv import tvManager
 
+from movie import movieInfoClient
+
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
   def test_seasonFromFolderName(self):
@@ -278,7 +280,7 @@ class SwitchFilesTest(unittest.TestCase):
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormatTest(unittest.TestCase):
   def setUp(self):
-    self.ip = outputFormat.TvInputMap("Entourage", 1, 3, "Talk Show")
+    self.ip = outputFormat.TvInputValues(tvImpl.AdvancedEpisodeInfo("Entourage", 1, 3, "Talk Show"))
     
   def test_normal(self):
     fmt = outputFormat.OutputFormat("<show> - S<s_num>E<ep_num> - <ep_name>")
@@ -294,13 +296,13 @@ class OutputFormatTest(unittest.TestCase):
 class AdvancedOutputFormat(unittest.TestCase):
     
   def test_omit(self):
-    ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "", "")    
+    ip = outputFormat.MovieInputValues(movieInfoClient.MovieInfo("Anchorman", 2004, ["Comedy"], "", "")) 
     fmt = outputFormat.OutputFormat("<g> - <t> (<y>)%( - Disc <p>)%")
     out = fmt.outputToString(ip)
     self.assertEqual(out, "Comedy - Anchorman (2004)")
 
   def test_include(self):
-    ip = outputFormat.MovieInputMap("Anchorman", 2004, "Comedy", "2", "")
+    ip = outputFormat.MovieInputValues(movieInfoClient.MovieInfo("Anchorman", 2004, ["Comedy"], "", "2"))
     fmt = outputFormat.OutputFormat("<g> - <t> (<y>)%( - Disc <p>)%")
     out = fmt.outputToString(ip)
     self.assertEqual(out, "Comedy - Anchorman (2004) - Disc 2")
