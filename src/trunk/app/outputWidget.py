@@ -18,27 +18,24 @@ from common import utils
 import interfaces
 
 # --------------------------------------------------------------------------------------------------------------------
-class InputValueManager:
-  def __init__(self, inputValues, helpInfo, exampleInfo, previewInfo=None):
-    self.inputValues = inputValues
+class NameFormatHelper:
+  def __init__(self, formatter, helpInfo, exampleInfo, previewInfo=None):
+    self.formatter = formatter
     self.helpInfo = helpInfo
     self.exampleInfo = exampleInfo
     self.previewInfo = previewInfo
     
-  def getValues(self, info):
-    return self.inputValues.getValues(info)
-      
 # --------------------------------------------------------------------------------------------------------------------
 class OutputWidget(interfaces.LoadWidgetInterface):
   """ Widget allowing for the configuration of output settings """
   renameSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
   
-  def __init__(self, mode, inputValueManager, parent=None):
+  def __init__(self, mode, nameFormatHelper, parent=None):
     super(OutputWidget, self).__init__("output/{}".format(mode), parent)    
     uic.loadUi("ui/ui_Output.ui", self)
     
-    self._inputValueManager = inputValueManager
+    self._helper = nameFormatHelper
     self._initFormat()
     
     self.renameButton.clicked.connect(self.renameSignal)
@@ -95,14 +92,14 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       return text.replace("<", "&lt;").replace(">", "&gt;")
     
     if self.formatEdit.text().isEmpty():
-      self.formatEdit.setText(self._inputValueManager.inputValues.DEFAULT_FORMAT_STR)
+      self.formatEdit.setText(self._helper.formatter.DEFAULT_FORMAT_STR)
     #tooltip
     
     helpText = ["Available options:"]
-    helpValues = self._inputValueManager.getValues(self._inputValueManager.helpInfo)
+    helpValues = self._helper.formatter.getValues(self._helper.helpInfo)
     for key, value in helpValues.items():
       helpText.append("<b>{}</b>: {}".format(escapeHtml(key), value))
-    if outputFormat.CONDITIONAL_START in self._inputValueManager.inputValues.DEFAULT_FORMAT_STR:
+    if outputFormat.CONDITIONAL_START in self._helper.formatter.DEFAULT_FORMAT_STR:
       helpText += ["", "Enclose text within <b>%( )%</b> to optionally include text is a value is present.",
                    "Eg. <b>%(</b> Disc <b>{}</b> <b>)%</b>".format(escapeHtml("<part>"))]
     self.helpEdit.setText("<html><body>{}</body></html>".format("<br/>".join(helpText)))
@@ -110,16 +107,15 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     self._updatePreviewText()
     
   def _updatePreviewText(self):
-    oFormat = outputFormat.OutputFormat(utils.toString(self.formatEdit.text()))
-    self._inputValueManager.inputValues.info = self._inputValueManager.exampleInfo
     prefixText = "Example"
-    if self._inputValueManager.previewInfo:
+    info = self._helper.exampleInfo
+    if self._helper.previewInfo:
       prefixText = "Preview"
-      self._inputValueManager.inputValues.info = self._inputValueManager.previewInfo
-    formattedText = oFormat.outputToString(self._inputValueManager.inputValues)
+      info = self._helper.previewInfo
+    formattedText = self._helper.formatter.getNameFromInfo(utils.toString(self.formatEdit.text()), info)
     color = "red"
     if fileHelper.FileHelper.isValidFilename(formattedText):
-      color = "black"
+      color = "gray"
     formattedText = "{}: {}".format(prefixText, fileHelper.FileHelper.sanitizeFilename(formattedText))
     self.formatExampleLabel.setText(formattedText)
     self.formatExampleLabel.setStyleSheet("QLabel {{ color: {}; }}".format(color))
@@ -144,7 +140,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
   def setConfig(self, data):
     data = data or config.OutputConfig()
     
-    self.formatEdit.setText(data.format or self._inputValueManager.inputValues.DEFAULT_FORMAT_STR)
+    self.formatEdit.setText(data.format or self._helper.formatter.DEFAULT_FORMAT_STR)
     self.specificDirectoryEdit.setText(data.folder)
     if data.useSource:
       self.useSourceDirectoryRadio.setChecked(True)
@@ -172,7 +168,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     
   def _onRenameItemChanged(self, item):
     info = item.getInfo() if item else None
-    if info != self._inputValueManager.previewInfo:
-      self._inputValueManager.previewInfo = info
+    if info != self._helper.previewInfo:
+      self._helper.previewInfo = info
       self._updatePreviewText()
     

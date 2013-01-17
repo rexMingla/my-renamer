@@ -18,8 +18,12 @@ class BaseRenameItem(object):
   """ stores filename and new metadata used to rename file """
   __metaclass__ = abc.ABCMeta
   
-  def __init__(self):
+  def __init__(self, filename):
     super(BaseRenameItem, self).__init__()
+    self.filename = filename
+    self.fileSize = fileHelper.FileHelper.getFileSize(filename)
+    self.ext = fileHelper.FileHelper.extension(filename)
+    self.outputFolder = fileHelper.FileHelper.dirname(self.filename)
   
   @abc.abstractmethod  
   def getInfo(self):
@@ -43,17 +47,15 @@ class BaseRenameItemGenerator(object):
 class RenameItemGenerator(BaseRenameItemGenerator):
   """ converts an item a BaseRenamer object """
   
-  def __init__(self, inputValues=None, config=None):
+  def __init__(self, formatter=None, config=None):
     super(RenameItemGenerator, self).__init__()
-    self.inputValues = inputValues
+    self._formatter = formatter
     self.config = config or {}
     
   def getRenameItem(self, item):
-    fmt = outputFormat.OutputFormat(self.config.format)
-    outputFolder = self.config.getOutputFolder() or fileHelper.FileHelper.dirname(item.filename)
-    self.inputValues.info = item.getInfo()
-    newName = fmt.outputToString(self.inputValues, item.ext, outputFolder)
-    newName = fileHelper.FileHelper.sanitizeFilename(newName)
+    if self.config.getOutputFolder():
+      item.outputFolder = self.config.getOutputFolder()
+    name = fileHelper.FileHelper.sanitizeFilename(self._formatter.getName(item))
     return FileRenamer(item.filename, newName, canOverwrite=not self.config.dontOverwrite, 
                                                keepSource=not self.config.isMove,
                                                subtitleExtensions=self.config.getSubtitles())

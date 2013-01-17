@@ -40,7 +40,7 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout_2">
        <property name="spacing">
         <number>4</number>
@@ -118,7 +118,7 @@ p, li { white-space: pre-wrap; }
          </property>
          <property name="font">
           <font>
-           <italic>true</italic>
+           <italic>false</italic>
           </font>
          </property>
          <property name="text">

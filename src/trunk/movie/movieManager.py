@@ -44,10 +44,7 @@ VALID_RESULTS = (Result.SAMPLE_VIDEO,
 # --------------------------------------------------------------------------------------------------------------------
 class MovieRenameItem(renamer.BaseRenameItem):
   def __init__(self, filename, info):
-    super(MovieRenameItem, self).__init__()
-    self.filename = filename #utils.toString(filename)
-    self.fileSize = fileHelper.FileHelper.getFileSize(filename)
-    self.ext = fileHelper.FileHelper.extension(filename)
+    super(MovieRenameItem, self).__init__(filename)
     self.info = info
     self.result = None #Filthy, just temporary   
     
