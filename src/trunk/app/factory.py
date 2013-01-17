@@ -45,21 +45,21 @@ class Factory:
     
   @staticmethod
   def getOutputWidget(mode, parent=None):
-    manager = Factory.getInputValueManager(mode)    
+    manager = Factory.getNameFormatHelper(mode)    
     return outputWidget.OutputWidget(mode, manager, parent)
     
   @staticmethod
-  def getInputValueManager(mode, parent=None):
+  def getNameFormatHelper(mode, parent=None):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return outputWidget.InputValueManager(outputFormat.MovieInputValues(),
-                                            movieInfoClient.MovieInfo("Title", "Year", 
-                                                                       "Genre", "Part", "Series"),
-                                            movieInfoClient.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
+      return outputWidget.NameFormatHelper(outputFormat.MovieNameFormatter(),
+                                           movieInfoClient.MovieInfo("Title", "Year", 
+                                                                     "Genre", "Part", "Series"),
+                                           movieInfoClient.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
     else:  
-      return outputWidget.InputValueManager(outputFormat.TvInputValues(),
-                                            tvImpl.AdvancedEpisodeInfo("Show Name", "Series Number", 
-                                                                       "Episode Number", "Episode Name"),
-                                            tvImpl.AdvancedEpisodeInfo("Entourage", 9, 3, "The Serenity Now"))
+      return outputWidget.NameFormatHelper(outputFormat.TvNameFormatter(),
+                                           tvImpl.AdvancedEpisodeInfo("Show Name", "Series Number", 
+                                                                      "Episode Number", "Episode Name"),
+                                           tvImpl.AdvancedEpisodeInfo("Entourage", 9, 3, "The Serenity Now"))
     
   @staticmethod
   def getWorkBenchWidget(mode, parent=None):
@@ -72,9 +72,9 @@ class Factory:
   @staticmethod
   def getRenameItemGenerator(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return renamer.RenameItemGenerator(outputFormat.MovieInputValues())
+      return renamer.RenameItemGenerator(outputFormat.MovieNameFormatter())
     else:  
-      return renamer.RenameItemGenerator(outputFormat.TvInputValues())
+      return renamer.RenameItemGenerator(outputFormat.TvNameFormatter())
     
   @staticmethod
   def getStoreHolder(mode):

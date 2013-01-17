@@ -73,11 +73,9 @@ class EpisodeRenameItem(renamer.BaseRenameItem):
     else: assert(False);                      return "Unknown"      
   
   def __init__(self, filename, info):
+    super(EpisodeRenameItem, self).__init__(filename)
     utils.verifyType(filename, basestring)
     utils.verifyType(info, EpisodeInfo)
-    self.filename = filename
-    self.fileSize = fileHelper.FileHelper.getFileSize(filename)
-    self.ext = fileHelper.FileHelper.extension(filename)
     self.info = info
     mt = self.matchType()
     self.canMove = mt == EpisodeRenameItem.READY #can execute

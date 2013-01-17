@@ -60,8 +60,8 @@ class SeriesTest(unittest.TestCase):
                 tvImpl.SourceFile(tvImpl.UNRESOLVED_KEY,"c01.avi")])
     act = tvManager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
     self.assertEqual(act, exp)
-
-  def test_getDestinationEpisodeMapFromTVDB(self):
+  
+  def _test_getDestinationEpisodeMapFromTVDB(self):
     exp = tvImpl.SeasonInfo("Entourage", 1)
     exp.episodes.extend([tvImpl.EpisodeInfo(1,"Entourage (Pilot)"), 
                           tvImpl.EpisodeInfo(2,"The Review"), 
@@ -72,7 +72,7 @@ class SeriesTest(unittest.TestCase):
                           tvImpl.EpisodeInfo(7,"The Scene"),
                           tvImpl.EpisodeInfo(8,"New York")])
     act = tvInfoClient.TvdbClient().getInfo(tvInfoClient.TvSearchParams("Entourage", 1))
-    #self.assertEqual(act, exp) # take out for now
+    self.assertEqual(act, exp)
     
   def test_getDestinationEpisodeMapFromTVDBInvalid(self):
     exp = None
@@ -280,31 +280,30 @@ class SwitchFilesTest(unittest.TestCase):
 # --------------------------------------------------------------------------------------------------------------------
 class OutputFormatTest(unittest.TestCase):
   def setUp(self):
-    self.ip = outputFormat.TvInputValues(tvImpl.AdvancedEpisodeInfo("Entourage", 1, 3, "Talk Show"))
+    self.formatter = outputFormat.TvNameFormatter()
+    self.info = tvImpl.AdvancedEpisodeInfo("Entourage", 1, 3, "Talk Show")
     
   def test_normal(self):
-    fmt = outputFormat.OutputFormat("<show> - S<s_num>E<ep_num> - <ep_name>")
-    out = fmt.outputToString(self.ip)
+    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name>", self.info)
     self.assertEqual(out, "Entourage - S01E03 - Talk Show")
  
   def test_missing(self):
-    fmt = outputFormat.OutputFormat("<show> - S<s_num>E<ep_num> - <ep_name >")
-    out = fmt.outputToString(self.ip)
+    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name >", self.info)
     self.assertEqual(out, "Entourage - S01E03 - <ep_name >")
 
 # --------------------------------------------------------------------------------------------------------------------
 class AdvancedOutputFormat(unittest.TestCase):
     
   def test_omit(self):
-    ip = outputFormat.MovieInputValues(movieInfoClient.MovieInfo("Anchorman", 2004, ["Comedy"], "", "")) 
-    fmt = outputFormat.OutputFormat("<g> - <t> (<y>)%( - Disc <p>)%")
-    out = fmt.outputToString(ip)
+    formatter = outputFormat.MovieNameFormatter()
+    info = movieInfoClient.MovieInfo("Anchorman", 2004, ["Comedy"], "", "")
+    out = formatter.getNameFromInfo("<g> - <t> (<y>)%( - Disc <p>)%", info)
     self.assertEqual(out, "Comedy - Anchorman (2004)")
 
   def test_include(self):
-    ip = outputFormat.MovieInputValues(movieInfoClient.MovieInfo("Anchorman", 2004, ["Comedy"], "", "2"))
-    fmt = outputFormat.OutputFormat("<g> - <t> (<y>)%( - Disc <p>)%")
-    out = fmt.outputToString(ip)
+    formatter = outputFormat.MovieNameFormatter()
+    info = movieInfoClient.MovieInfo("Anchorman", 2004, ["Comedy"], "", "2")
+    out = formatter.getNameFromInfo("<g> - <t> (<y>)%( - Disc <p>)%", info)
     self.assertEqual(out, "Comedy - Anchorman (2004) - Disc 2")
 
 # --------------------------------------------------------------------------------------------------------------------

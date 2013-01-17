@@ -23,21 +23,38 @@ def _wrapReplaceStr(val):
   return "<{}>".format(val)
 
 # --------------------------------------------------------------------------------------------------------------------
-class InputValues(object):
+class BaseNameFormatter(object):
   __metaclass__ = abc.ABCMeta
   
   DEFAULT_FORMAT_STR = ""
   
-  def __init__(self, info=None):
-    super(InputValues, self).__init__()
-    self.info = info
+  def __init__(self):
+    super(BaseNameFormatter, self).__init__()
     
+  def getName(self, fmt, item, folder=None):
+    if folder is None:
+      folder = item.outputFolder
+    return self.getNameFromInfo(fmt, item.getInfo(), item.ext, folder)
+    
+  def getNameFromInfo(self, fmt, info, ext="", folder=""):
+    ret = FileHelper.joinPath(folder, fmt)
+    keyValues = self.getValues(info).items()    
+    for match in _RE_CONDITIONAL.finditer(ret):
+      text = match.group(1)
+      newText = ""
+      if any(key in text and value for key, value in keyValues):
+        newText = self.getNameFromInfo(text[len(CONDITIONAL_START):-len(CONDITIONAL_END)], info) #strip delimiters
+      ret = ret.replace(text, newText)
+    for key, value in keyValues: #TODO: fix this. i'm sure there is a built in function for this.
+      ret = ret.replace(key, str(value))
+    return "".join([ret, ext])
+  
   @abc.abstractmethod
-  def getValues(self, info=None):
+  def getValues(self, info):
     pass
     
 # --------------------------------------------------------------------------------------------------------------------
-class TvInputValues(InputValues):
+class TvNameFormatter(BaseNameFormatter):
   """ Configurable attributes for output. """
   KEY_SHOW_NAME  = _wrapReplaceStr("show")
   KEY_SERIES_NUM = _wrapReplaceStr("s_num")
@@ -45,21 +62,21 @@ class TvInputValues(InputValues):
   KEY_EP_NAME    = _wrapReplaceStr("ep_name")  
   DEFAULT_FORMAT_STR = "<show> - S<s_num>E<ep_num> - <ep_name>"
 
-  def __init__(self, info=None):
-    super(TvInputValues, self).__init__(info)    
+  def __init__(self):
+    super(TvNameFormatter, self).__init__()    
     
-  def getValues(self, info=None):
+  def getValues(self, info):
     ret = {}
     info = info or self.info
     if info:
-      ret = {TvInputValues.KEY_SHOW_NAME:  info.showName,
-             TvInputValues.KEY_SERIES_NUM: _leftPad(info.seasonNum),
-             TvInputValues.KEY_EP_NUM:     _leftPad(info.epNum),
-             TvInputValues.KEY_EP_NAME:    info.epName}  
+      ret = {TvNameFormatter.KEY_SHOW_NAME:  info.showName,
+             TvNameFormatter.KEY_SERIES_NUM: _leftPad(info.seasonNum),
+             TvNameFormatter.KEY_EP_NUM:     _leftPad(info.epNum),
+             TvNameFormatter.KEY_EP_NAME:    info.epName}  
     return ret
     
 # --------------------------------------------------------------------------------------------------------------------
-class MovieInputValues(InputValues):
+class MovieNameFormatter(BaseNameFormatter):
   """ Configurable attributes for output. """
   KEY_TITLE  = _wrapReplaceStr("t")
   KEY_YEAR   = _wrapReplaceStr("y")
@@ -68,53 +85,16 @@ class MovieInputValues(InputValues):
   KEY_SERIES = _wrapReplaceStr("s")
   DEFAULT_FORMAT_STR = "<g>/%(<s> - )%<t> (<y>)%( - Disc <p>)%"
 
-  def __init__(self, info=None):
-    super(MovieInputValues, self).__init__(info)
+  def __init__(self):
+    super(MovieNameFormatter, self).__init__()
     
-  def getValues(self, info=None):
+  def getValues(self, info):
     ret = {}
     info = info or self.info
     if info:
-      ret = {MovieInputValues.KEY_TITLE: info.title,
-             MovieInputValues.KEY_YEAR:  str(info.year),
-             MovieInputValues.KEY_GENRE: info.getGenre(""),
-             MovieInputValues.KEY_DISC: str(info.disc or ""),
-             MovieInputValues.KEY_SERIES: info.series}
+      ret = {MovieNameFormatter.KEY_TITLE: info.title,
+             MovieNameFormatter.KEY_YEAR:  str(info.year),
+             MovieNameFormatter.KEY_GENRE: info.getGenre(""),
+             MovieNameFormatter.KEY_DISC: str(info.disc or ""),
+             MovieNameFormatter.KEY_SERIES: info.series}
     return ret
-
-# --------------------------------------------------------------------------------------------------------------------
-class OutputFormat(object):
-  """ 
-  Resolution of input map to create output filename. 
-  Eg. 
-  >>> inputValues = tvImpl.AdvancedEpisodeInfo("Entourage", 1, 7, "The Scene")
-  >>> outputFormat = OutputFormat("<show_name> S<season_num>E<ep_num> <ep_name>)
-  >>> outputFormat.outputToString(inputValues, ".mpg")
-  Entourage S01E07 The Scene.mpg
-  
-  """
-  
-  def __init__(self, formatStr):
-    super(OutputFormat, self).__init__()
-    utils.verifyType(formatStr, str)
-    self.formatStr = formatStr
-    
-  def outputToString(self, inputs, ext="", path=""):
-    utils.verifyType(inputs, InputValues)
-    utils.verifyType(ext, str)
-    ret = self.formatStr
-    keyValues = inputs.getValues().items()
-    for match in _RE_CONDITIONAL.finditer(ret):
-      text = match.group(1)
-      newText = ""
-      if any(key in text and value for key, value in keyValues):
-        childFormat = OutputFormat(text[len(CONDITIONAL_START):-len(CONDITIONAL_END)]) #strip delimiters
-        newText = childFormat.outputToString(inputs)
-      ret = ret.replace(text, newText, 1)
-    if path:
-      ret = FileHelper.joinPath(path, ret)
-    for key, value in keyValues: #TODO: fix this. i'm sure there is a built in function for this.
-      ret = ret.replace(key, str(value))
-    return "".join([ret, ext])
-
-  
