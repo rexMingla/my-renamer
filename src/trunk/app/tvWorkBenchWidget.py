@@ -9,15 +9,13 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 from common import config
+from common import interfaces
 from common import utils
 
-from tv import tvImpl
-from tv import tvManager
 from tv import tvModel
 
 import editEpisodeWidget
 import editSeasonWidget
-import interfaces
 import workBenchWidget
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -66,7 +64,7 @@ class TvWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
     indexes = selection.indexes()
     self._currentIndex = indexes[0] if indexes else QtCore.QModelIndex()
     self._updateActions()
-    self.renameItemChangedSignal.emit(self._model.getMoveItem(self._currentIndex)) #HACK: consistent naming!
+    self.renameItemChangedSignal.emit(self._model.getRenameItem(self._currentIndex))
     
   def _showItem(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
@@ -103,7 +101,7 @@ class TvWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
     
   def _onChangeSeasonFinished(self):
     data = self._changeSeasonWidget.data()
-    utils.verifyType(data, tvImpl.Season)
+    #utils.verifyType(data, tvTypes.Season)
     self._manager.setItem(data.getInfo())
     self._model.setData(self._currentIndex, data, tvModel.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)

@@ -6,14 +6,9 @@
 # Purpose of document: Helper functions associated with tv series 
 # --------------------------------------------------------------------------------------------------------------------
 import copy
-import collections
-import itertools
 import os
-import re
 
-from common import extension
 from common import fileHelper
-from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseManager(object):
@@ -25,8 +20,6 @@ class BaseManager(object):
     
   @staticmethod
   def getFolders(rootFolder, isRecursive):
-    utils.verifyType(rootFolder, str)
-    utils.verifyType(isRecursive, bool)
     folders = []
     for root, dirs, files in os.walk(fileHelper.FileHelper.replaceSeparators(rootFolder, os.sep)):
       folders.append(root)      
@@ -35,7 +28,7 @@ class BaseManager(object):
     return folders 
 
   def setCache(self, data):
-    utils.verifyType(data, dict)
+    #utils.verifyType(data, dict)
     self._cache = data
 
   def cache(self):

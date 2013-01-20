@@ -14,35 +14,6 @@ from app import dontShowAgainWidget
 from common import utils
 
 import interfaces
-
-# --------------------------------------------------------------------------------------------------------------------
-class BaseWorkBenchModel(object):
-  ACTION_DELETE = "Delete"
-  ACTION_LAUNCH = "Launch File"
-  ACTION_OPEN = "Open Location"
-  ACTION_EPISODE = "Edit Episode"
-  ACTION_SEASON = "Edit Season"
-  ACTION_MOVIE = "Edit Movie"
-  
-  ALL_ACTIONS = ()
-  
-  def __init__(self):
-    super(BaseWorkBenchModel, self).__init__()
-    
-  def getFile(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.fileLocation not implemented")
-  
-  def getFolder(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.folder not implemented")
-  
-  def getDeleteItem(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.getDeleteItem not implemented")
-  
-  def getAvailableActions(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.getAvailableActions not implemented")
-  
-  def getMoveItem(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.getMoveItem not implemented")  
   
 # --------------------------------------------------------------------------------------------------------------------
 class _ActionHolder:
@@ -197,7 +168,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self._enable()
     
   def _onWorkBenchChanged(self, hasChecked):
-    utils.verifyType(hasChecked, bool)
+    #utils.verifyType(hasChecked, bool)
     cs = self._model.overallCheckedState()
     self.selectAllCheckBox.setEnabled(not cs is None)
     if cs == None:

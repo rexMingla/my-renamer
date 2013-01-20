@@ -7,12 +7,11 @@
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore
 
-from common import extension
 from common import interfaces
 from common import thread
 from common import utils
 
-from movie import movieManager
+from movie import movieTypes
 
 import factory
 
@@ -74,7 +73,7 @@ class MovieSearchThread(SearchThread):
     item = self._manager.processFile(item)
     ret = None
     if item:
-      ret = thread.WorkItem(item, movieManager.Result.resultStr(item.result))
+      ret = thread.WorkItem(item, movieTypes.Result.resultStr(item.result))
     return ret
 
 def getSearchThread(mode, manager, config):
