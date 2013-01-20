@@ -7,33 +7,6 @@
 # --------------------------------------------------------------------------------------------------------------------
 import abc
 
-# --------------------------------------------------------------------------------------------------------------------
-class BaseInfo(object):
-  """ objects retrieved from InfoClients """
-  __metaclass__ = abc.ABCMeta
-  
-  @abc.abstractmethod
-  def toSearchParams(self):
-    pass
-  
-  def hasData(self):
-    return True
-
-# --------------------------------------------------------------------------------------------------------------------
-class BaseInfoClientSearchParams(object):
-  """ objects sent to the InfoClients so to retrieve BaseInfo objects """
-  
-  __metaclass__ = abc.ABCMeta
-    
-  @abc.abstractmethod
-  def getKey(self):
-    pass
-  
-  @abc.abstractmethod
-  def toInfo(self):
-    pass
-    
-# --------------------------------------------------------------------------------------------------------------------
 class BaseInfoStoreHolder(object):
   """ container for all of the InfoClients """
   

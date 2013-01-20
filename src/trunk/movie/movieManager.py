@@ -5,59 +5,20 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module responsible for the renaming of movies
 # --------------------------------------------------------------------------------------------------------------------
-import copy
 import glob
 import os
 import re
 
-from common import extension
 from common import fileHelper
-from common import manager
-from common import renamer
+from common import commonManager
 from common import utils
 
+import movieTypes
 import movieInfoClient
 
 _PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
 _MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
 _MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
-
-# --------------------------------------------------------------------------------------------------------------------
-class Result:
-  SAMPLE_VIDEO = 1
-  FILE_NOT_FOUND = 2
-  FOUND = 3
-  
-  @staticmethod 
-  def resultStr(result):
-    if result == Result.SAMPLE_VIDEO:     return "Too small"
-    elif result == Result.FILE_NOT_FOUND: return "File not found"
-    elif result == Result.FOUND:          return "OK"
-    else: 
-      assert(result == Result.FOUND_NO_YEAR)
-      return "Found: Without year"
-  
-VALID_RESULTS = (Result.SAMPLE_VIDEO, 
-                 Result.FILE_NOT_FOUND, 
-                 Result.FOUND)
-
-# --------------------------------------------------------------------------------------------------------------------
-class MovieRenameItem(renamer.BaseRenameItem):
-  def __init__(self, filename, info):
-    super(MovieRenameItem, self).__init__(filename)
-    self.info = info
-    self.result = None #Filthy, just temporary   
-    
-  def __copy__(self):
-    ret = MovieRenameItem(self.filename, copy.copy(self.info))
-    ret.result = self.result
-    return ret
-  
-  def __str__(self):
-    return str(self.info)
-    
-  def getInfo(self):
-    return self.info
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
@@ -80,9 +41,9 @@ class MovieHelper:
     ext = ext.lower()
     title, part, year, result = "", "", "", None
     if not os.path.exists(filename):
-      result = Result.FILE_NOT_FOUND #somehow this happens
+      result = movieTypes.Result.FILE_NOT_FOUND #somehow this happens
     else:
-      result = Result.FOUND
+      result = movieTypes.Result.FOUND
       m = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)
       assert(m)
       title = m.groupdict().get("title")
@@ -103,12 +64,12 @@ class MovieHelper:
         title = title.replace(".", " ")
       title = re.sub(r"[\(\[\{\s]+$", "", title) #clean end
       title = re.sub(r"^\w+\-", "", title) #strip anywords at the start before a - character
-    movie = MovieRenameItem(filename, movieInfoClient.MovieInfo(title, year, genres=[], series="", disc=part))
+    movie = movieTypes.MovieRenameItem(filename, movieTypes.MovieInfo(title, year, genres=[], series="", disc=part))
     movie.result = result
     return movie  
     
 # --------------------------------------------------------------------------------------------------------------------
-class MovieManager(manager.BaseManager):
+class MovieManager(commonManager.BaseManager):
   helper = MovieHelper
   
   def __init__(self):
@@ -116,8 +77,8 @@ class MovieManager(manager.BaseManager):
   
   def processFile(self, filename):
     movie = MovieHelper.extractMovieFromFile(filename)
-    if movie.result == Result.FOUND:
-      movie.info = self.getItem(movieInfoClient.MovieSearchParams(movie.info.title, movie.info.year))
+    if movie.result == movieTypes.Result.FOUND:
+      movie.info = self.getItem(movie.getInfo().toSearchParams())
     return movie
 
 _MANAGER = None  

@@ -13,7 +13,7 @@ from PyQt4 import uic
 from common import fileHelper
 from common import outputFormat
 from common import utils
-from tv import tvImpl
+from tv import tvTypes
 
 # --------------------------------------------------------------------------------------------------------------------
 class EditEpisodeWidget(QtGui.QDialog):
@@ -32,13 +32,13 @@ class EditEpisodeWidget(QtGui.QDialog):
   
   def setData(self, ssn, ep):
     """ Fill the dialog with the data prior to being shown """
-    utils.verifyType(ssn, tvImpl.Season)
-    utils.verifyType(ep, tvImpl.EpisodeRenameItem)
+    #utils.verifyType(ssn, tvTypes.Season)
+    #utils.verifyType(ep, tvTypes.EpisodeRenameItem)
     self.episodeComboBox.clear()
     #episodeMoveItems = copy.copy(ssn.episodeMoveItems)
     #episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
     for mi in ssn.episodeMoveItems:
-      if mi.info.epNum != tvImpl.UNRESOLVED_KEY:
+      if mi.info.epNum != tvTypes.UNRESOLVED_KEY:
         displayName = "{}: {}".format(mi.info.epNum, mi.info.epName)
         self.episodeComboBox.addItem(displayName, mi.info.epNum)
     index = self.episodeComboBox.findData(ep.info.epNum)
@@ -54,10 +54,10 @@ class EditEpisodeWidget(QtGui.QDialog):
   def episodeNumber(self):
     """ 
     Returns the currently selected episode number from the dialog. 
-    Returns tvImpl.UNRESOLVED_KEY if non is selected. 
+    Returns tvTypes.UNRESOLVED_KEY if non is selected. 
     """
     if self.ignoreRadio.isChecked():
-      return tvImpl.UNRESOLVED_KEY
+      return tvTypes.UNRESOLVED_KEY
     else:
       return self.episodeComboBox.itemData(self.episodeComboBox.currentIndex()).toInt()[0]
    

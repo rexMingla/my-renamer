@@ -78,15 +78,6 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
     #raise AssertionError(text)
 
 # --------------------------------------------------------------------------------------------------------------------
-def dictCompare(left, right):
-  """ Compare two dictionaries. 
-  Returns False if the dictionaries are different sizes or their contents do not match up and True othewise. """
-  verifyType(left, dict)
-  verifyType(right, dict)
-  isSame = len(left) == len(right) and all(l in right and left[l] == right[l] for l in left)
-  return isSame 
-
-# --------------------------------------------------------------------------------------------------------------------
 def toString(value, defaultIfError=""):
   """ Attempt to convert string. returns defaultIfError if null. """
   verify(isinstance(defaultIfError, str), "type mismatch: defaultIfError") #will go recursive if we use verifyType() here

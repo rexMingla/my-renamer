@@ -14,7 +14,6 @@ from PyQt4 import uic
 from common import fileHelper
 from common import outputFormat
 from common import utils
-from tv import tvImpl
     
 # --------------------------------------------------------------------------------------------------------------------
 class SearchResultsWidget(QtGui.QDialog):

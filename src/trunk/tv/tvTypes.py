@@ -6,24 +6,33 @@
 # Purpose of document: Main class for working the tv seasons
 # --------------------------------------------------------------------------------------------------------------------
 import copy
-import os
 
-from common import fileHelper
-from common import infoClient
-from common import renamer
+from common import commonTypes
 from common import utils
-
-import tvInfoClient
 
 UNRESOLVED_KEY = -1
 UNRESOLVED_NAME = "" 
   
 # --------------------------------------------------------------------------------------------------------------------
+class TvSearchParams(commonTypes.BaseInfoClientSearchParams):
+  def __init__(self, showName, seasonNum):
+    super(TvSearchParams, self).__init__()
+    self.showName = showName
+    self.seasonNum = seasonNum    
+    
+  def getKey(self):
+    return utils.sanitizeString("{} ({})".format(self.showName, self.seasonNum))
+
+  def toInfo(self):
+    return SeasonInfo(self.showName, self.seasonNum)  
+  
+# --------------------------------------------------------------------------------------------------------------------
 class EpisodeInfo(object):
   """ Information about an output file """
   def __init__(self, epNum, epName):
-    utils.verifyType(epNum, int)
-    utils.verifyType(epName, basestring)
+    super(EpisodeInfo, self).__init__()
+    #utils.verifyType(epNum, int)
+    #utils.verifyType(epName, basestring)
     self.epNum = epNum
     self.epName = epName
     
@@ -58,7 +67,7 @@ class AdvancedEpisodeInfo(EpisodeInfo):
     return AdvancedEpisodeInfo(self.showName, self.seasonNum, self.epNum, self.epName)
   
 # -----------------------------------------------------------------------------------
-class EpisodeRenameItem(renamer.BaseRenameItem):
+class EpisodeRenameItem(commonTypes.BaseRenameItem):
   """ An item that may be selected for move/copy action. """
   READY          = 1
   MISSING_NEW    = 2
@@ -74,8 +83,8 @@ class EpisodeRenameItem(renamer.BaseRenameItem):
   
   def __init__(self, filename, info):
     super(EpisodeRenameItem, self).__init__(filename)
-    utils.verifyType(filename, basestring)
-    utils.verifyType(info, EpisodeInfo)
+    #utils.verifyType(filename, basestring)
+    #utils.verifyType(info, EpisodeInfo)
     self.info = info
     mt = self.matchType()
     self.canMove = mt == EpisodeRenameItem.READY #can execute
@@ -141,7 +150,6 @@ class SourceFiles(list):
     if oldEp:
       oldEp.epNum = UNRESOLVED_KEY
     newEp.epNum = key
-    self._sort()
       
   def append(self, item):
     if not isinstance(item, SourceFile):
@@ -149,14 +157,9 @@ class SourceFiles(list):
     if self.getItemByEpisodeNum(item.epNum):
       item.epNum = UNRESOLVED_KEY
     super(SourceFiles, self).append(item)
-    self._sort()
-    
-  def _sort(self):
-    #HACK: only really relevant for testing, but the sort is done primarily on key if possible then on filename
-    self.sort(key=lambda s: "{}".format(s.epNum).zfill(3) if s.epNum != UNRESOLVED_KEY else "999{}".format(s.filename))
     
 # -----------------------------------------------------------------------------------
-class SeasonInfo(infoClient.BaseInfo):
+class SeasonInfo(commonTypes.BaseInfo):
   """ contains list of """
   def __init__(self, showName="", seasonNum=""):
     super(SeasonInfo, self).__init__()
@@ -184,7 +187,7 @@ class SeasonInfo(infoClient.BaseInfo):
     return "{} season {} - # episodes: {}".format(self.showName, self.seasonNum, len(self.episodes))
 
   def toSearchParams(self):
-    return tvInfoClient.TvSearchParams(self.showName, self.seasonNum)
+    return TvSearchParams(self.showName, self.seasonNum)
   
   def hasData(self):
     return bool(self.episodes)
@@ -213,9 +216,9 @@ class Season:
       return "Season: {} #: {}".format(self.info.showName, self.info.seasonNum)
   
   def __init__(self, inputFolder, info, sources):
-    utils.verifyType(inputFolder, str)
-    utils.verifyType(sources, SourceFiles)
-    utils.verifyType(info, SeasonInfo)
+    #utils.verifyType(inputFolder, str)
+    #utils.verifyType(sources, SourceFiles)
+    #utils.verifyType(info, SeasonInfo)
     
     self.sources = sources
     self.info = info
@@ -225,22 +228,22 @@ class Season:
     self._resolveStatus() 
     
   def setInputFolder(self, folder):
-    utils.verifyType(folder, basestring)
+    #utils.verifyType(folder, basestring)
     self.inputFolder = folder
     
   def removeSourceFile(self, f):
-    utils.verifyType(f, basestring)
+    #utils.verifyType(f, basestring)
     self.sources.removeFile(f)
     self.updateSource(self.sources)
     
   def updateSeasonInfo(self, info):
-    utils.verifyType(info, SeasonInfo)
+    #utils.verifyType(info, SeasonInfo)
     self.info = info
     self._resolveEpisodeMoveItems()
     self._resolveStatus()    
     
   def updateSource(self, sources):
-    utils.verifyType(sources, SourceFiles)
+    #utils.verifyType(sources, SourceFiles)
     self.sources = sources
     self._resolveEpisodeMoveItems()
     self._resolveStatus()    

@@ -10,12 +10,11 @@ import copy
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+from common import commonModel
 from common import fileHelper
 from common import utils
 
-import movieManager
-
-from app import workBenchWidget #HACK: movie importing from app...
+import movieTypes
 
 # --------------------------------------------------------------------------------------------------------------------
 class SortFilterModel(QtGui.QSortFilterProxyModel):
@@ -54,7 +53,7 @@ _OK = "Ok"
 class MovieItem(object):
   def __init__(self, movie, index):
     super(MovieItem, self).__init__()
-    utils.verifyType(movie, movieManager.MovieRenameItem)
+    #utils.verifyType(movie, movieTypes.MovieRenameItem)
     self.movie = movie
     self.index = index
     self.wantToMove = True
@@ -62,11 +61,11 @@ class MovieItem(object):
     self.duplicates = []
     
   def isMatch(self, other):
-    utils.verifyType(other, MovieItem)
-    return self.movie.result == movieManager.Result.FOUND and self.movie.info == other.movie.info
+    #utils.verifyType(other, MovieItem)
+    return self.movie.result == movieTypes.Result.FOUND and self.movie.info == other.movie.info
   
 # --------------------------------------------------------------------------------------------------------------------
-class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel):
+class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
   """ 
   Represents 0 or more movies
   """
@@ -74,14 +73,14 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
   beginUpdateSignal = QtCore.pyqtSignal()
   endUpdateSignal = QtCore.pyqtSignal() 
   
-  ALL_ACTIONS = (workBenchWidget.BaseWorkBenchModel.ACTION_DELETE,
-                 workBenchWidget.BaseWorkBenchModel.ACTION_LAUNCH,
-                 workBenchWidget.BaseWorkBenchModel.ACTION_OPEN,
-                 workBenchWidget.BaseWorkBenchModel.ACTION_MOVIE)  
+  ALL_ACTIONS = (commonModel.BaseWorkBenchModel.ACTION_DELETE,
+                 commonModel.BaseWorkBenchModel.ACTION_LAUNCH,
+                 commonModel.BaseWorkBenchModel.ACTION_OPEN,
+                 commonModel.BaseWorkBenchModel.ACTION_MOVIE)  
   
   def __init__(self, parent=None):
     super(QtCore.QAbstractTableModel, self).__init__(parent)
-    super(workBenchWidget.BaseWorkBenchModel, self).__init__()
+    super(commonModel.BaseWorkBenchModel, self).__init__()
     self._movies = []
     self._bulkProcessing = False
     self._requireYear = True
@@ -89,7 +88,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
     self._flagDuplicates = True
     
   def getFile(self, index):
-    item = self.getMoveItem(index)
+    item = self.getRenameItem(index)
     return item.movie.filename if item else ""
   
   def getFolder(self, index):
@@ -101,17 +100,17 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
   def getDeleteItem(self, index):
     return self.getFile(index)
   
-  def getMoveItem(self, index):
+  def getRenameItem(self, index):
     return self._movies[index.row()].movie if index.isValid() else None    
     
   def getAvailableActions(self, index):
     hasIndex = index.isValid()
     
     ret = {}
-    ret[workBenchWidget.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
-    ret[workBenchWidget.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
-    ret[workBenchWidget.BaseWorkBenchModel.ACTION_OPEN] = hasIndex
-    ret[workBenchWidget.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
+    ret[commonModel.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
+    ret[commonModel.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
+    ret[commonModel.BaseWorkBenchModel.ACTION_OPEN] = hasIndex
+    ret[commonModel.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
     return ret
     
   def columnCount(self, parent):
@@ -160,7 +159,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
     elif col == Columns.COL_GENRE:
       return info.getGenre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesToString(movie.fileSize) if movie.result == movieManager.Result.FOUND else ""
+      return utils.bytesToString(movie.fileSize) if movie.result == movieTypes.Result.FOUND else ""
     elif col == Columns.COL_SERIES:
       return info.series
        
@@ -169,7 +168,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
       return False
     
     if role == RAW_DATA_ROLE:
-      utils.verifyType(value, movieManager.MovieRenameItem)
+      #utils.verifyType(value, movieTypes.MovieRenameItem)
       item = self._movies[index.row()]
       newMovie = copy.copy(value)
       if item.movie != newMovie:
@@ -235,7 +234,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
       self._emitWorkBenchChanged()    
   
   def addItem(self, m):
-    utils.verifyType(m, movieManager.MovieRenameItem)
+    #utils.verifyType(m, movieTypes.MovieRenameItem)
     #check if already in list
     count = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
@@ -261,8 +260,8 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
       
   def _updateItemStatusText(self, item):
     ret = ""
-    if item.movie.result != movieManager.Result.FOUND:
-      ret = movieManager.Result.resultStr(item.movie.result)
+    if item.movie.result != movieTypes.Result.FOUND:
+      ret = movieTypes.Result.resultStr(item.movie.result)
     elif item.duplicates:
       ret = _DUPLICATE
     elif self._requireYear and not item.movie.info.year:
@@ -279,7 +278,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
   
   def _updateDuplicatesForItem(self, item):
     item.duplicates = []
-    if item.movie.result == movieManager.Result.FOUND:
+    if item.movie.result == movieTypes.Result.FOUND:
       item.duplicates = [m.index for m in self._movies if m.index != item.index and m.isMatch(item)]
   
   def overallCheckedState(self):
@@ -295,7 +294,7 @@ class MovieModel(QtCore.QAbstractTableModel, workBenchWidget.BaseWorkBenchModel)
     return ret
   
   def setOverallCheckedState(self, isChecked):
-    utils.verifyType(isChecked, bool)
+    #utils.verifyType(isChecked, bool)
     self.beginUpdate()
     cs = QtCore.Qt.Checked
     if not isChecked:

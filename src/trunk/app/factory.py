@@ -11,12 +11,13 @@ from common import interfaces
 from common import renamer
 from common import outputFormat
 
-from tv import tvImpl
 from tv import tvInfoClient
 from tv import tvManager
+from tv import tvTypes
 
-from movie import movieManager
 from movie import movieInfoClient
+from movie import movieManager
+from movie import movieTypes
 
 import editSourcesWidget
 import inputWidget
@@ -45,21 +46,21 @@ class Factory:
     
   @staticmethod
   def getOutputWidget(mode, parent=None):
-    manager = Factory.getNameFormatHelper(mode)    
-    return outputWidget.OutputWidget(mode, manager, parent)
+    helper = Factory.getNameFormatHelper(mode)    
+    return outputWidget.OutputWidget(mode, helper, parent)
     
   @staticmethod
   def getNameFormatHelper(mode, parent=None):
     if mode == interfaces.Mode.MOVIE_MODE:
       return outputWidget.NameFormatHelper(outputFormat.MovieNameFormatter(),
-                                           movieInfoClient.MovieInfo("Title", "Year", 
+                                           movieTypes.MovieInfo("Title", "Year", 
                                                                      "Genre", "Part", "Series"),
-                                           movieInfoClient.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
+                                           movieTypes.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
     else:  
       return outputWidget.NameFormatHelper(outputFormat.TvNameFormatter(),
-                                           tvImpl.AdvancedEpisodeInfo("Show Name", "Series Number", 
+                                           tvTypes.AdvancedEpisodeInfo("Show Name", "Series Number", 
                                                                       "Episode Number", "Episode Name"),
-                                           tvImpl.AdvancedEpisodeInfo("Entourage", 9, 3, "The Serenity Now"))
+                                           tvTypes.AdvancedEpisodeInfo("Seinfeld", 9, 3, "The Serenity Now"))
     
   @staticmethod
   def getWorkBenchWidget(mode, parent=None):

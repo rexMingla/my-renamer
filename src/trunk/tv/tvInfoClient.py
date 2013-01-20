@@ -5,10 +5,10 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module that connects to tv show sources
 # --------------------------------------------------------------------------------------------------------------------
-from common import infoClient
+from common import commonInfoClient
 from common import utils
 
-import tvImpl
+import tvTypes
 
 hasTvdb = False
 try:
@@ -25,36 +25,9 @@ try:
   hasTvRage = True
 except ImportError:
   pass
-
-# --------------------------------------------------------------------------------------------------------------------
-class TvSearchParams(infoClient.BaseInfoClientSearchParams):
-  def __init__(self, showName, seasonNum):
-    super(TvSearchParams, self).__init__()
-    self.showName = showName
-    self.seasonNum = seasonNum    
-    
-  def getKey(self):
-    return utils.sanitizeString("{} ({})".format(self.showName, self.seasonNum))
-
-  def toInfo(self):
-    return tvImpl.SeasonInfo(self.showName, self.seasonNum)
-
-# --------------------------------------------------------------------------------------------------------------------
-class TvInfo(infoClient.BaseInfo):
-  def __init__(self, showName, seasonNum):
-    self.showName = showName
-    self.seasonNum = seasonNum
-    self.episodes = {}
-    
-  def toDestEpisodeMap(self):
-    #hack: this should be the same class
-    ret = tvImpl.SeasonInfo(self.showName, self.seasonNum)
-    for epNum, name in self.episodes.items():
-      ret.matches[key] = copy.copy(value)
-    return ret
   
 # --------------------------------------------------------------------------------------------------------------------
-class TvInfoStoreHolder(infoClient.BaseInfoStoreHolder):
+class TvInfoStoreHolder(commonInfoClient.BaseInfoStoreHolder):
   pass
 
 _STORE = None
@@ -69,7 +42,7 @@ def getStoreHolder():
   return _STORE
 
 # --------------------------------------------------------------------------------------------------------------------
-class BaseTvInfoClient(infoClient.BaseInfoClient):
+class BaseTvInfoClient(commonInfoClient.BaseInfoClient):
   pass
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -84,12 +57,12 @@ class TvdbClient(BaseTvInfoClient):
     try:
       tv = tvdb_api.Tvdb()
       season = tv[searchParams.showName][searchParams.seasonNum]
-      eps = tvImpl.SeasonInfo(utils.sanitizeString(tv[searchParams.showName]["seriesname"], "") or 
+      eps = tvTypes.SeasonInfo(utils.sanitizeString(tv[searchParams.showName]["seriesname"], "") or 
                                           searchParams.showName, searchParams.seasonNum)
       ret.append(eps)
       for i in season:
         ep = season[i]
-        show = tvImpl.EpisodeInfo(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
+        show = tvTypes.EpisodeInfo(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
         eps.episodes.append(show)
     except tvdb_exceptions.tvdb_exception as e:
       utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 
@@ -109,10 +82,10 @@ class TvRageClient(BaseTvInfoClient):
     try:
       tv = tvrage.api.Show(searchParams.showName)
       season = tv.season(searchParams.seasonNum)
-      eps = tvImpl.SeasonInfo(utils.sanitizeString(tv.name) or searchParams.showName, searchParams.seasonNum)
+      eps = tvTypes.SeasonInfo(utils.sanitizeString(tv.name) or searchParams.showName, searchParams.seasonNum)
       ret.append(eps)
       for ep in season.values():
-        show = tvImpl.EpisodeInfo(int(ep.number), utils.sanitizeString(ep.title))
+        show = tvTypes.EpisodeInfo(int(ep.number), utils.sanitizeString(ep.title))
         eps.episodes.append(show)
     except tvrage.exceptions.BaseError as e:
       utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 

@@ -80,22 +80,21 @@ class MovieWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
     self._editMovie()
 
   def _onSelectionChanged(self, selection=None):
-    #HACK: rename to _updateWidget perhaps?
     selection = selection or self.movieView.selectionModel().selection()
     indexes = selection.indexes()
     self._currentIndex = self._sortModel.mapToSource(indexes[0]) if indexes else QtCore.QModelIndex()
     self._updateActions()
-    self.renameItemChangedSignal.emit(self._model.getMoveItem(self._currentIndex)) #HACK: consistent naming!
-      
+    self.renameItemChangedSignal.emit(self._model.getRenameItem(self._currentIndex))
+    
   def _editMovie(self):
     movie = self._model.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
-    utils.verifyType(movie, movieManager.MovieRenameItem)
+    #utils.verifyType(movie, movieManager.MovieRenameItem)
     self._changeMovieWidget.setData(movie)
     self._changeMovieWidget.show()    
       
   def _onChangeMovieFinished(self):
     data = self._changeMovieWidget.data()    
-    utils.verifyType(data, movieManager.MovieRenameItem)
+    #utils.verifyType(data, movieManager.MovieRenameItem)
     self._manager.setItem(data.getInfo())
     self._model.setData(self._currentIndex, data, movieModel.RAW_DATA_ROLE)
     self._onSelectionChanged()
