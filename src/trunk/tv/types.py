@@ -7,14 +7,14 @@
 # --------------------------------------------------------------------------------------------------------------------
 import copy
 
-from common import commonTypes
+from base import types as base_types
 from common import utils
 
 UNRESOLVED_KEY = -1
 UNRESOLVED_NAME = "" 
   
 # --------------------------------------------------------------------------------------------------------------------
-class TvSearchParams(commonTypes.BaseInfoClientSearchParams):
+class TvSearchParams(base_types.BaseInfoClientSearchParams):
   def __init__(self, showName, seasonNum):
     super(TvSearchParams, self).__init__()
     self.showName = showName
@@ -67,7 +67,7 @@ class AdvancedEpisodeInfo(EpisodeInfo):
     return AdvancedEpisodeInfo(self.showName, self.seasonNum, self.epNum, self.epName)
   
 # -----------------------------------------------------------------------------------
-class EpisodeRenameItem(commonTypes.BaseRenameItem):
+class EpisodeRenameItem(base_types.BaseRenameItem):
   """ An item that may be selected for move/copy action. """
   READY          = 1
   MISSING_NEW    = 2
@@ -159,7 +159,7 @@ class SourceFiles(list):
     super(SourceFiles, self).append(item)
     
 # -----------------------------------------------------------------------------------
-class SeasonInfo(commonTypes.BaseInfo):
+class SeasonInfo(base_types.BaseInfo):
   """ contains list of """
   def __init__(self, showName="", seasonNum=""):
     super(SeasonInfo, self).__init__()

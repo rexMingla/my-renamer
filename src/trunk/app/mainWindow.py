@@ -12,7 +12,7 @@ from PyQt4 import QtCore
 from PyQt4 import uic
 
 from common import config
-from common import fileHelper
+from common import file_helper
 from common import utils
 
 import configManager
@@ -138,10 +138,10 @@ class MainWindow(QtGui.QMainWindow):
     event.accept()
     
   def _addDockWidget(self, widget, areas, defaultArea, name):
-    utils.verifyType(widget, QtGui.QWidget)
-    utils.verifyType(areas, int)
-    utils.verifyType(defaultArea, int)
-    utils.verifyType(name, str)
+    #utils.verifyType(widget, QtGui.QWidget)
+    #utils.verifyType(areas, int)
+    #utils.verifyType(defaultArea, int)
+    #utils.verifyType(name, str)
     dock = QtGui.QDockWidget(name, widget.parent())
     dock.setObjectName(name)
     dock.setWidget(widget)
@@ -221,7 +221,7 @@ class MainWindow(QtGui.QMainWindow):
       for m in self._modeToModule.values():
         for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
           w.setConfig(self._configManager.getData(w.configName, None))    
-    except (AttributeError, KeyError) as e:
+    except (ValueError, TypeError, IndexError, KeyError) as e:
       utils.logWarning("Unable to load config file. reason: {}".format(e))
       if not self._restoringDefaults:
         self._restoreDefaults()
@@ -235,12 +235,12 @@ class MainWindow(QtGui.QMainWindow):
   
   def _restoreDefaults(self):
     self._restoringDefaults = True
-    fileHelper.FileHelper.removeFile(self._configFile)
+    file_helper.FileHelper.removeFile(self._configFile)
     self._loadSettingsConfig()
     self._restoringDefaults = False
     
   def _clearCache(self):
-    fileHelper.FileHelper.removeFile(self._cacheFile)
+    file_helper.FileHelper.removeFile(self._cacheFile)
     self._loadCache()
     
     

@@ -12,8 +12,8 @@ from common import config
 from common import renamer
 from common import utils
 
-from movie import movieModel
-from movie import movieManager
+from movie import model as movie_model
+#from movie import manager as movie_manager
 
 import editMovieWidget
 import interfaces
@@ -23,23 +23,23 @@ import workBenchWidget
 class MovieWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
   def __init__(self, manager, parent=None):
     super(MovieWorkBenchWidget, self).__init__(interfaces.Mode.MOVIE_MODE, manager, parent)
-    self._setModel(movieModel.MovieModel(self.movieView))
+    self._setModel(movie_model.MovieModel(self.movieView))
     
     self._changeMovieWidget = editMovieWidget.EditMovieWidget(self)
     self._changeMovieWidget.accepted.connect(self._onChangeMovieFinished)
     self._changeMovieWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)    
     
-    self._sortModel = movieModel.SortFilterModel(self)
+    self._sortModel = movie_model.SortFilterModel(self)
     self._sortModel.setSourceModel(self._model)  
     self.movieView.setModel(self._sortModel)
-    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_CHECK, QtGui.QHeaderView.Fixed)
-    self.movieView.horizontalHeader().resizeSection(movieModel.Columns.COL_CHECK, 25)
-    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
-    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
-    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_YEAR, QtGui.QHeaderView.Interactive)
-    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_DISC, QtGui.QHeaderView.Interactive)
-    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_STATUS, QtGui.QHeaderView.Interactive)
-    self.movieView.horizontalHeader().setResizeMode(movieModel.Columns.COL_GENRE, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_CHECK, QtGui.QHeaderView.Fixed)
+    self.movieView.horizontalHeader().resizeSection(movie_model.Columns.COL_CHECK, 25)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_YEAR, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_DISC, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_STATUS, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_GENRE, QtGui.QHeaderView.Interactive)
     self.movieView.horizontalHeader().setStretchLastSection(True)
     self.movieView.verticalHeader().setDefaultSectionSize(20)
     self.movieView.setSortingEnabled(True)
@@ -87,16 +87,16 @@ class MovieWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
     self.renameItemChangedSignal.emit(self._model.getRenameItem(self._currentIndex))
     
   def _editMovie(self):
-    movie = self._model.data(self._currentIndex, movieModel.RAW_DATA_ROLE)
-    #utils.verifyType(movie, movieManager.MovieRenameItem)
+    movie = self._model.data(self._currentIndex, movie_model.RAW_DATA_ROLE)
+    #utils.verifyType(movie, movie_manager.MovieRenameItem)
     self._changeMovieWidget.setData(movie)
     self._changeMovieWidget.show()    
       
   def _onChangeMovieFinished(self):
     data = self._changeMovieWidget.data()    
-    #utils.verifyType(data, movieManager.MovieRenameItem)
+    #utils.verifyType(data, movie_manager.MovieRenameItem)
     self._manager.setItem(data.getInfo())
-    self._model.setData(self._currentIndex, data, movieModel.RAW_DATA_ROLE)
+    self._model.setData(self._currentIndex, data, movie_model.RAW_DATA_ROLE)
     self._onSelectionChanged()
     
   def _requireYearChanged(self, requireYear):

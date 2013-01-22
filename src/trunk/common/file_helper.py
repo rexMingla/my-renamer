@@ -27,49 +27,49 @@ class FileHelper:
   
   @staticmethod
   def isFile(f):
-    utils.verifyType(f, str)
+    #utils.verifyType(f, str)
     return os.path.isfile(f)
 
   @staticmethod
   def isDir(d):
-    utils.verifyType(d, str)
+    #utils.verifyType(d, str)
     return os.path.isdir(d)
 
   @staticmethod
   def dirname(f):
-    utils.verifyType(f, str)
+    #utils.verifyType(f, str)
     return os.path.dirname(f)
   
   @staticmethod
   def basename(f):
-    utils.verifyType(f, str)
+    #utils.verifyType(f, str)
     return os.path.basename(f)
   
   @staticmethod
   def splitDrive(p):
-    utils.verifyType(p, str)
+    #utils.verifyType(p, str)
     return os.path.splitdrive(p)
   
   @staticmethod
   def extension(f):
-    utils.verifyType(f, str)
+    #utils.verifyType(f, str)
     return os.path.splitext(f)[1]
   
   @staticmethod
   def joinPath(d, f):
-    utils.verifyType(d, str)
-    utils.verifyType(f, str)
+    #utils.verifyType(d, str)
+    #utils.verifyType(f, str)
     ret = os.path.join(d, f)
     return ret
 
   @staticmethod
   def dirExists(d):
-    utils.verifyType(d, str)
+    #utils.verifyType(d, str)
     return os.path.exists(d) and FileHelper.isDir(d)
   
   @staticmethod
   def createDir(d):
-    utils.verifyType(d, str)
+    #utils.verifyType(d, str)
     ret = True
     if not FileHelper.dirExists(d):
       try:
@@ -80,7 +80,7 @@ class FileHelper:
   
   @staticmethod
   def removeDir(d):
-    utils.verifyType(d, str)
+    #utils.verifyType(d, str)
     ret = True
     if FileHelper.dirExists(d):
       try:
@@ -91,12 +91,12 @@ class FileHelper:
 
   @staticmethod
   def fileExists(f):
-    utils.verifyType(f, str)
+    #utils.verifyType(f, str)
     return os.path.exists(f) and FileHelper.isFile(f)
  
   @staticmethod
   def isValidFilename(f):
-    utils.verifyType(f, str)
+    #utils.verifyType(f, str)
     drive, tail = FileHelper.splitDrive(f)
     parts = _RE_PATH.split(tail)   
     isOk = bool(_RE_VALID_FILENAME.match(tail))
@@ -104,8 +104,8 @@ class FileHelper:
     
   @staticmethod
   def sanitizeFilename(f, replaceChar="-"):
-    utils.verifyType(f, str)
-    utils.verifyType(replaceChar, str)
+    #utils.verifyType(f, str)
+    #utils.verifyType(replaceChar, str)
     drive, tail = FileHelper.splitDrive(f)
     tail = _RE_INALID_FILENAME.sub(replaceChar, tail)
     ret = FileHelper.replaceSeparators("".join([drive, tail]), os.sep)
@@ -121,7 +121,7 @@ class FileHelper:
   
   @staticmethod
   def removeFile(f):
-    utils.verifyType(f, str)
+    #utils.verifyType(f, str)
     ret = True
     if FileHelper.fileExists(f):
       try:
@@ -136,8 +136,8 @@ class FileHelper:
 
   @staticmethod
   def moveFile(source, dest, progressCb=None):
-    utils.verifyType(source, str)
-    utils.verifyType(dest, str)
+    #utils.verifyType(source, str)
+    #utils.verifyType(dest, str)
     
     def safeMoveFile(source, dest):
       ret = False
@@ -165,8 +165,8 @@ class FileHelper:
   
   @staticmethod
   def copyFile(source, dest, progressCb=None):
-    utils.verifyType(source, str)
-    utils.verifyType(dest, str)
+    #utils.verifyType(source, str)
+    #utils.verifyType(dest, str)
 
     def unsafeCopyFile(s, d, progressCb):
       """ bitwise copy so that we can be more responsive to user cancels etc. """

@@ -11,8 +11,8 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from common import fileHelper
-from common import outputFormat
+from common import file_helper
+from common import formatting
 from common import utils
     
 # --------------------------------------------------------------------------------------------------------------------

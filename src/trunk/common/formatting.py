@@ -9,7 +9,7 @@ import abc
 import re
 
 from common import utils
-from fileHelper import FileHelper
+from file_helper import FileHelper
 
 CONDITIONAL_START = "%("
 CONDITIONAL_END = ")%"

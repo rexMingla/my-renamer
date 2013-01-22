@@ -12,15 +12,13 @@ if __name__ == "__main__":
 
 import unittest
 
-from app import outputWidget
-
-from common import fileHelper
+from common import file_helper
 from common import renamer
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 def createTestFile(name):
-  utils.verifyType(name, str)
+  #utils.verifyType(name, str)
   f = file(name, "w")
   f.close()
 
@@ -30,10 +28,10 @@ class BasicTest(unittest.TestCase):
     src = "basicMoveSrc.txt"
     dest = "basicMoveDest.txt"
     createTestFile(src)
-    self.assertTrue(fileHelper.FileHelper.moveFile(src, dest))
-    self.assertFalse(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    fileHelper.FileHelper.removeFile(dest)
+    self.assertTrue(file_helper.FileHelper.moveFile(src, dest))
+    self.assertFalse(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
+    file_helper.FileHelper.removeFile(dest)
 
 # --------------------------------------------------------------------------------------------------------------------
 class BasicCopyTest(unittest.TestCase):
@@ -41,70 +39,70 @@ class BasicCopyTest(unittest.TestCase):
     src = "basicCopySrc.txt"
     dest = "basicCopyDest.txt"
     createTestFile(src)
-    self.assertTrue(fileHelper.FileHelper.copyFile(src, dest))
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    fileHelper.FileHelper.removeFile(src)
-    fileHelper.FileHelper.removeFile(dest)
+    self.assertTrue(file_helper.FileHelper.copyFile(src, dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
+    file_helper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(dest)
     
   def test_basicCopyToNewDir(self):
     src = "basicCopyToDir.txt"
     destDir = "test/"
     dest = destDir + "basicCopyToDir.txt"
     createTestFile(src)
-    self.assertTrue(fileHelper.FileHelper.removeDir(destDir))
-    self.assertTrue(fileHelper.FileHelper.copyFile(src, dest))
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    fileHelper.FileHelper.removeFile(src)
-    fileHelper.FileHelper.removeFile(dest)
-    fileHelper.FileHelper.removeDir(destDir)
+    self.assertTrue(file_helper.FileHelper.removeDir(destDir))
+    self.assertTrue(file_helper.FileHelper.copyFile(src, dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
+    file_helper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeDir(destDir)
     
   def test_basicCopyToNewDir2(self):
     src = "basicCopyToDir.txt"
     destDir = "test/test/"
     dest = destDir + "basicCopyToDir.txt"
     createTestFile(src)
-    self.assertTrue(fileHelper.FileHelper.removeDir(destDir))
-    self.assertTrue(fileHelper.FileHelper.copyFile(src, dest))
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    fileHelper.FileHelper.removeFile(src)
-    fileHelper.FileHelper.removeFile(dest)
-    fileHelper.FileHelper.removeDir("test")
+    self.assertTrue(file_helper.FileHelper.removeDir(destDir))
+    self.assertTrue(file_helper.FileHelper.copyFile(src, dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
+    file_helper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeDir("test")
     
 # --------------------------------------------------------------------------------------------------------------------
 class BasicMoveTest(unittest.TestCase):
   def test_createAndRemove(self):
     name = "createAndRemove.txt"
     createTestFile(name)
-    self.assertTrue(fileHelper.FileHelper.fileExists(name))
-    fileHelper.FileHelper.removeFile(name)
-    self.assertFalse(fileHelper.FileHelper.fileExists(name))
+    self.assertTrue(file_helper.FileHelper.fileExists(name))
+    file_helper.FileHelper.removeFile(name)
+    self.assertFalse(file_helper.FileHelper.fileExists(name))
 
   def test_basicMoveToNewDir(self):
     src = "basicMoveToDir.txt"
     destDir = "test/"
     dest = destDir + "basicMoveToDir.txt"
     createTestFile(src)
-    self.assertTrue(fileHelper.FileHelper.removeDir(destDir))
-    self.assertTrue(fileHelper.FileHelper.moveFile(src, dest))
-    self.assertFalse(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    fileHelper.FileHelper.removeFile(dest)
-    fileHelper.FileHelper.removeDir(destDir)
+    self.assertTrue(file_helper.FileHelper.removeDir(destDir))
+    self.assertTrue(file_helper.FileHelper.moveFile(src, dest))
+    self.assertFalse(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
+    file_helper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeDir(destDir)
     
   def test_basicMoveToNewDir2(self):
     src = "basicMoveToDir.txt"
     destDir = "test/test/"
     dest = destDir + "basicMoveToDir.txt"
     createTestFile(src)
-    self.assertTrue(fileHelper.FileHelper.removeDir(destDir))
-    self.assertTrue(fileHelper.FileHelper.moveFile(src, dest))
-    self.assertFalse(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
-    fileHelper.FileHelper.removeFile(dest)
-    fileHelper.FileHelper.removeDir("test")
+    self.assertTrue(file_helper.FileHelper.removeDir(destDir))
+    self.assertTrue(file_helper.FileHelper.moveFile(src, dest))
+    self.assertFalse(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
+    file_helper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeDir("test")
     
 # --------------------------------------------------------------------------------------------------------------------
 class MoveItemCandidateTest(unittest.TestCase):
@@ -114,10 +112,10 @@ class MoveItemCandidateTest(unittest.TestCase):
     mover = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
     res = mover.performAction()
-    self.assertFalse(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertFalse(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SUCCESS)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(dest)
     
   def test_sameLocation(self):
     src = "sameLocation.txt"
@@ -125,9 +123,9 @@ class MoveItemCandidateTest(unittest.TestCase):
     mover = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
     res = mover.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SUCCESS)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(dest)
   
   def test_overwrite(self):
     src = "moveOverwriteSrc.txt"
@@ -136,10 +134,10 @@ class MoveItemCandidateTest(unittest.TestCase):
     createTestFile(src)
     createTestFile(dest)
     res = mover.performAction()
-    self.assertFalse(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertFalse(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SUCCESS)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(dest)
 
   def test_noOverwrite(self):
     src = "moveOverwriteSrc.txt"
@@ -148,11 +146,11 @@ class MoveItemCandidateTest(unittest.TestCase):
     createTestFile(src)
     createTestFile(dest)
     res = mover.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.COULD_NOT_OVERWRITE)
-    fileHelper.FileHelper.removeFile(src)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(dest)
 
   def test_badFilename(self):
     src = "src.txt"
@@ -160,10 +158,10 @@ class MoveItemCandidateTest(unittest.TestCase):
     mover = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     createTestFile(src)
     res = mover.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertFalse(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertFalse(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.INVALID_FILENAME)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(dest)
     
   def test_badFilename2(self):
     src = "src.txt"
@@ -172,7 +170,7 @@ class MoveItemCandidateTest(unittest.TestCase):
     createTestFile(src)
     res = mover.performAction()
     self.assertEqual(res, renamer.FileRenamer.INVALID_FILENAME)
-    fileHelper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(src)
     
   def test_badFilename3(self):
     src = "src.txt"
@@ -181,7 +179,7 @@ class MoveItemCandidateTest(unittest.TestCase):
     createTestFile(src)
     res = mover.performAction()
     self.assertEqual(res, renamer.FileRenamer.INVALID_FILENAME)
-    fileHelper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(src)
 
   def test_badFilename4(self):
     src = "src.txt"
@@ -190,14 +188,14 @@ class MoveItemCandidateTest(unittest.TestCase):
     createTestFile(src)
     res = mover.performAction()
     self.assertEqual(res, renamer.FileRenamer.INVALID_FILENAME)
-    fileHelper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(src)
 
   def test_badSource(self):
     src = ""
     dest = "dest.txt"
     copier = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=False)
     res = copier.performAction()
-    self.assertFalse(fileHelper.FileHelper.fileExists(dest))
+    self.assertFalse(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SOURCE_DOES_NOT_EXIST)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -208,10 +206,10 @@ class CopyItemTest(unittest.TestCase):
     copier = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     createTestFile(src)
     res = copier.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SUCCESS)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(dest)
     
   def test_sameLocation(self):
     src = "sameLocation.txt"
@@ -219,9 +217,9 @@ class CopyItemTest(unittest.TestCase):
     copier = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     createTestFile(src)
     res = copier.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SUCCESS)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(dest)
   
   def test_overwrite(self):
     src = "overwriteSrc.txt"
@@ -230,10 +228,10 @@ class CopyItemTest(unittest.TestCase):
     createTestFile(src)
     createTestFile(dest)
     res = copier.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SUCCESS)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(dest)
 
   def test_noOverwrite(self):
     src = "overwriteSrc.txt"
@@ -242,11 +240,11 @@ class CopyItemTest(unittest.TestCase):
     createTestFile(src)
     createTestFile(dest)
     res = copier.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertTrue(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertTrue(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.COULD_NOT_OVERWRITE)
-    fileHelper.FileHelper.removeFile(src)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(dest)
     
   def test_badFilename(self):
     src = "src.txt"
@@ -254,18 +252,18 @@ class CopyItemTest(unittest.TestCase):
     copier = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     createTestFile(src)
     res = copier.performAction()
-    self.assertTrue(fileHelper.FileHelper.fileExists(src))
-    self.assertFalse(fileHelper.FileHelper.fileExists(dest))
+    self.assertTrue(file_helper.FileHelper.fileExists(src))
+    self.assertFalse(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.INVALID_FILENAME)
-    fileHelper.FileHelper.removeFile(src)
-    fileHelper.FileHelper.removeFile(dest)
+    file_helper.FileHelper.removeFile(src)
+    file_helper.FileHelper.removeFile(dest)
 
   def test_badSource(self):
     src = ""
     dest = "dest.txt"
     copier = renamer.FileRenamer(src, dest, canOverwrite=True, keepSource=True)
     res = copier.performAction()
-    self.assertFalse(fileHelper.FileHelper.fileExists(dest))
+    self.assertFalse(file_helper.FileHelper.fileExists(dest))
     self.assertEqual(res, renamer.FileRenamer.SOURCE_DOES_NOT_EXIST)
     
 # --------------------------------------------------------------------------------------------------------------------

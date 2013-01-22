@@ -11,13 +11,14 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from common import commonInfoClient
-from common import fileHelper
+from common import file_helper
 from common import thread
 from common import utils
 
-from tv import tvTypes
-from tv import tvInfoClient
+from base import client as base_client
+
+from tv import types as tv_types
+from tv import client as tv_client
 
 import searchResultsWidget
 
@@ -46,7 +47,7 @@ class EditSeasonWidget(QtGui.QDialog):
     uic.loadUi("ui/ui_ChangeSeason.ui", self)
     self.setWindowModality(True)
     self._workerThread = None
-    self._data = tvTypes.Season("", tvTypes.SeasonInfo(), tvTypes.SourceFiles())
+    self._data = tv_types.Season("", tv_types.SeasonInfo(), tv_types.SourceFiles())
     
     self.searchButton.clicked.connect(self._search)
     self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
@@ -111,9 +112,9 @@ class EditSeasonWidget(QtGui.QDialog):
     self.placeholderWidget.setEnabled(False)    
     self.progressBar.setVisible(True)
     
-    self._workerThread = GetSeasonThread(tvTypes.TvSearchParams(utils.toString(self.seasonEdit.text()), 
+    self._workerThread = GetSeasonThread(tv_types.TvSearchParams(utils.toString(self.seasonEdit.text()), 
                                                                      self.seasonSpin.value()),
-                                         tvInfoClient.getStoreHolder(),
+                                         tv_client.getStoreHolder(),
                                          self._isLucky)
     self._workerThread.newDataSignal.connect(self._onDataFound)
     self._workerThread.finished.connect(self._onThreadFinished)
@@ -147,7 +148,7 @@ class EditSeasonWidget(QtGui.QDialog):
     else:
       if not self._foundData:
         self._searchResults.clear()
-        self._searchResults.addItem(commonInfoClient.ResultHolder(self.data().info, "current"))
+        self._searchResults.addItem(base_client.ResultHolder(self.data().info, "current"))
       self._searchResults.addItem(data)
       self._showResults()
     self._foundData = True
@@ -203,15 +204,15 @@ class EditSeasonWidget(QtGui.QDialog):
   
   def setData(self, s):
     """ Fill the dialog with the data prior to being shown """
-    #utils.verifyType(s, tvTypes.Season)
+    #utils.verifyType(s, tv_types.Season)
     self._data = s
-    self.folderEdit.setText(fileHelper.FileHelper.basename(s.inputFolder))    
+    self.folderEdit.setText(file_helper.FileHelper.basename(s.inputFolder))    
     self.folderEdit.setToolTip(s.inputFolder)    
     self._setSeasonInfo(s.info)
     self.seasonEdit.selectAll()    
     
   def _setSeasonInfo(self, info):
-    #utils.verifyType(info, tvTypes.SeasonInfo)
+    #utils.verifyType(info, tv_types.SeasonInfo)
     self.seasonEdit.setText(info.showName)
     self.seasonSpin.setValue(info.seasonNum)    
     self.episodeTable.clearContents()
@@ -230,11 +231,11 @@ class EditSeasonWidget(QtGui.QDialog):
     self._onSelectionChanged()
     
   def data(self):   
-    info = tvTypes.SeasonInfo(utils.toString(self.seasonEdit.text()), self.seasonSpin.value()) 
+    info = tv_types.SeasonInfo(utils.toString(self.seasonEdit.text()), self.seasonSpin.value()) 
     startIndex = self.indexSpinBox.value()
     for i in range(self.episodeTable.rowCount()):
       epName = self.episodeTable.item(i, _TITLE_COLUMN)
-      info.episodes.append(tvTypes.EpisodeInfo(i + startIndex, utils.toString(epName.text())))
+      info.episodes.append(tv_types.EpisodeInfo(i + startIndex, utils.toString(epName.text())))
     self._data.updateSeasonInfo(info)
     return copy.copy(self._data)
   

@@ -10,7 +10,6 @@ import time
 from PyQt4 import QtCore
 
 import collections
-import logModel
 import utils
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -34,7 +33,7 @@ class WorkerThread(QtCore.QThread):
 
   def __init__(self, name):
     super(WorkerThread, self).__init__()
-    utils.verifyType(name, str)
+    #utils.verifyType(name, str)
     self._name = name
     self._userStopped = False
     self.startTime = time.clock()
@@ -80,7 +79,7 @@ class AdvancedWorkerThread(WorkerThread):
     items = self._getAllItems()
     itemCount = 0
     self._numItems = len(items)
-    results = collections.defaultdict(int)
+    results = collections.Counter()
     for self._i, inputItem in enumerate(items):
       item = self._applyToItem(inputItem)
       if item:
@@ -91,7 +90,7 @@ class AdvancedWorkerThread(WorkerThread):
           self._onLog(item.log)
         results[item.result] += 1
       if self._userStopped:
-        self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+        self._onLog(utils.LogItem(utils.LogLevel.INFO, 
                                      self._name,
                                      "User cancelled. {} of {} processed.".format(self._i + 1, self._numItems)))              
         break
@@ -100,7 +99,7 @@ class AdvancedWorkerThread(WorkerThread):
     results["Total"] = sum(v for _, v in results.items())
     summaryText = " ".join([("{}:{}".format(key, results[key])) 
                             for key in sorted(results, key=lambda k: results[k] + 1 if k == "Total" else 0)])
-    self._onLog(logModel.LogItem(logModel.LogLevel.INFO, 
+    self._onLog(utils.LogItem(utils.LogLevel.INFO, 
                                  self._name, 
                                  "Action complete. {} processed in {}. Summary: {}".format(itemCount, 
                                                                                            prettyTime(self.startTime),

@@ -13,7 +13,7 @@ import traceback
 from PyQt4 import QtGui
 
 from common import config
-from common import fileHelper
+from common import file_helper
 from common import utils
 
 jsonpickle.set_encoder_options("simplejson", indent=2)
@@ -33,11 +33,11 @@ class ConfigManager(object):
     
   def loadConfig(self, filename):
     self._data = {}
-    if fileHelper.FileHelper.fileExists(filename):
+    if file_helper.FileHelper.fileExists(filename):
       f = open(filename, "r")
       try:
         self._data = jsonpickle.decode(f.read())
-      except (ValueError, TypeError, KeyError) as e:
+      except (ValueError, TypeError, IndexError, KeyError) as e:
         utils.logWarning("loadConfig error: {}".format(e))
     if not isinstance(self._data, dict):
       self._data = {}

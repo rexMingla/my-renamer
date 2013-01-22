@@ -12,7 +12,7 @@ from common import config
 from common import interfaces
 from common import utils
 
-from tv import tvModel
+from tv import model as tv_model
 
 import editEpisodeWidget
 import editSeasonWidget
@@ -22,7 +22,7 @@ import workBenchWidget
 class TvWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
   def __init__(self, manager, parent=None):
     super(TvWorkBenchWidget, self).__init__(interfaces.Mode.TV_MODE, manager, parent)
-    self._setModel(tvModel.TvModel(self.tvView))
+    self._setModel(tv_model.TvModel(self.tvView))
 
     self._changeEpisodeWidget = editEpisodeWidget.EditEpisodeWidget(self)
     self._changeEpisodeWidget.accepted.connect(self._onChangeEpisodeFinished)
@@ -32,12 +32,12 @@ class TvWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
     self._changeSeasonWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)
         
     self.tvView.setModel(self._model)
-    self.tvView.header().setResizeMode(tvModel.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
-    self.tvView.header().setResizeMode(tvModel.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
-    self.tvView.header().setResizeMode(tvModel.Columns.COL_NEW_NUM, QtGui.QHeaderView.Interactive)
-    self.tvView.header().setResizeMode(tvModel.Columns.COL_STATUS, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_NEW_NUM, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_STATUS, QtGui.QHeaderView.Interactive)
     self.tvView.header().setStretchLastSection(True)
-    #self.tvView.setItemDelegateForColumn(tvModel.Columns.COL_NEW_NAME, tvModel.SeriesDelegate(self))
+    #self.tvView.setItemDelegateForColumn(tv_model.Columns.COL_NEW_NAME, tv_model.SeriesDelegate(self))
     
     self.tvView.selectionModel().selectionChanged.connect(self._onSelectionChanged)
     self.tvView.doubleClicked.connect(self._showItem)
@@ -67,7 +67,7 @@ class TvWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
     self.renameItemChangedSignal.emit(self._model.getRenameItem(self._currentIndex))
     
   def _showItem(self):
-    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
+    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
     if isMoveItemCandidate:
       if self._model.canEdit(self._currentIndex):
         self._editEpisode()
@@ -78,31 +78,31 @@ class TvWorkBenchWidget(workBenchWidget.BaseWorkBenchWidget):
       self._editSeason()
         
   def _editSeason(self):
-    seasonData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
+    seasonData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
     if isMoveItemCandidate:
       self._currentIndex  = self._currentIndex.parent()
-      seasonData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
+      seasonData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
     utils.verify(not isMoveItemCandidate, "Must be a movie to have gotten here!")
     self._changeSeasonWidget.setData(seasonData)
     self._changeSeasonWidget.show()
   
   def _editEpisode(self):
-    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tvModel.RAW_DATA_ROLE)
+    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
     if isMoveItemCandidate and moveItemCandidateData.canEdit:
-      seasonData, isMoveItemCandidate = self._model.data(self._currentIndex.parent(), tvModel.RAW_DATA_ROLE)
+      seasonData, isMoveItemCandidate = self._model.data(self._currentIndex.parent(), tv_model.RAW_DATA_ROLE)
       utils.verify(not isMoveItemCandidate, "Must be move item")
       self._changeEpisodeWidget.setData(seasonData, moveItemCandidateData)
       self._changeEpisodeWidget.show()
       
   def _onChangeEpisodeFinished(self):
-    self._model.setData(self._currentIndex, self._changeEpisodeWidget.episodeNumber(), tvModel.RAW_DATA_ROLE)
+    self._model.setData(self._currentIndex, self._changeEpisodeWidget.episodeNumber(), tv_model.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex.parent())
     self._onSelectionChanged()
     
   def _onChangeSeasonFinished(self):
     data = self._changeSeasonWidget.data()
-    #utils.verifyType(data, tvTypes.Season)
+    #utils.verifyType(data, tv_types.Season)
     self._manager.setItem(data.getInfo())
-    self._model.setData(self._currentIndex, data, tvModel.RAW_DATA_ROLE)
+    self._model.setData(self._currentIndex, data, tv_model.RAW_DATA_ROLE)
     self.tvView.expand(self._currentIndex)
     

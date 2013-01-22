@@ -9,15 +9,15 @@ from PyQt4 import QtCore
 
 from common import interfaces
 from common import renamer
-from common import outputFormat
+from common import formatting
 
-from tv import tvInfoClient
-from tv import tvManager
-from tv import tvTypes
+from tv import client as tv_client
+from tv import manager as tv_manager
+from tv import types as tv_types
 
-from movie import movieInfoClient
-from movie import movieManager
-from movie import movieTypes
+from movie import client as movie_client
+from movie import manager as movie_manager
+from movie import types as movie_types
 
 import editSourcesWidget
 import inputWidget
@@ -52,15 +52,15 @@ class Factory:
   @staticmethod
   def getNameFormatHelper(mode, parent=None):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return outputWidget.NameFormatHelper(outputFormat.MovieNameFormatter(),
-                                           movieTypes.MovieInfo("Title", "Year", 
+      return outputWidget.NameFormatHelper(formatting.MovieNameFormatter(),
+                                           movie_types.MovieInfo("Title", "Year", 
                                                                      "Genre", "Part", "Series"),
-                                           movieTypes.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
+                                           movie_types.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
     else:  
-      return outputWidget.NameFormatHelper(outputFormat.TvNameFormatter(),
-                                           tvTypes.AdvancedEpisodeInfo("Show Name", "Series Number", 
+      return outputWidget.NameFormatHelper(formatting.TvNameFormatter(),
+                                           tv_types.AdvancedEpisodeInfo("Show Name", "Series Number", 
                                                                       "Episode Number", "Episode Name"),
-                                           tvTypes.AdvancedEpisodeInfo("Seinfeld", 9, 3, "The Serenity Now"))
+                                           tv_types.AdvancedEpisodeInfo("Seinfeld", 9, 3, "The Serenity Now"))
     
   @staticmethod
   def getWorkBenchWidget(mode, parent=None):
@@ -73,29 +73,29 @@ class Factory:
   @staticmethod
   def getRenameItemGenerator(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return renamer.RenameItemGenerator(outputFormat.MovieNameFormatter())
+      return renamer.RenameItemGenerator(formatting.MovieNameFormatter())
     else:  
-      return renamer.RenameItemGenerator(outputFormat.TvNameFormatter())
+      return renamer.RenameItemGenerator(formatting.TvNameFormatter())
     
   @staticmethod
   def getStoreHolder(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return movieInfoClient.getStoreHolder()
+      return movie_client.getStoreHolder()
     else:
-      return tvInfoClient.getStoreHolder()
+      return tv_client.getStoreHolder()
     
   @staticmethod
   def getManager(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return movieManager.getManager()
+      return movie_manager.getManager()
     else:
-      return tvManager.getManager()
+      return tv_manager.getManager()
     
   @staticmethod
   def getOutputFormat(mode):
     if mode == interfaces.Mode.MOVIE_MODE:
-      return outputFormat.MovieInputMap
+      return formatting.MovieInputMap
     else:
-      return outputFormat.TvInputValues
+      return formatting.TvInputValues
     
     
