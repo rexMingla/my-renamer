@@ -3,26 +3,116 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Allow the user to select an season for a given folder
+# Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-import copy
-
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+import copy
+
+from common import config
 from common import file_helper
+from common import interfaces
 from common import thread
 from common import utils
 
 from base import client as base_client
+from base import widget as base_widget
 
 from tv import types as tv_types
 from tv import client as tv_client
-
-import searchResultsWidget
+from tv import model as tv_model
 
 _TITLE_COLUMN = 0
+
+# --------------------------------------------------------------------------------------------------------------------
+class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
+  def __init__(self, manager, parent=None):
+    super(TvWorkBenchWidget, self).__init__(interfaces.Mode.TV_MODE, manager, parent)
+    self._setModel(tv_model.TvModel(self.tvView))
+
+    self._changeEpisodeWidget = EditEpisodeWidget(self)
+    self._changeEpisodeWidget.accepted.connect(self._onChangeEpisodeFinished)
+    
+    self._changeSeasonWidget = EditSeasonWidget(self)
+    self._changeSeasonWidget.accepted.connect(self._onChangeSeasonFinished)
+    self._changeSeasonWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)
+        
+    self.tvView.setModel(self._model)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_NEW_NUM, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setResizeMode(tv_model.Columns.COL_STATUS, QtGui.QHeaderView.Interactive)
+    self.tvView.header().setStretchLastSection(True)
+    #self.tvView.setItemDelegateForColumn(tv_model.Columns.COL_NEW_NAME, tv_model.SeriesDelegate(self))
+    
+    self.tvView.selectionModel().selectionChanged.connect(self._onSelectionChanged)
+    self.tvView.doubleClicked.connect(self._showItem)
+    
+    self.movieView.setVisible(False)
+    self.movieGroupBox.setVisible(False)
+    self._onSelectionChanged()
+    
+  def getConfig(self):
+    ret = config.TvWorkBenchConfig()
+    ret.state = utils.toString(self.tvView.header().saveState().toBase64())
+    return ret
+  
+  def setConfig(self, data):
+    data = data or config.TvWorkBenchConfig()
+    self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.state))
+    
+  def stopExploring(self):
+    super(TvWorkBenchWidget, self).stopExploring()
+    self.tvView.expandAll()
+            
+  def _onSelectionChanged(self, selection=None):
+    selection = selection or self.tvView.selectionModel().selection()
+    indexes = selection.indexes()
+    self._currentIndex = indexes[0] if indexes else QtCore.QModelIndex()
+    self._updateActions()
+    self.renameItemChangedSignal.emit(self._model.getRenameItem(self._currentIndex))
+    
+  def _showItem(self):
+    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
+    if isMoveItemCandidate:
+      if self._model.canEdit(self._currentIndex):
+        self._editEpisode()
+      else:
+        QtGui.QMessageBox.information(self, "Can not edit Episode", 
+                                      "Episodes can only be edited for existing files where Season data has been defined.")
+    else:
+      self._editSeason()
+        
+  def _editSeason(self):
+    seasonData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
+    if isMoveItemCandidate:
+      self._currentIndex  = self._currentIndex.parent()
+      seasonData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
+    utils.verify(not isMoveItemCandidate, "Must be a movie to have gotten here!")
+    self._changeSeasonWidget.setData(seasonData)
+    self._changeSeasonWidget.show()
+  
+  def _editEpisode(self):
+    moveItemCandidateData, isMoveItemCandidate = self._model.data(self._currentIndex, tv_model.RAW_DATA_ROLE)
+    if isMoveItemCandidate and moveItemCandidateData.canEdit:
+      seasonData, isMoveItemCandidate = self._model.data(self._currentIndex.parent(), tv_model.RAW_DATA_ROLE)
+      utils.verify(not isMoveItemCandidate, "Must be move item")
+      self._changeEpisodeWidget.setData(seasonData, moveItemCandidateData)
+      self._changeEpisodeWidget.show()
+      
+  def _onChangeEpisodeFinished(self):
+    self._model.setData(self._currentIndex, self._changeEpisodeWidget.episodeNumber(), tv_model.RAW_DATA_ROLE)
+    self.tvView.expand(self._currentIndex.parent())
+    self._onSelectionChanged()
+    
+  def _onChangeSeasonFinished(self):
+    data = self._changeSeasonWidget.data()
+    #utils.verifyType(data, tv_types.Season)
+    self._manager.setItem(data.getInfo())
+    self._model.setData(self._currentIndex, data, tv_model.RAW_DATA_ROLE)
+    self.tvView.expand(self._currentIndex)
 
 # --------------------------------------------------------------------------------------------------------------------
 class GetSeasonThread(thread.WorkerThread):
@@ -66,7 +156,7 @@ class EditSeasonWidget(QtGui.QDialog):
     self.seasonEdit.installEventFilter(self)
     self.seasonSpin.installEventFilter(self)
 
-    self._searchResults = searchResultsWidget.SearchResultsWidget(self)
+    self._searchResults = base_widget.SearchResultsWidget(self)
     self._searchResults.itemSelectedSignal.connect(self._setSeasonInfo)
     lo = QtGui.QVBoxLayout()
     lo.setContentsMargins(0, 0, 0, 0)
@@ -249,4 +339,48 @@ class EditSeasonWidget(QtGui.QDialog):
     self.hideLabel.setVisible(False)
     self.showLabel.setVisible(True)
 
+# --------------------------------------------------------------------------------------------------------------------
+class EditEpisodeWidget(QtGui.QDialog):
+  """ Allows the user to assign an episode to a given file """
+  def __init__(self, parent=None):
+    super(QtGui.QDialog, self).__init__(parent)
+    self._ui = uic.loadUi("ui/ui_ChangeEpisode.ui", self)
+    self.pickFromListRadio.toggled.connect(self.episodeComboBox.setEnabled)
+    self.setWindowModality(True)
+    
+  def showEvent(self, event):
+    """ protected Qt function """
+    utils.verify(self.episodeComboBox.count() > 0, "No items in list")
+    self.setMaximumHeight(self.sizeHint().height())
+    self.setMinimumHeight(self.sizeHint().height())
   
+  def setData(self, ssn, ep):
+    """ Fill the dialog with the data prior to being shown """
+    #utils.verifyType(ssn, tv_types.Season)
+    #utils.verifyType(ep, tv_types.EpisodeRenameItem)
+    self.episodeComboBox.clear()
+    #episodeMoveItems = copy.copy(ssn.episodeMoveItems)
+    #episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
+    for mi in ssn.episodeMoveItems:
+      if mi.info.epNum != tv_types.UNRESOLVED_KEY:
+        displayName = "{}: {}".format(mi.info.epNum, mi.info.epName)
+        self.episodeComboBox.addItem(displayName, mi.info.epNum)
+    index = self.episodeComboBox.findData(ep.info.epNum)
+    if index != -1:
+      self.pickFromListRadio.setChecked(True)
+      self.episodeComboBox.setCurrentIndex(index)
+    else:
+      self.ignoreRadio.setChecked(True)
+    self.filenameEdit.setText(file_helper.FileHelper.basename(ep.filename))
+    self.filenameEdit.setToolTip(ep.filename)
+    self.episodeComboBox.setEnabled(index != -1)
+    
+  def episodeNumber(self):
+    """ 
+    Returns the currently selected episode number from the dialog. 
+    Returns tv_types.UNRESOLVED_KEY if non is selected. 
+    """
+    if self.ignoreRadio.isChecked():
+      return tv_types.UNRESOLVED_KEY
+    else:
+      return self.episodeComboBox.itemData(self.episodeComboBox.currentIndex()).toInt()[0]

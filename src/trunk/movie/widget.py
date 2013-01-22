@@ -3,29 +3,128 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Allow the user to select an season for a given folder
+# Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from base import client as base_client
+from common import config
+from common import utils
 
+from movie import model as movie_model
+from movie import client as movie_client
+from movie import types as movie_types
+
+from base import client as base_client
+from base import widget as base_widget
+
+from common import interfaces
 from common import file_helper
 from common import thread 
 from common import utils
 
-from movie import client as movie_client
-from movie import types as movie_types
+# --------------------------------------------------------------------------------------------------------------------
+class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
+  def __init__(self, manager, parent=None):
+    super(MovieWorkBenchWidget, self).__init__(interfaces.Mode.MOVIE_MODE, manager, parent)
+    self._setModel(movie_model.MovieModel(self.movieView))
+    
+    self._changeMovieWidget = EditMovieWidget(self)
+    self._changeMovieWidget.accepted.connect(self._onChangeMovieFinished)
+    self._changeMovieWidget.showEditSourcesSignal.connect(self.showEditSourcesSignal.emit)    
+    
+    self._sortModel = movie_model.SortFilterModel(self)
+    self._sortModel.setSourceModel(self._model)  
+    self.movieView.setModel(self._sortModel)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_CHECK, QtGui.QHeaderView.Fixed)
+    self.movieView.horizontalHeader().resizeSection(movie_model.Columns.COL_CHECK, 25)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_OLD_NAME, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_YEAR, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_DISC, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_STATUS, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setResizeMode(movie_model.Columns.COL_GENRE, QtGui.QHeaderView.Interactive)
+    self.movieView.horizontalHeader().setStretchLastSection(True)
+    self.movieView.verticalHeader().setDefaultSectionSize(20)
+    self.movieView.setSortingEnabled(True)
+        
+    self.yearCheckBox.toggled.connect(self._requireYearChanged)
+    self.genreCheckBox.toggled.connect(self._requireGenreChanged)
+    self.duplicateCheckBox.toggled.connect(self._flagDuplicateChanged)
+    self.movieView.selectionModel().selectionChanged.connect(self._onSelectionChanged)    
+    self.movieView.doubleClicked.connect(self._editMovie)
+    self.editMovieButton.clicked.connect(self._editMovie)
+    
+    self._requireYearChanged(self.yearCheckBox.isChecked())
+    self._requireGenreChanged(self.genreCheckBox.isChecked())
+    self._flagDuplicateChanged(self.duplicateCheckBox.isChecked())
+    
+    self.tvView.setVisible(False)
+    self._onSelectionChanged()
+     
+  def getConfig(self):
+    ret = config.MovieWorkBenchConfig()
+    ret.noYearAsError = self.yearCheckBox.isChecked()
+    ret.noGenreAsError = self.genreCheckBox.isChecked()
+    ret.duplicateAsError = self.duplicateCheckBox.isChecked()
+    ret.state = utils.toString(self.movieView.horizontalHeader().saveState().toBase64())
+    ret.seriesList = self._changeMovieWidget.getSeriesList()
+    return ret
+  
+  def setConfig(self, data):
+    data = data or config.MovieWorkBenchConfig()
 
-import searchResultsWidget
+    self.yearCheckBox.setChecked(data.noYearAsError)
+    self.genreCheckBox.setChecked(data.noGenreAsError)
+    self.duplicateCheckBox.setChecked(data.duplicateAsError)
+    self.movieView.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.state))
+    self._changeMovieWidget.setSeriesList(data.seriesList)
+    
+  def _showItem(self):    
+    self._editMovie()
+
+  def _onSelectionChanged(self, selection=None):
+    selection = selection or self.movieView.selectionModel().selection()
+    indexes = selection.indexes()
+    self._currentIndex = self._sortModel.mapToSource(indexes[0]) if indexes else QtCore.QModelIndex()
+    self._updateActions()
+    self.renameItemChangedSignal.emit(self._model.getRenameItem(self._currentIndex))
+    
+  def _editMovie(self):
+    movie = self._model.data(self._currentIndex, movie_model.RAW_DATA_ROLE)
+    #utils.verifyType(movie, movie_manager.MovieRenameItem)
+    self._changeMovieWidget.setData(movie)
+    self._changeMovieWidget.show()    
+      
+  def _onChangeMovieFinished(self):
+    data = self._changeMovieWidget.data()    
+    #utils.verifyType(data, movie_manager.MovieRenameItem)
+    self._manager.setItem(data.getInfo())
+    self._model.setData(self._currentIndex, data, movie_model.RAW_DATA_ROLE)
+    self._onSelectionChanged()
+    
+  def _requireYearChanged(self, requireYear):
+    self._disable()
+    self._model.requireYearChanged(requireYear)
+    self._enable()
+
+  def _requireGenreChanged(self, requireGenre):
+    self._disable()
+    self._model.requireGenreChanged(requireGenre)
+    self._enable()
+
+  def _flagDuplicateChanged(self, flagDuplicate):
+    self._disable()
+    self._model.flagDuplicateChanged(flagDuplicate)
+    self._enable()
 
 # --------------------------------------------------------------------------------------------------------------------
-class GetMovieThread(thread.WorkerThread):
+class _GetMovieThread(thread.WorkerThread):
   """ search for movie from sources """
   
   def __init__(self, searchParams, isLucky):
-    super(GetMovieThread, self).__init__("movie search")
+    super(_GetMovieThread, self).__init__("movie search")
     self._searchParams = searchParams
     self._store = movie_client.getStoreHolder()
     self._isLucky = isLucky
@@ -50,7 +149,7 @@ class EditMovieWidget(QtGui.QDialog):
     self.searchButton.clicked.connect(self._search)
     self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
     
-    self._searchResults = searchResultsWidget.SearchResultsWidget(self)
+    self._searchResults = base_widget.SearchResultsWidget(self)
     self._searchResults.itemSelectedSignal.connect(self._setMovieInfo)
     lo = QtGui.QVBoxLayout()
     lo.setContentsMargins(0, 0, 0, 0)
@@ -110,7 +209,7 @@ class EditMovieWidget(QtGui.QDialog):
     self.placeholderWidget.setEnabled(False)    
     self.progressBar.setVisible(True)
     
-    self._workerThread = GetMovieThread(movie_types.MovieSearchParams(utils.toString(self.searchEdit.text())), self._isLucky)
+    self._workerThread = _GetMovieThread(movie_types.MovieSearchParams(utils.toString(self.searchEdit.text())), self._isLucky)
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
@@ -183,9 +282,9 @@ class EditMovieWidget(QtGui.QDialog):
     self.yearEdit.setText(info.year or "")
     self.genreEdit.setText(info.getGenre(""))
     self.seriesEdit.setText(info.series)
-    if info.disc:
-      self.partSpinBox.setValue(int(info.disc))
-    self.partCheckBox.setChecked(bool(info.disc))
+    if info.part:
+      self.partSpinBox.setValue(int(info.part))
+    self.partCheckBox.setChecked(bool(info.part))
     
   def data(self):
     self._item.info.title = utils.toString(self.titleEdit.text())

@@ -95,6 +95,6 @@ class MovieNameFormatter(BaseNameFormatter):
       ret = {MovieNameFormatter.KEY_TITLE: info.title,
              MovieNameFormatter.KEY_YEAR:  str(info.year),
              MovieNameFormatter.KEY_GENRE: info.getGenre(""),
-             MovieNameFormatter.KEY_DISC: str(info.disc or ""),
+             MovieNameFormatter.KEY_DISC: str(info.part or ""),
              MovieNameFormatter.KEY_SERIES: info.series}
     return ret

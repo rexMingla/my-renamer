@@ -18,76 +18,6 @@ from tv import types as tv_types
 from tv import manager as tv_manager
 
 # --------------------------------------------------------------------------------------------------------------------
-class SeriesDelegate(QtGui.QStyledItemDelegate):
-  def __init__ (self, parent = None):
-    QtGui.QStyledItemDelegate.__init__(self, parent)  
-    
-  def createEditor(self, parent, option, index):
-    model = index.model()
-    item, isMoveCandidate = model.data(index, RAW_DATA_ROLE)
-    if not isMoveCandidate:
-      return None
-
-    season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
-      return None
-
-    if index.column() == Columns.COL_NEW_NAME:
-      comboBox = QtGui.QComboBox(parent)
-      
-      comboBox.addItem("Not set", tv_types.UNRESOLVED_KEY)
-      comboBox.insertSeparator(1)
-      # fill it
-
-      episodeMoveItems = copy.copy(season.episodeMoveItems)
-      episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
-      for mi in episodeMoveItems:
-        if mi.info.epName != tv_types.UNRESOLVED_NAME:
-          displayName = "{}: {}".format(mi.info.epNum, mi.info.epName)
-          comboBox.addItem(displayName, mi.info.epNum)
-      comboBox.setCurrentIndex(comboBox.findData(ep.source.epNum))
-      # Commit data to the model once the selection has changed
-      comboBox.currentIndexChanged.connect(self.commitEditorData)
-      return comboBox;
-
-  def setEditorData(self, editor, index):
-    model = index.model()
-    item, isMoveCandidate = model.data(index, RAW_DATA_ROLE)
-    if not isMoveCandidate:
-      return None
-
-    season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
-      return None
-
-    if index.column() == Columns.COL_NEW_NAME:
-      editor.setCurrentIndex(editor.findData(ep.source.epNum))
- 
-  def setModelData(self, editor, model, index):
-    model = index.model()
-    item, isMoveCandidate = model.data(index, RAW_DATA_ROLE)
-    if not isMoveCandidate:
-      return None
-
-    season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
-      return None
-
-    if index.column() == Columns.COL_NEW_NAME:
-      model.setData(index, editor.itemData(editor.currentIndex()), RAW_DATA_ROLE)
-
-  def commitEditorData(self):
-    editor = self.sender()
-    self.commitData.emit(editor)
-
-  def closeAndCommitEditorData(self):
-    self.commitEditorData()
-    self.closeEditor.emit(editor)
-    
-  def sizeHint(self, option, index):
-    return super(SeriesDelegate, self).sizeHint(option, index)  
-
-# --------------------------------------------------------------------------------------------------------------------
 class Columns:
   """ Columns used in workbench model. """
   COL_OLD_NAME  = 0
@@ -116,9 +46,6 @@ class BaseItem(object):
 
   def childCount(self):
     return len(self.childItems)
-
-  def columnCount(self):
-    return len(self.rowData_)
 
   def parent(self):
     return self.parent

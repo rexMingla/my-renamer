@@ -9,36 +9,34 @@ import getopt
 import sys
 
 class CommandLineParser:
-  def usageMessage(self):
+  def usage_message(self):
     """ Help message text displayed to user on start up error or if requested by the user. """
-    ret = self._name + " [-h | -u | -g ]\n" + \
-           "  -h -? --help   Show this message\n" + \
-           "  -u --unittest  Run unit tests\n" + \
-           "  -g --gui       Run gui (default)"
-    if self._errorMessage:
-      ret += "Error: " + self._errorMessage
+    ret = ("{} [-h | -u | -g ]\n"
+           "  -h -? --help   Show this message\n"
+           "  -u --unittest  Run unit tests\n"
+           "  -g --gui       Run gui (default)").format(sys.argv[0])
+    if self._error:
+      ret += "Error: {}".format(self._error)
     return ret
 
   def __init__(self):
-    argv = sys.argv
-    self._name = argv[0]
-    self._errorMessage = ""
+    self._error = ""
+    self.test_only = False
+    self.show_help = False
     try:
-      opts, args = getopt.getopt(argv[1:], "?hug", ["help", "unittest", "gui"])
-    except getopt.GetoptError, err:
-      self._errorMessage = err
+      opts, _ = getopt.getopt(sys.argv[1:], "?hug", ["help", "unittest", "gui"])
+    except getopt.GetoptError as err:
+      self._error = str(err)
     
-    self.testOnly = False
-    self.showHelp = False
-    if not self._errorMessage:
-      for opt, arg in opts:
+    if not self._error:
+      for opt, _ in opts:
         if opt in ("-?", "-h", "--help"):
-          self.showHelp = True
+          self.show_help = True
         elif opt in ("-u", "--unittest"):
-          self.testOnly = True
+          self.test_only = True
         elif opt in ("-g", "--gui"):
           pass
         else:
           assert(False)    
-    self.showHelp = self.showHelp or bool(self._errorMessage)
+    self.show_help = self.show_help or bool(self._error)
   

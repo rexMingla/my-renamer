@@ -61,7 +61,7 @@ class MovieHelper:
         title = title.replace(".", " ")
       title = re.sub(r"[\(\[\{\s]+$", "", title) #clean end
       title = re.sub(r"^\w+\-", "", title) #strip anywords at the start before a - character
-    movie = movie_types.MovieRenameItem(filename, movie_types.MovieInfo(title, year, genres=[], series="", disc=part))
+    movie = movie_types.MovieRenameItem(filename, movie_types.MovieInfo(title, year, genres=[], series="", part=part))
     return movie  
     
 # --------------------------------------------------------------------------------------------------------------------
