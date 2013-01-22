@@ -9,11 +9,8 @@ from PyQt4 import QtCore
 
 from common import interfaces
 from common import thread
-from common import utils
 
-from movie import types as movie_types
-
-import factory
+from app import factory
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenameThread(thread.AdvancedWorkerThread):  
@@ -40,6 +37,12 @@ class SearchThread(thread.AdvancedWorkerThread):
     super(SearchThread, self).__init__("search {}".format(mode))
     self._manager = manager
     self._config = config
+
+  def _getAllItems(self):
+    raise NotImplementedError("SearchThread._getAllItems not implemented")
+   
+  def _applyToItem(self, item):
+    raise NotImplementedError("SearchThread._applyToItem not implemented")
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvSearchThread(SearchThread):
@@ -103,7 +106,7 @@ class RenamerModule(QtCore.QObject):
     self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
     self.outputWidget.renameSignal.connect(self._rename)
     self.outputWidget.stopSignal.connect(self._stopRename)
-    self.workBenchWidget.renameItemChangedSignal.connect(self.outputWidget._onRenameItemChanged)    
+    self.workBenchWidget.renameItemChangedSignal.connect(self.outputWidget.onRenameItemChanged)    
     self.workBenchWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
     self.inputWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
     self.editSourcesWidget.accepted.connect(self.inputWidget.onSourcesWidgetFinished)
@@ -141,7 +144,8 @@ class RenamerModule(QtCore.QObject):
       w.startActioning()
 
     self._renamer.config = self.outputWidget.getConfig()
-    self._workerThread = RenameThread("rename {}".format(self.mode), self._renamer, self.workBenchWidget.actionableItems())
+    self._workerThread = RenameThread("rename {}".format(self.mode), self._renamer, 
+        self.workBenchWidget.actionableItems())
     self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
     self._workerThread.logSignal.connect(self.logSignal)
     self._workerThread.finished.connect(self._onThreadFinished)

@@ -8,13 +8,13 @@
 import os
 import sys
 
-from app import commandLine
+from app import command_line
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 def _runGUI(cl):  
   from PyQt4 import QtGui
-  from app import mainWindow
+  from app import widget
   
   try:
     if __name__ != "__main__":
@@ -30,7 +30,7 @@ def _runGUI(cl):
   
   app = QtGui.QApplication(sys.argv)
   
-  mw = mainWindow.MainWindow()
+  mw = widget.MainWindow()
   mw.show()
   app.exec_()
 
@@ -51,13 +51,15 @@ def _runTests():
   
 # --------------------------------------------------------------------------------------------------------------------
 def main(argv):
-  utils.initLogging("log.txt")
-  cl = commandLine.CommandLineParser()
-  if cl.showHelp:
-    utils.logError(cl.usageMessage())
+  utils.initLogging("log.txt") # TODO: make this configurable
+  utils.logInfo("Starting app")
+  
+  cl = command_line.CommandLineParser()
+  if cl.show_help:
+    utils.logError(cl.usage_message())
     return
   
-  if cl.testOnly:
+  if cl.test_only:
     _runTests()
   else:
     _runGUI(cl)

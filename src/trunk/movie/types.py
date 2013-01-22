@@ -32,13 +32,13 @@ class MovieRenameItem(base_types.BaseRenameItem):
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInfo(base_types.BaseInfo):
   """ info retrieved from movie clients """ 
-  def __init__(self, title="", year=None, genres=None, series="", disc=None):
+  def __init__(self, title="", year=None, genres=None, series="", part=None):
     super(MovieInfo, self).__init__()
     self.title = title
     self.year = year
     self.genres = genres or []
     self.series = series
-    self.disc = disc
+    self.part = part
     
   def __copy__(self):
     return MovieInfo(self.title, self.year, list(self.genres), self.series)

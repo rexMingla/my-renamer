@@ -152,7 +152,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     elif col == Columns.COL_NEW_NAME:
       return info.title
     elif col == Columns.COL_DISC:
-      return info.disc
+      return info.part
     elif col == Columns.COL_STATUS:
       return item.cachedStatusText
     elif col == Columns.COL_YEAR:

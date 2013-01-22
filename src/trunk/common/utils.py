@@ -15,7 +15,7 @@ UNDECODABLE_ERROR_MESSAGE = "<could not decode>"
 MIN_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 # 20 MB
 
 # --------------------------------------------------------------------------------------------------------------------
-def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
+def stackFunctionName(index=2): #1 is calling, 2 parent etc.
   """ Print the function name. Useful in debugging """
   ret = "??"
   try:

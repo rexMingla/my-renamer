@@ -5,42 +5,36 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: MainWindow for the application
 # --------------------------------------------------------------------------------------------------------------------
-import os
-
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from PyQt4 import uic
 
 from common import config
+from common import interfaces
 from common import file_helper
 from common import utils
-
-import configManager
-import dontShowAgainWidget
-import factory
-import logWidget
-import interfaces
-import welcomeWidget
+from common import dont_show
 
 import app
+from app import config_manager
+from app import module
+from app import factory
 
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
   """ main window for the app """
-  def __init__(self, configFile="config.txt", cacheFile="cache.txt", logFile="log.txt", parent = None):
-    super(QtGui.QMainWindow, self).__init__(parent)
+  def __init__(self, configFile="config.txt", cacheFile="cache.txt", parent = None):
+    super(MainWindow, self).__init__(parent)
     self.setWindowIcon(QtGui.QIcon("img/icon.ico"))
     self._configFile = configFile
     self._cacheFile = cacheFile
-    
-    utils.logInfo("Starting app")    
     
     uic.loadUi("ui/ui_MainWindow.ui", self)
     
     self._inputStackWidget = QtGui.QStackedWidget(parent)
     self._workBenchStackWidget = QtGui.QStackedWidget(parent)
     self._outputStackWidget = QtGui.QStackedWidget(parent)
-    self._logWidget = logWidget.LogWidget(parent)
+    self._logWidget = LogWidget(parent)
     self.setCentralWidget(self._workBenchStackWidget)
     
     self._modeToAction = {interfaces.Mode.MOVIE_MODE : self.actionMovieMode, 
@@ -52,12 +46,12 @@ class MainWindow(QtGui.QMainWindow):
     self._addDockWidget(self._outputStackWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
     self._addDockWidget(self._logWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
-    self._configManager = configManager.ConfigManager()
-    self._cacheManager = configManager.ConfigManager()
+    self._config_manager = config_manager.ConfigManager()
+    self._cacheManager = config_manager.ConfigManager()
     
     self._modeToModule = {}
     for mode in interfaces.VALID_MODES:
-      self._addModule(factory.Factory.getRenamerModule(mode, self))
+      self._addModule(module.RenamerModule(mode, self))
     self._mode = None
     self._autoStart = False
     
@@ -109,25 +103,25 @@ class MainWindow(QtGui.QMainWindow):
                             href("http://code.google.com/p/my-renamer/", "google code"))
     QtGui.QMessageBox.about(self, "About {}".format(app.__NAME__), msg)
     
-  def _addModule(self, module):
-    self._modeToModule[module.mode] = module
-    self._inputStackWidget.addWidget(module.inputWidget)
-    self._workBenchStackWidget.addWidget(module.workBenchWidget)
-    self._outputStackWidget.addWidget(module.outputWidget) 
-    module.logSignal.connect(self._logWidget.appendMessage)
+  def _addModule(self, mod):
+    self._modeToModule[mod.mode] = mod
+    self._inputStackWidget.addWidget(mod.inputWidget)
+    self._workBenchStackWidget.addWidget(mod.workBenchWidget)
+    self._outputStackWidget.addWidget(mod.outputWidget) 
+    mod.logSignal.connect(self._logWidget.appendMessage)
     
   def showEvent(self, event):
     super(MainWindow, self).showEvent(event)
     if not self._autoStart:
-      ww = welcomeWidget.WelcomeWidget(self._mode, self)
+      ww = WelcomeWidget(self._mode, self)
       ww.exec_()
       self._setMode(ww.mode())
       self._autoStart = ww.isAutoStart()
     event.accept()
     
   def closeEvent(self, event):
-    module = self._modeToModule[self._mode]
-    if module.outputWidget.isExecuting():
+    mod = self._modeToModule[self._mode]
+    if mod.outputWidget.isExecuting():
       response = QtGui.QMessageBox.warning(self, "You have unfinished renames", 
                                            "Do you want to keep your pending renames?", 
                                            QtGui.QMessageBox.Discard, QtGui.QMessageBox.Cancel)
@@ -164,11 +158,11 @@ class MainWindow(QtGui.QMainWindow):
       self._modeToModule[self._mode].setInactive()
     
     self._mode = mode
-    module = self._modeToModule[self._mode]
-    self._inputStackWidget.setCurrentWidget(module.inputWidget)
-    self._workBenchStackWidget.setCurrentWidget(module.workBenchWidget)
-    self._outputStackWidget.setCurrentWidget(module.outputWidget)
-    module.setActive()
+    mod = self._modeToModule[self._mode]
+    self._inputStackWidget.setCurrentWidget(mod.inputWidget)
+    self._workBenchStackWidget.setCurrentWidget(mod.workBenchWidget)
+    self._outputStackWidget.setCurrentWidget(mod.outputWidget)
+    mod.setActive()
     self.setWindowTitle("{} [{} mode]".format(app.__NAME__, self._mode.capitalize()))
 
     self.menuAction.clear()
@@ -186,14 +180,14 @@ class MainWindow(QtGui.QMainWindow):
     data.state = utils.toString(self.saveState().toBase64())
     data.mode = self._mode
     data.autoStart = self._autoStart
-    data.dontShows = dontShowAgainWidget.DontShowManager.getConfig()
+    data.dontShows = dont_show.DontShowManager.getConfig()
     data.configVersion = config.CONFIG_VERSION
-    self._configManager.setData("mw", data)
+    self._config_manager.setData("mw", data)
 
     for m in self._modeToModule.values():
       for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
-        self._configManager.setData(w.configName, w.getConfig())
-    self._configManager.saveConfig(self._configFile)
+        self._config_manager.setData(w.configName, w.getConfig())
+    self._config_manager.saveConfig(self._configFile)
     
   def _saveCache(self):
     for m in interfaces.VALID_MODES:
@@ -206,13 +200,13 @@ class MainWindow(QtGui.QMainWindow):
     self._loadCache()
     
   def _loadSettingsConfig(self):
-    self._configManager.loadConfig(self._configFile)
+    self._config_manager.loadConfig(self._configFile)
   
     try:
-      data = self._configManager.getData("mw", config.MainWindowConfig())
+      data = self._config_manager.getData("mw", config.MainWindowConfig())
       self.restoreGeometry(QtCore.QByteArray.fromBase64(data.geo))
       self.restoreState(QtCore.QByteArray.fromBase64(data.state))
-      dontShowAgainWidget.DontShowManager.setConfig(data.dontShows)
+      dont_show.DontShowManager.setConfig(data.dontShows)
       if not data.mode in interfaces.VALID_MODES:
         data.mode = interfaces.Mode.TV_MODE
       self._setMode(data.mode)
@@ -220,7 +214,7 @@ class MainWindow(QtGui.QMainWindow):
       
       for m in self._modeToModule.values():
         for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
-          w.setConfig(self._configManager.getData(w.configName, None))    
+          w.setConfig(self._config_manager.getData(w.configName, None))    
     except (ValueError, TypeError, IndexError, KeyError) as e:
       utils.logWarning("Unable to load config file. reason: {}".format(e))
       if not self._restoringDefaults:
@@ -243,7 +237,132 @@ class MainWindow(QtGui.QMainWindow):
     file_helper.FileHelper.removeFile(self._cacheFile)
     self._loadCache()
     
+# --------------------------------------------------------------------------------------------------------------------
+class WelcomeWidget(QtGui.QDialog):
+  """ First prompt seen by the user, to select movie / tv mode. """
+  def __init__(self, mode, parent=None):
+    utils.verify(mode in interfaces.VALID_MODES, "mode must be valid")
+    super(WelcomeWidget, self).__init__(parent)
+    uic.loadUi("ui/ui_Welcome.ui", self)
+    self.setWindowTitle("Welcome to {}".format(app.__NAME__))
+    self.setWindowModality(True)
     
-    
+    if mode == interfaces.Mode.MOVIE_MODE:
+      self.movieRadio.setChecked(True)
+    else:
+      self.tvRadio.setChecked(True)
   
+  def mode(self):
+    return interfaces.Mode.MOVIE_MODE if self.movieRadio.isChecked() else interfaces.Mode.TV_MODE
+  
+  def isAutoStart(self):
+    return self.autoStartCheckBox.isChecked()
+
+# --------------------------------------------------------------------------------------------------------------------
+class LogWidget(QtGui.QWidget):
+  """ Widget to display log messages to the user """
+  def __init__(self, parent=None):
+    super(LogWidget, self).__init__(parent)
+    uic.loadUi("ui/ui_LogWidget.ui", self)
+    self.clearButton.clicked.connect(self._clearLog)
+    self.clearButton.setIcon(QtGui.QIcon("img/clear.png"))    
+    self.clearButton.setEnabled(True)
+
+    self._model = _LogModel(self)
+    self.logView.setModel(self._model)
+    self.logView.horizontalHeader().setResizeMode(_LogColumns.COL_ACTION, QtGui.QHeaderView.Interactive)
+    self.logView.horizontalHeader().resizeSection(_LogColumns.COL_ACTION, 75)
+    self.logView.horizontalHeader().setResizeMode(_LogColumns.COL_MESSAGE, QtGui.QHeaderView.Interactive)
+    self.logView.horizontalHeader().setStretchLastSection(True)
     
+    self._isUpdating = False
+    
+  def onRename(self):
+    if self.autoClearCheckBox.isChecked():
+      self._clearLog()
+    
+  def appendMessage(self, item):
+    #utils.verifyType(item, LogItem)
+    self._model.addItem(item)
+    
+  def _clearLog(self):
+    self._model.clearItems()
+    
+  def setConfig(self, data):
+    """ Update from settings """
+    self.autoClearCheckBox.setChecked(data.get("autoClear", False))
+  
+  def getConfig(self):
+    return {"autoClear" : self.autoClearCheckBox.isChecked()}
+
+# --------------------------------------------------------------------------------------------------------------------
+class _LogColumns:
+  """ Columns used in log model. """
+  #COL_LEVEL   = 0
+  COL_ACTION  = 0
+  COL_MESSAGE = 1
+  NUM_COLS    = 2
+
+# --------------------------------------------------------------------------------------------------------------------
+class _LogModel(QtCore.QAbstractTableModel):
+  """ Collection of LogItems wrapped in a QAbstractTableModel """
+  LOG_LEVEL_ROLE = QtCore.Qt.UserRole + 1
+  
+  def __init__(self, parent):
+    super(_LogModel, self).__init__(parent)
+    self.items = []
+      
+  def rowCount(self, _parent):
+    return len(self.items)
+
+  def columnCount(self, _parent):
+    return _LogColumns.NUM_COLS
+  
+  def data(self, index, role):
+    if not index.isValid():
+      return None
+    
+    if role not in (QtCore.Qt.ForegroundRole, QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole):
+      return None
+    
+    item = self.items[index.row()]
+    if role == QtCore.Qt.ForegroundRole and item.logLevel >= utils.LogLevel.ERROR:
+      return QtGui.QBrush(QtCore.Qt.red)      
+    elif role == _LogModel.LOG_LEVEL_ROLE:
+      return item.logLevel
+    elif index.column() == _LogColumns.COL_ACTION:
+      return item.action
+    elif index.column() == _LogColumns.COL_MESSAGE: 
+      if role == QtCore.Qt.DisplayRole:
+        return item.shortMessage
+      else:
+        return item.longMessage
+    else: 
+      return None  
+  
+  def headerData(self, section, orientation, role):
+    if role != QtCore.Qt.DisplayRole or orientation == QtCore.Qt.Vertical:
+      return None
+    
+    #if section == _LogColumns.COL_LEVEL: 
+    #  return "Type"
+    if section == _LogColumns.COL_ACTION:
+      return "Action"
+    elif section == _LogColumns.COL_MESSAGE: 
+      return "Message"
+    return None
+    
+  def addItem(self, item):
+    #utils.verifyType(item, LogItem)
+    utils.log(item.logLevel, msg=item.shortMessage, longMsg=item.longMessage, title=item.action)
+    count = self.rowCount(QtCore.QModelIndex())
+    self.beginInsertRows(QtCore.QModelIndex(), count, count)
+    self.items.append(item)
+    self.endInsertRows()
+    
+  def clearItems(self):
+    count = self.rowCount(QtCore.QModelIndex())
+    if count:
+      self.beginResetModel()
+      self.items = []
+      self.endResetModel()

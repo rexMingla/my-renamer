@@ -31,11 +31,11 @@ class FileExtensions:
     return " "
 
   def setExtensionsFromString(self, s):
-    utils.verifyType(s, str)
+    #utils.verifyType(s, str)
     self.setExtensionsFromList(s.split(FileExtensions.delimiter()))
 
   def setExtensionsFromList(self, l):
-    utils.verifyType(l, list)
+    #utils.verifyType(l, list)
     isAll = not l
     sanitized = []
     for item in l:
@@ -60,7 +60,7 @@ class FileExtensions:
   
   def filterFiles(self, files):
     """ Return list of files matching extension filter """
-    utils.verifyType(files, list)
+    #utils.verifyType(files, list)
     ret = []
     if self == ALL_FILE_EXTENSIONS:
       ret = files
