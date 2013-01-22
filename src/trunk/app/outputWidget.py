@@ -11,8 +11,8 @@ from PyQt4 import uic
 
 from common import config
 from common import extension
-from common import fileHelper
-from common import outputFormat
+from common import file_helper
+from common import formatting
 from common import utils
 
 import interfaces
@@ -99,7 +99,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     helpValues = self._helper.formatter.getValues(self._helper.helpInfo)
     for key, value in helpValues.items():
       helpText.append("<b>{}</b>: {}".format(escapeHtml(key), value))
-    if outputFormat.CONDITIONAL_START in self._helper.formatter.DEFAULT_FORMAT_STR:
+    if formatting.CONDITIONAL_START in self._helper.formatter.DEFAULT_FORMAT_STR:
       helpText += ["", "Enclose text within <b>%( )%</b> to optionally include text is a value is present.",
                    "Eg. <b>%(</b> Disc <b>{}</b> <b>)%</b>".format(escapeHtml("<part>"))]
     self.helpEdit.setText("<html><body>{}</body></html>".format("<br/>".join(helpText)))
@@ -114,9 +114,9 @@ class OutputWidget(interfaces.LoadWidgetInterface):
       info = self._helper.previewInfo
     formattedText = self._helper.formatter.getNameFromInfo(utils.toString(self.formatEdit.text()), info)
     color = "red"
-    if fileHelper.FileHelper.isValidFilename(formattedText):
+    if file_helper.FileHelper.isValidFilename(formattedText):
       color = "gray"
-    formattedText = "{}: {}".format(prefixText, fileHelper.FileHelper.sanitizeFilename(formattedText))
+    formattedText = "{}: {}".format(prefixText, file_helper.FileHelper.sanitizeFilename(formattedText))
     self.formatExampleLabel.setText(formattedText)
     self.formatExampleLabel.setStyleSheet("QLabel {{ color: {}; }}".format(color))
     

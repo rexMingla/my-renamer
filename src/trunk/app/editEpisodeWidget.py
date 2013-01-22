@@ -10,10 +10,10 @@ import copy
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from common import fileHelper
-from common import outputFormat
+from common import file_helper
+from common import formatting
 from common import utils
-from tv import tvTypes
+from tv import types as tv_types
 
 # --------------------------------------------------------------------------------------------------------------------
 class EditEpisodeWidget(QtGui.QDialog):
@@ -32,13 +32,13 @@ class EditEpisodeWidget(QtGui.QDialog):
   
   def setData(self, ssn, ep):
     """ Fill the dialog with the data prior to being shown """
-    #utils.verifyType(ssn, tvTypes.Season)
-    #utils.verifyType(ep, tvTypes.EpisodeRenameItem)
+    #utils.verifyType(ssn, tv_types.Season)
+    #utils.verifyType(ep, tv_types.EpisodeRenameItem)
     self.episodeComboBox.clear()
     #episodeMoveItems = copy.copy(ssn.episodeMoveItems)
     #episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
     for mi in ssn.episodeMoveItems:
-      if mi.info.epNum != tvTypes.UNRESOLVED_KEY:
+      if mi.info.epNum != tv_types.UNRESOLVED_KEY:
         displayName = "{}: {}".format(mi.info.epNum, mi.info.epName)
         self.episodeComboBox.addItem(displayName, mi.info.epNum)
     index = self.episodeComboBox.findData(ep.info.epNum)
@@ -47,17 +47,17 @@ class EditEpisodeWidget(QtGui.QDialog):
       self.episodeComboBox.setCurrentIndex(index)
     else:
       self.ignoreRadio.setChecked(True)
-    self.filenameEdit.setText(fileHelper.FileHelper.basename(ep.filename))
+    self.filenameEdit.setText(file_helper.FileHelper.basename(ep.filename))
     self.filenameEdit.setToolTip(ep.filename)
     self.episodeComboBox.setEnabled(index != -1)
     
   def episodeNumber(self):
     """ 
     Returns the currently selected episode number from the dialog. 
-    Returns tvTypes.UNRESOLVED_KEY if non is selected. 
+    Returns tv_types.UNRESOLVED_KEY if non is selected. 
     """
     if self.ignoreRadio.isChecked():
-      return tvTypes.UNRESOLVED_KEY
+      return tv_types.UNRESOLVED_KEY
     else:
       return self.episodeComboBox.itemData(self.episodeComboBox.currentIndex()).toInt()[0]
    

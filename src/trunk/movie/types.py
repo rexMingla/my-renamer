@@ -3,53 +3,34 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Model and other classes pertaining to the set of tv seasons to be modified in the workbench
+# Purpose of document: Classes to represent movies
 # --------------------------------------------------------------------------------------------------------------------
 import copy
 
-from common import commonTypes
+from base import types as base_types
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
-class Result:
-  SAMPLE_VIDEO = 1
-  FILE_NOT_FOUND = 2
-  FOUND = 3
-  
-  @staticmethod 
-  def resultStr(result):
-    if result == Result.SAMPLE_VIDEO:     return "Too small"
-    elif result == Result.FILE_NOT_FOUND: return "File not found"
-    elif result == Result.FOUND:          return "OK"
-    else: 
-      assert(result == Result.FOUND_NO_YEAR)
-      return "Found: Without year"
-  
-VALID_RESULTS = (Result.SAMPLE_VIDEO, 
-                 Result.FILE_NOT_FOUND, 
-                 Result.FOUND)  
-#TODO: Kill result!
-
-# --------------------------------------------------------------------------------------------------------------------
-class MovieRenameItem(commonTypes.BaseRenameItem):
+class MovieRenameItem(base_types.BaseRenameItem):
   def __init__(self, filename, info):
     super(MovieRenameItem, self).__init__(filename)
     self.info = info
-    self.result = None #Filthy, just temporary   
     
   def __copy__(self):
     ret = MovieRenameItem(self.filename, copy.copy(self.info))
-    ret.result = self.result
     return ret
+  
+  def fileExists(self):
+    return self.fileSize > 0
   
   def __str__(self):
     return str(self.info)
-    
+  
   def getInfo(self):
     return self.info
 
 # --------------------------------------------------------------------------------------------------------------------
-class MovieInfo(commonTypes.BaseInfo):
+class MovieInfo(base_types.BaseInfo):
   """ info retrieved from movie clients """ 
   def __init__(self, title="", year=None, genres=None, series="", disc=None):
     super(MovieInfo, self).__init__()
@@ -76,7 +57,7 @@ class MovieInfo(commonTypes.BaseInfo):
     return MovieSearchParams(self.title, self.year)
 
 # --------------------------------------------------------------------------------------------------------------------
-class MovieSearchParams(commonTypes.BaseInfoClientSearchParams):
+class MovieSearchParams(base_types.BaseInfoClientSearchParams):
   """ class used to query info clients """
   def __init__(self, title, year=""):
     self.title = title

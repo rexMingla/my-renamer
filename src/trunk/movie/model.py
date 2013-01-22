@@ -10,11 +10,12 @@ import copy
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-from common import commonModel
-from common import fileHelper
+from common import file_helper
 from common import utils
 
-import movieTypes
+from base import model as base_model
+
+import types as movie_types
 
 # --------------------------------------------------------------------------------------------------------------------
 class SortFilterModel(QtGui.QSortFilterProxyModel):
@@ -53,7 +54,7 @@ _OK = "Ok"
 class MovieItem(object):
   def __init__(self, movie, index):
     super(MovieItem, self).__init__()
-    #utils.verifyType(movie, movieTypes.MovieRenameItem)
+    #utils.verifyType(movie, movie_types.MovieRenameItem)
     self.movie = movie
     self.index = index
     self.wantToMove = True
@@ -62,10 +63,10 @@ class MovieItem(object):
     
   def isMatch(self, other):
     #utils.verifyType(other, MovieItem)
-    return self.movie.result == movieTypes.Result.FOUND and self.movie.info == other.movie.info
-  
+    return self.movie.fileExists() and self.movie.info == other.movie.info
+      
 # --------------------------------------------------------------------------------------------------------------------
-class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
+class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
   """ 
   Represents 0 or more movies
   """
@@ -73,14 +74,14 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
   beginUpdateSignal = QtCore.pyqtSignal()
   endUpdateSignal = QtCore.pyqtSignal() 
   
-  ALL_ACTIONS = (commonModel.BaseWorkBenchModel.ACTION_DELETE,
-                 commonModel.BaseWorkBenchModel.ACTION_LAUNCH,
-                 commonModel.BaseWorkBenchModel.ACTION_OPEN,
-                 commonModel.BaseWorkBenchModel.ACTION_MOVIE)  
+  ALL_ACTIONS = (base_model.BaseWorkBenchModel.ACTION_DELETE,
+                 base_model.BaseWorkBenchModel.ACTION_LAUNCH,
+                 base_model.BaseWorkBenchModel.ACTION_OPEN,
+                 base_model.BaseWorkBenchModel.ACTION_MOVIE)  
   
   def __init__(self, parent=None):
     super(QtCore.QAbstractTableModel, self).__init__(parent)
-    super(commonModel.BaseWorkBenchModel, self).__init__()
+    super(base_model.BaseWorkBenchModel, self).__init__()
     self._movies = []
     self._bulkProcessing = False
     self._requireYear = True
@@ -89,12 +90,12 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
     
   def getFile(self, index):
     item = self.getRenameItem(index)
-    return item.movie.filename if item else ""
+    return item.filename if item else ""
   
   def getFolder(self, index):
     ret = self.getFile(index)
     if ret:
-      ret = fileHelper.FileHelper.dirname(ret)
+      ret = file_helper.FileHelper.dirname(ret)
     return ret
   
   def getDeleteItem(self, index):
@@ -107,10 +108,10 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
     hasIndex = index.isValid()
     
     ret = {}
-    ret[commonModel.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
-    ret[commonModel.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
-    ret[commonModel.BaseWorkBenchModel.ACTION_OPEN] = hasIndex
-    ret[commonModel.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
+    ret[base_model.BaseWorkBenchModel.ACTION_DELETE] = hasIndex
+    ret[base_model.BaseWorkBenchModel.ACTION_LAUNCH] = hasIndex
+    ret[base_model.BaseWorkBenchModel.ACTION_OPEN] = hasIndex
+    ret[base_model.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
     return ret
     
   def columnCount(self, parent):
@@ -145,7 +146,7 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
           return QtCore.Qt.Unchecked
     elif col == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.DisplayRole:
-        return fileHelper.FileHelper.basename(movie.filename)
+        return file_helper.FileHelper.basename(movie.filename)
       else:
         return movie.filename
     elif col == Columns.COL_NEW_NAME:
@@ -159,7 +160,7 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
     elif col == Columns.COL_GENRE:
       return info.getGenre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesToString(movie.fileSize) if movie.result == movieTypes.Result.FOUND else ""
+      return utils.bytesToString(movie.fileSize) if movie.fileExists() else ""
     elif col == Columns.COL_SERIES:
       return info.series
        
@@ -168,7 +169,7 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
       return False
     
     if role == RAW_DATA_ROLE:
-      #utils.verifyType(value, movieTypes.MovieRenameItem)
+      #utils.verifyType(value, movie_types.MovieRenameItem)
       item = self._movies[index.row()]
       newMovie = copy.copy(value)
       if item.movie != newMovie:
@@ -234,7 +235,7 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
       self._emitWorkBenchChanged()    
   
   def addItem(self, m):
-    #utils.verifyType(m, movieTypes.MovieRenameItem)
+    #utils.verifyType(m, movie_types.MovieRenameItem)
     #check if already in list
     count = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
@@ -260,8 +261,8 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
       
   def _updateItemStatusText(self, item):
     ret = ""
-    if item.movie.result != movieTypes.Result.FOUND:
-      ret = movieTypes.Result.resultStr(item.movie.result)
+    if not file_helper.FileHelper.fileExists(item.movie.filename):
+      ret = "File not found"
     elif item.duplicates:
       ret = _DUPLICATE
     elif self._requireYear and not item.movie.info.year:
@@ -278,7 +279,7 @@ class MovieModel(QtCore.QAbstractTableModel, commonModel.BaseWorkBenchModel):
   
   def _updateDuplicatesForItem(self, item):
     item.duplicates = []
-    if item.movie.result == movieTypes.Result.FOUND:
+    if item.movie.fileExists():
       item.duplicates = [m.index for m in self._movies if m.index != item.index and m.isMatch(item)]
   
   def overallCheckedState(self):

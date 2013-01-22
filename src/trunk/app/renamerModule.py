@@ -11,7 +11,7 @@ from common import interfaces
 from common import thread
 from common import utils
 
-from movie import movieTypes
+from movie import types as movie_types
 
 import factory
 
@@ -73,7 +73,7 @@ class MovieSearchThread(SearchThread):
     item = self._manager.processFile(item)
     ret = None
     if item:
-      ret = thread.WorkItem(item, movieTypes.Result.resultStr(item.result))
+      ret = thread.WorkItem(item, "File exists" if item.fileExists() else "File not found")
     return ret
 
 def getSearchThread(mode, manager, config):

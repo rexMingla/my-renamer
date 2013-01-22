@@ -121,7 +121,7 @@
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>&amp;Safe settings</string>
+    <string>&amp;Save settings</string>
    </property>
   </action>
   <action name="actionRestoreDefaults">

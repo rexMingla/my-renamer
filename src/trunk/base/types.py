@@ -7,7 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 import abc
 
-import fileHelper
+from common import file_helper
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItem(object):
@@ -17,9 +17,9 @@ class BaseRenameItem(object):
   def __init__(self, filename):
     super(BaseRenameItem, self).__init__()
     self.filename = filename
-    self.fileSize = fileHelper.FileHelper.getFileSize(filename)
-    self.ext = fileHelper.FileHelper.extension(filename)
-    self.outputFolder = fileHelper.FileHelper.dirname(self.filename)
+    self.fileSize = file_helper.FileHelper.getFileSize(filename)
+    self.ext = file_helper.FileHelper.extension(filename)
+    self.outputFolder = file_helper.FileHelper.dirname(self.filename)
   
   @abc.abstractmethod  
   def getInfo(self):

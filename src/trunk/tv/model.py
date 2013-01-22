@@ -10,12 +10,12 @@ import copy
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-from common import commonModel
-from common import fileHelper
+from base import model as base_model
+from common import file_helper
 from common import utils
 
-from tv import tvTypes
-from tv import tvManager
+from tv import types as tv_types
+from tv import manager as tv_manager
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesDelegate(QtGui.QStyledItemDelegate):
@@ -29,20 +29,20 @@ class SeriesDelegate(QtGui.QStyledItemDelegate):
       return None
 
     season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == tvTypes.EpisodeRenameItem.MISSING_OLD:
+    if ep.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
       return None
 
     if index.column() == Columns.COL_NEW_NAME:
       comboBox = QtGui.QComboBox(parent)
       
-      comboBox.addItem("Not set", tvTypes.UNRESOLVED_KEY)
+      comboBox.addItem("Not set", tv_types.UNRESOLVED_KEY)
       comboBox.insertSeparator(1)
       # fill it
 
       episodeMoveItems = copy.copy(season.episodeMoveItems)
       episodeMoveItems = sorted(episodeMoveItems, key=lambda item: item.info.epNum)
       for mi in episodeMoveItems:
-        if mi.info.epName != tvTypes.UNRESOLVED_NAME:
+        if mi.info.epName != tv_types.UNRESOLVED_NAME:
           displayName = "{}: {}".format(mi.info.epNum, mi.info.epName)
           comboBox.addItem(displayName, mi.info.epNum)
       comboBox.setCurrentIndex(comboBox.findData(ep.source.epNum))
@@ -57,7 +57,7 @@ class SeriesDelegate(QtGui.QStyledItemDelegate):
       return None
 
     season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == tvTypes.EpisodeRenameItem.MISSING_OLD:
+    if ep.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
       return None
 
     if index.column() == Columns.COL_NEW_NAME:
@@ -70,7 +70,7 @@ class SeriesDelegate(QtGui.QStyledItemDelegate):
       return None
 
     season, ep = model.data(index.parent(), RAW_DATA_ROLE)[0], item
-    if ep.matchType() == tvTypes.EpisodeRenameItem.MISSING_OLD:
+    if ep.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
       return None
 
     if index.column() == Columns.COL_NEW_NAME:
@@ -129,10 +129,10 @@ class BaseItem(object):
     return 0
 
   def isSeason(self):
-    return isinstance(self.raw, tvTypes.Season)
+    return isinstance(self.raw, tv_types.Season)
 
   def isEpisode(self):
-    return isinstance(self.raw, tvTypes.EpisodeRenameItem)
+    return isinstance(self.raw, tv_types.EpisodeRenameItem)
   
   def setData(self, model, index, value, role):
     raise NotImplementedError("BaseItem.setData not implemented")    
@@ -191,7 +191,7 @@ class ContainerItem(BaseItem):
     if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, QtCore.Qt.ForegroundRole):
       return None
 
-    isUnresolved = self.raw.info.seasonNum == tvTypes.UNRESOLVED_KEY
+    isUnresolved = self.raw.info.seasonNum == tv_types.UNRESOLVED_KEY
     if role == QtCore.Qt.ForegroundRole and isUnresolved:
       return QtGui.QBrush(QtCore.Qt.red)      
     elif index.column() == Columns.COL_OLD_NAME:
@@ -229,26 +229,26 @@ class LeafItem(BaseItem):
 
     column = index.column()
     if role == QtCore.Qt.ForegroundRole:
-      if self.raw.matchType() == tvTypes.EpisodeRenameItem.MISSING_NEW:
+      if self.raw.matchType() == tv_types.EpisodeRenameItem.MISSING_NEW:
         return QtGui.QBrush(QtCore.Qt.red)       
-      elif self.raw.matchType() == tvTypes.EpisodeRenameItem.MISSING_OLD:
+      elif self.raw.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
         return QtGui.QBrush(QtCore.Qt.gray)       
     if column == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.ToolTipRole:
         return self.raw.filename
       else:
-        return fileHelper.FileHelper.basename(self.raw.filename)
+        return file_helper.FileHelper.basename(self.raw.filename)
     elif column == Columns.COL_NEW_NUM:
-      if self.raw.info.epNum == tvTypes.UNRESOLVED_KEY:
+      if self.raw.info.epNum == tv_types.UNRESOLVED_KEY:
         return None
       else:
         return self.raw.info.epNum
     elif column == Columns.COL_NEW_NAME:
       return self.raw.info.epName
     elif column == Columns.COL_STATUS:
-      return tvTypes.EpisodeRenameItem.typeStr(self.raw.matchType())
+      return tv_types.EpisodeRenameItem.typeStr(self.raw.matchType())
     elif column == Columns.COL_FILE_SIZE:
-      if self.raw.matchType() != tvTypes.EpisodeRenameItem.MISSING_OLD:
+      if self.raw.matchType() != tv_types.EpisodeRenameItem.MISSING_OLD:
         return utils.bytesToString(self.raw.fileSize) 
     return None
   
@@ -292,7 +292,7 @@ class LeafItem(BaseItem):
     return bool(self.raw.filename)
 
 # --------------------------------------------------------------------------------------------------------------------
-class TvModel(QtCore.QAbstractItemModel, commonModel.BaseWorkBenchModel):
+class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
   """ 
   Represents 0 or more tv seasons. Each folder (season) contains a collection of moveItemCandiates. 
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
@@ -301,15 +301,15 @@ class TvModel(QtCore.QAbstractItemModel, commonModel.BaseWorkBenchModel):
   beginUpdateSignal = QtCore.pyqtSignal()
   endUpdateSignal = QtCore.pyqtSignal()  
   
-  ALL_ACTIONS = (commonModel.BaseWorkBenchModel.ACTION_DELETE,
-                 commonModel.BaseWorkBenchModel.ACTION_LAUNCH,
-                 commonModel.BaseWorkBenchModel.ACTION_OPEN,
-                 commonModel.BaseWorkBenchModel.ACTION_EPISODE,
-                 commonModel.BaseWorkBenchModel.ACTION_SEASON)
+  ALL_ACTIONS = (base_model.BaseWorkBenchModel.ACTION_DELETE,
+                 base_model.BaseWorkBenchModel.ACTION_LAUNCH,
+                 base_model.BaseWorkBenchModel.ACTION_OPEN,
+                 base_model.BaseWorkBenchModel.ACTION_EPISODE,
+                 base_model.BaseWorkBenchModel.ACTION_SEASON)
 
   def __init__(self, parent=None):
     super(QtCore.QAbstractItemModel, self).__init__(parent)
-    super(commonModel.BaseWorkBenchModel, self).__init__()
+    super(base_model.BaseWorkBenchModel, self).__init__()
     self.rootItem = None
     self._bulkProcessing = False
     self.clear()
@@ -335,7 +335,7 @@ class TvModel(QtCore.QAbstractItemModel, commonModel.BaseWorkBenchModel):
     item = self._getItem(index)
     ret = ""
     if item.isEpisode():
-      ret = fileHelper.FileHelper.dirname(item.raw.filename)
+      ret = file_helper.FileHelper.dirname(item.raw.filename)
     else:
       ret = item.raw.inputFolder
     return ret
@@ -370,11 +370,11 @@ class TvModel(QtCore.QAbstractItemModel, commonModel.BaseWorkBenchModel):
     canDelete = bool(self.getDeleteItem(index))
     
     ret = {}
-    ret[commonModel.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
-    ret[commonModel.BaseWorkBenchModel.ACTION_SEASON] = canOpen
-    ret[commonModel.BaseWorkBenchModel.ACTION_OPEN] = canOpen
-    ret[commonModel.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
-    ret[commonModel.BaseWorkBenchModel.ACTION_DELETE] = canDelete
+    ret[base_model.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
+    ret[base_model.BaseWorkBenchModel.ACTION_SEASON] = canOpen
+    ret[base_model.BaseWorkBenchModel.ACTION_OPEN] = canOpen
+    ret[base_model.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
+    ret[base_model.BaseWorkBenchModel.ACTION_DELETE] = canDelete
     return ret
 
   def data(self, index, role):
@@ -465,7 +465,7 @@ class TvModel(QtCore.QAbstractItemModel, commonModel.BaseWorkBenchModel):
     return parent.childCount()
 
   def addItem(self, s):
-    #utils.verifyType(s, tvTypes.Season)
+    #utils.verifyType(s, tv_types.Season)
     #check if already in list
     rowCount = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), rowCount, rowCount)

@@ -25,6 +25,31 @@ def stackFunctionName(index = 2): #1 is calling, 2 parent etc.
   return ret
 
 # --------------------------------------------------------------------------------------------------------------------
+class LogItem:
+  """ Information contained in a log entry. """
+  def __init__(self, logLevel, action, shortMessage, longMessage=""):
+    #utils.verifyType(logLevel, int)
+    #utils.verifyType(action, str)
+    #utils.verifyType(shortMessage, str)
+    #utils.verifyType(longMessage, str)
+    self.logLevel = logLevel
+    self.action = action
+    self.shortMessage = shortMessage
+    self.longMessage = longMessage or shortMessage
+    
+# --------------------------------------------------------------------------------------------------------------------
+class LogLevel:
+  """ Log levels copied from logging. """
+  CRITICAL = 50
+  FATAL = CRITICAL
+  ERROR = 40
+  WARNING = 30
+  WARN = WARNING
+  INFO = 20
+  DEBUG = 10
+  NOTSET = 0
+
+# --------------------------------------------------------------------------------------------------------------------
 def initLogging(logfile):
   logging.basicConfig(level=logging.DEBUG,
                       format="%(asctime)s %(title)-12s %(name)-12s %(levelname)-8s %(message)s",
@@ -41,19 +66,19 @@ def initLogging(logfile):
   logging.getLogger("renamer").addHandler(console)
 
 def logNotSet(msg, longMsg="", title=""):
-  log(logging.NOTSET, msg, longMsg, title)
+  log(LogLevel.NOTSET, msg, longMsg, title)
 
 def logDebug(msg, longMsg="", title=""):
-  log(logging.DEBUG, msg, longMsg, title)
+  log(LogLevel.DEBUG, msg, longMsg, title)
 
 def logInfo(msg, longMsg="", title=""):
-  log(logging.INFO, msg, longMsg, title)
+  log(LogLevel.INFO, msg, longMsg, title)
 
 def logWarning(msg, longMsg="", title=""):
-  log(logging.WARNING, msg, longMsg, title)
+  log(LogLevel.WARNING, msg, longMsg, title)
 
 def logError(msg, longMsg="", title=""):
-  log(logging.ERROR, msg, longMsg, title)
+  log(LogLevel.ERROR, msg, longMsg, title)
 
 def log(level, msg, longMsg="", title=""):
   logging.getLogger("renamer").log(level, msg or longMsg, extra={"title":title}) 
@@ -114,8 +139,9 @@ def printTiming(func):
 
 # --------------------------------------------------------------------------------------------------------------------
 def stringToBytes(text):
-  m = re.match(r"^(\d+)\s+(B|KB|MB|GB)$", text, re.IGNORECASE)
-  return int(m.group(1)) * pow(1024, ["B", "KB", "MB", "GB"].index(m.group(2).upper())) if m else 0
+  vals = ["B", "KB", "MB", "GB"]
+  m = re.match(r"^(\d+)\s+({})$".format("|".join(vals)), text, re.IGNORECASE)
+  return int(m.group(1)) * pow(1024, vals.index(m.group(2).upper())) if m else 0
 
 # --------------------------------------------------------------------------------------------------------------------
 def bytesToString(bytes_):

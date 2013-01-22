@@ -9,14 +9,14 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from common import fileHelper
-from common import commonInfoClient
-from common import interfaces
+from base import client as base_client
+
+from common import file_helper
 from common import thread 
 from common import utils
 
-from movie import movieInfoClient
-from movie import movieTypes
+from movie import client as movie_client
+from movie import types as movie_types
 
 import searchResultsWidget
 
@@ -27,7 +27,7 @@ class GetMovieThread(thread.WorkerThread):
   def __init__(self, searchParams, isLucky):
     super(GetMovieThread, self).__init__("movie search")
     self._searchParams = searchParams
-    self._store = movieInfoClient.getStoreHolder()
+    self._store = movie_client.getStoreHolder()
     self._isLucky = isLucky
 
   def run(self):
@@ -110,7 +110,7 @@ class EditMovieWidget(QtGui.QDialog):
     self.placeholderWidget.setEnabled(False)    
     self.progressBar.setVisible(True)
     
-    self._workerThread = GetMovieThread(movieTypes.MovieSearchParams(utils.toString(self.searchEdit.text())), self._isLucky)
+    self._workerThread = GetMovieThread(movie_types.MovieSearchParams(utils.toString(self.searchEdit.text())), self._isLucky)
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
@@ -142,19 +142,19 @@ class EditMovieWidget(QtGui.QDialog):
     else:
       if not self._foundData:
         self._searchResults.clear()
-        self._searchResults.addItem(commonInfoClient.ResultHolder(self._getMovieInfo(), "current"))
+        self._searchResults.addItem(base_client.ResultHolder(self._getMovieInfo(), "current"))
       self._searchResults.addItem(data)
       self._showResults()
     self._foundData = True
     
   def _getMovieInfo(self):
     genreStr = utils.toString(self.genreEdit.text())
-    return movieTypes.MovieInfo(utils.toString(self.titleEdit.text()),
+    return movie_types.MovieInfo(utils.toString(self.titleEdit.text()),
                                      utils.toString(self.yearEdit.text()),
                                      [genreStr] if genreStr else [])
       
   def _setMovieInfo(self, info):
-    #utils.verifyType(info, movieTypes.MovieInfo)
+    #utils.verifyType(info, movie_types.MovieInfo)
     self.titleEdit.setText(info.title)
     self.yearEdit.setText(info.year or "")
     self.genreEdit.setText(info.genres[0] if info.genres else "")  
@@ -172,9 +172,9 @@ class EditMovieWidget(QtGui.QDialog):
   
   def setData(self, item):
     """ Fill the dialog with the data prior to being shown """
-    #utils.verifyType(item, movieManager.MovieRenameItem)
+    #utils.verifyType(item, movie_manager.MovieRenameItem)
     self._item = item  
-    self.filenameEdit.setText(fileHelper.FileHelper.basename(item.filename))
+    self.filenameEdit.setText(file_helper.FileHelper.basename(item.filename))
     self.filenameEdit.setToolTip(item.filename)
     info = item.info
     self.titleEdit.setText(info.title)
