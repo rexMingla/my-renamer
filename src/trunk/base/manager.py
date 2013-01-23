@@ -21,7 +21,7 @@ class BaseManager(object):
   @staticmethod
   def getFolders(rootFolder, isRecursive):
     folders = []
-    for root, dirs, files in os.walk(file_helper.FileHelper.replaceSeparators(rootFolder, os.sep)):
+    for root, _dirs, _files in os.walk(file_helper.FileHelper.replaceSeparators(rootFolder, os.sep)):
       folders.append(root)      
       if not isRecursive:
         break
