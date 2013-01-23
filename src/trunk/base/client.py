@@ -11,6 +11,7 @@ class BaseInfoStoreHolder(object):
   """ container for all of the InfoClients """
   
   def __init__(self):
+    super(BaseInfoStoreHolder, self).__init__()
     self.stores = []
   
   def addStore(self, store):
@@ -50,8 +51,8 @@ class BaseInfoStoreHolder(object):
         store.isEnabled = values["isEnabled"]
         store.key = values["key"]
         
-  """ get info api  """
   def getInfo(self, searchParams, default=None):
+    """ get info api  """
     return next(self.getInfos(searchParams), ResultHolder(default, "")).info
   
   def getInfos(self, searchParams):
@@ -62,8 +63,9 @@ class BaseInfoStoreHolder(object):
           yield ResultHolder(info, store.sourceName)  
   
 # --------------------------------------------------------------------------------------------------------------------
-class ResultHolder:
+class ResultHolder(object):
   def __init__(self, info, sourceName):
+    super(ResultHolder, self).__init__()
     self.info = info
     self.sourceName = sourceName
     

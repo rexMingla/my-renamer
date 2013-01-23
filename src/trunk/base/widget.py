@@ -33,17 +33,16 @@ class _SourceModel(QtCore.QAbstractTableModel):
   NUM_COLS = 2
   RAW_ITEM_ROLE = QtCore.Qt.UserRole + 1
   
-  """ SourceItems """
-  def __init__(self, store, parent):
-    super(QtCore.QAbstractTableModel, self).__init__(parent)
-    self._store = store
-    self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._store.stores) - 1)
+  def __init__(self, holder, parent):
+    super(_SourceModel, self).__init__(parent)
+    self._holder = holder
+    self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._holder.stores) - 1)
     self.endInsertRows()
       
-  def rowCount(self, parent=None):
-    return len(self._store.stores)
+  def rowCount(self, _parent=None):
+    return len(self._holder.stores)
 
-  def columnCount(self, parent):
+  def columnCount(self, _parent):
     return _SourceModel.NUM_COLS
   
   def data(self, index, role):
@@ -54,7 +53,7 @@ class _SourceModel(QtCore.QAbstractTableModel):
                     QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole):
       return None
     
-    item = self._store.stores[index.row()]
+    item = self._holder.stores[index.row()]
     if role == _SourceModel.RAW_ITEM_ROLE:
       return item
     if role == QtCore.Qt.ForegroundRole and index.column() == _SourceModel.COL_STATUS:
@@ -87,14 +86,14 @@ class _SourceModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return    
     row = index.row()
-    self._store.stores[row], self._store.stores[row - 1] = self._store.stores[row - 1], self._store.stores[row]
+    self._holder.stores[row], self._holder.stores[row - 1] = self._holder.stores[row - 1], self._holder.stores[row]
     self.dataChanged.emit(self.index(row - 1, 0), self.index(row, _SourceModel.NUM_COLS))
       
   def moveDown(self, index):
     if not index.isValid():
       return    
     row = index.row()
-    self._store.stores[row], self._store.stores[row + 1] = self._store.stores[row + 1], self._store.stores[row]
+    self._holder.stores[row], self._holder.stores[row + 1] = self._holder.stores[row + 1], self._holder.stores[row]
     self.dataChanged.emit(self.index(row, 0), self.index(row + 1, _SourceModel.NUM_COLS))
     
   def updateItem(self, index, item):
@@ -102,14 +101,14 @@ class _SourceModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return    
     row = index.row()
-    self._store.stores[row] = item
+    self._holder.stores[row] = item
     self.dataChanged.emit(self.index(row, 0), self.index(row, _SourceModel.NUM_COLS))
           
 # --------------------------------------------------------------------------------------------------------------------
 class EditSourcesWidget(QtGui.QDialog):
   """ Allows the user to prioritise the search order for information sources and set keys """
-  def __init__(self, mode, store, parent=None):
-    super(QtGui.QDialog, self).__init__(parent)
+  def __init__(self, mode, holder, parent=None):
+    super(EditSourcesWidget, self).__init__(parent)
     uic.loadUi("ui/ui_EditSources.ui", self)
     self.setWindowModality(True)
     self.setWindowTitle("Edit {} Sources".format(mode.capitalize()))
@@ -120,23 +119,24 @@ class EditSourcesWidget(QtGui.QDialog):
     self.downButton.clicked.connect(self._moveDown)
     self.keyEdit.setPlaceholderText("Enter key here")
     
-    self._model = _SourceModel(store, self)
+    self._currentIndex = None
+    self._model = _SourceModel(holder, self)
     self.sourceView.setModel(self._model)  
     self.sourceView.horizontalHeader().setResizeMode(_SourceModel.COL_NAME, QtGui.QHeaderView.Interactive)
     self.sourceView.horizontalHeader().setResizeMode(_SourceModel.COL_STATUS, QtGui.QHeaderView.Fixed)
     self.sourceView.horizontalHeader().resizeSection(_SourceModel.COL_STATUS, 30)        
     self.sourceView.horizontalHeader().setStretchLastSection(True)    
     self.sourceView.selectionModel().selectionChanged.connect(self._onSelectionChanged)
-    self._onSelectionChanged(self.sourceView.selectionModel().selection())
+    self._onSelectionChanged()
     
-  def _onSelectionChanged(self, selection):
-    indexes = selection.indexes()
+  def _onSelectionChanged(self):
+    indexes = self.sourceView.selectionModel().selection().indexes()
     item  = None
+    self._currentIndex = indexes[0] if indexes else None
     if not indexes:
       self.upButton.setEnabled(False)
       self.downButton.setEnabled(False)
     else:
-      self._currentIndex = indexes[0]
       item = self._model.data(self._currentIndex, _SourceModel.RAW_ITEM_ROLE)
       row = self._currentIndex.row()
       self.upButton.setEnabled(row >= 1)
@@ -158,10 +158,8 @@ class EditSourcesWidget(QtGui.QDialog):
     if self.keyGroupBox.isVisible():
       keyLabel = "No key required"
       if item.requiresKey:
-        """keyLabel = ("<html><body>Enter the key for <a href='{0}'>{0}</a><br/><br/>"
-                    "If you need to get one go to:<br/>"
-                     "<a href='{1}'>{1}</a>.</body></html>").format(item.sourceName, item.url)"""     
-        keyLabel = ("<html><body>Enter the key for <a href='{0}'>{0}</a></body></html>").format(item.sourceName, item.url)      
+        keyLabel = ("<html><body>Enter the key for <a href='{0}'>{0}</a>"
+                    "</body></html>").format(item.sourceName, item.url)      
       self.keyEdit.setText(item.key)
       self.keyLabel.setText(keyLabel)
     self.activeCheckBox.setEnabled(bool(item) and item.isAvailable())
@@ -185,11 +183,11 @@ class InputWidget(interfaces.LoadWidgetInterface):
   stopSignal = QtCore.pyqtSignal()
   showEditSourcesSignal = QtCore.pyqtSignal()
   
-  def __init__(self, mode, store, parent=None):
+  def __init__(self, mode, holder, parent=None):
     super(InputWidget, self).__init__("input/{}".format(mode), parent)
     uic.loadUi("ui/ui_Input.ui", self)
     
-    self._store = store
+    self._holder = holder
     self.folderButton.clicked.connect(self._showFolderSelectionDialog)
     self.searchButton.clicked.connect(self.exploreSignal)
     self.searchButton.setIcon(QtGui.QIcon("img/search.png"))
@@ -252,8 +250,9 @@ class InputWidget(interfaces.LoadWidgetInterface):
     data.allExtensions = self.anyExtRadioButton.isChecked()
     data.extensions = extension.FileExtensions(utils.toString(self.fileExtensionEdit.text())).extensionString()
     data.allFileSizes = self.anySizeRadioButton.isChecked()
-    data.minFileSizeBytes = utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), self.sizeComboBox.currentText()))
-    data.sources = self._store.getConfig()
+    data.minFileSizeBytes = utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), 
+                                                               self.sizeComboBox.currentText()))
+    data.sources = self._holder.getConfig()
     return data
   
   def setConfig(self, data):
@@ -273,11 +272,11 @@ class InputWidget(interfaces.LoadWidgetInterface):
     fileSize, fileDenom = utils.bytesToString(data.minFileSizeBytes).split()
     self.sizeSpinBox.setValue(int(float(fileSize)))
     self.sizeComboBox.setCurrentIndex(self.sizeComboBox.findText(fileDenom))
-    self._store.setConfig(data.sources or [])
+    self._holder.setConfig(data.sources or [])
     self.onSourcesWidgetFinished()
     
   def onSourcesWidgetFinished(self):
-    sources = self._store.getAllActiveNames()
+    sources = self._holder.getAllActiveNames()
     self.sourcesEdit.setText(", ".join(sources))
     #todo: act if == None
 
@@ -500,7 +499,7 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   def _showItem(self):
     raise NotImplementedError("BaseWorkBenchWidget._showItem not implemented")    
     
-  def _onSelectionChanged(self, selection):
+  def _onSelectionChanged(self, selection=None):
     raise NotImplementedError("BaseWorkBenchWidget._onSelectionChanged not implemented")
     
   def _editEpisode(self):
@@ -639,7 +638,7 @@ class SearchResultsWidget(QtGui.QDialog):
   itemSelectedSignal = QtCore.pyqtSignal(object)
   
   def __init__(self, parent=None):
-    super(QtGui.QDialog, self).__init__(parent)
+    super(SearchResultsWidget, self).__init__(parent)
     uic.loadUi("ui/ui_SearchResults.ui", self)
     self._items = []
     self.resultsWidget.itemSelectionChanged.connect(self._onItemClicked)

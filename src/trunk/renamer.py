@@ -8,14 +8,14 @@
 import os
 import sys
 
+from PyQt4 import QtGui
+
+from app import widget
 from app import command_line
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
-def _runGUI(cl):  
-  from PyQt4 import QtGui
-  from app import widget
-  
+def _runGUI():    
   try:
     if __name__ != "__main__":
       # HACK: for py2exe so it won't show "See log for details" message on shutdown
@@ -23,8 +23,8 @@ def _runGUI(cl):
       sys.stdout = open("my_stdout.log", "w")
       sys.stderr = open("my_stderr.log", "w")    
     
-    dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(dir)
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(cwd)
   except NameError:
     pass
   
@@ -62,7 +62,7 @@ def main(argv):
   if cl.test_only:
     _runTests()
   else:
-    _runGUI(cl)
+    _runGUI()
 
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
