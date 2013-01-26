@@ -5,6 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: App level interfaces
 # --------------------------------------------------------------------------------------------------------------------
+import abc
+
 from PyQt4 import QtGui
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -26,27 +28,41 @@ class WorkBenchActions:
   EDIT_EPISODE = "Edit Episode"
 
 # --------------------------------------------------------------------------------------------------------------------
-class LoadWidgetInterface(QtGui.QWidget):
+class ActionInterface(object):
   """ all the input, output and work bench widgets must implement these interfaces """
+  __metaclass__ = abc.ABCMeta
   
-  def __init__(self, configName, parent=None):
-    super(LoadWidgetInterface, self).__init__()
-    self.configName = configName
+  def __init__(self):
+    super(ActionInterface, self).__init__()
   
-  def startExploring(self):
-    raise NotImplementedError("LoadInterface.startExploring")
+  @abc.abstractmethod
+  def start_exploring(self):
+    pass
   
-  def stopExploring(self):
-    raise NotImplementedError("LoadInterface.stopExploring")
-
-  def startActioning(self):
-    raise NotImplementedError("LoadInterface.startActioning")
+  @abc.abstractmethod
+  def stop_exploring(self):
+    pass
   
+  @abc.abstractmethod
+  def start_actioning(self):
+    pass
+  
+  @abc.abstractmethod
   def stopActioning(self):
-    raise NotImplementedError("LoadInterface.stopActioning")
+    pass
   
-  def getConfig(self):
-    raise NotImplementedError("LoadInterface.getConfig")
+  @abc.abstractmethod
+  def get_config(self):
+    pass
   
-  def setConfig(self, data):
-    raise NotImplementedError("LoadInterface.setConfig")
+  @abc.abstractmethod
+  def set_config(self, data):
+    pass
+  
+# --------------------------------------------------------------------------------------------------------------------
+class ActionWidgetInterface(QtGui.QWidget):
+  def __init__(self, config_name, parent=None):
+    super(ActionWidgetInterface, self).__init__(parent)
+    self.config_name = config_name
+
+ActionInterface.register(ActionWidgetInterface)

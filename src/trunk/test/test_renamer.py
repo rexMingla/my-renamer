@@ -13,15 +13,12 @@ if __name__ == "__main__":
 import copy
 import unittest
 
-from common import utils
-from common import extension
 from common import formatting
 
 from tv import types as tv_types
 from tv import client as tv_client
 from tv import manager as tv_manager
 
-from movie import client as movie_client
 from movie import types as movie_types
 
 # --------------------------------------------------------------------------------------------------------------------

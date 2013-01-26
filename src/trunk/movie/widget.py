@@ -9,9 +9,6 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from common import config
-from common import utils
-
 from movie import model as movie_model
 from movie import client as movie_client
 from movie import types as movie_types
@@ -19,6 +16,7 @@ from movie import types as movie_types
 from base import client as base_client
 from base import widget as base_widget
 
+from common import config
 from common import interfaces
 from common import file_helper
 from common import thread 
@@ -63,7 +61,7 @@ class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
     self.tvView.setVisible(False)
     self._onSelectionChanged()
      
-  def getConfig(self):
+  def get_config(self):
     ret = config.MovieWorkBenchConfig()
     ret.noYearAsError = self.yearCheckBox.isChecked()
     ret.noGenreAsError = self.genreCheckBox.isChecked()
@@ -72,7 +70,7 @@ class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
     ret.seriesList = self._changeMovieWidget.getSeriesList()
     return ret
   
-  def setConfig(self, data):
+  def set_config(self, data):
     data = data or config.MovieWorkBenchConfig()
 
     self.yearCheckBox.setChecked(data.noYearAsError)
@@ -137,8 +135,8 @@ class _GetMovieThread(thread.WorkerThread):
 
 # --------------------------------------------------------------------------------------------------------------------
 class EditMovieWidget(QtGui.QDialog):
-  showEditSourcesSignal = QtCore.pyqtSignal()
   """ The widget allows the user to search and modify movie info. """
+  showEditSourcesSignal = QtCore.pyqtSignal()
   def __init__(self, parent=None):
     super(EditMovieWidget, self).__init__(parent)
     uic.loadUi("ui/ui_ChangeMovie.ui", self)
@@ -163,6 +161,8 @@ class EditMovieWidget(QtGui.QDialog):
     self.partCheckBox.toggled.connect(self.partSpinBox.setEnabled)
     self.sourceButton.clicked.connect(self.showEditSourcesSignal.emit)    
     
+    self._item = None
+    self._isShuttingDown = False
     self._isLucky = False
     self._foundData = True
     self._onThreadFinished()
@@ -209,7 +209,8 @@ class EditMovieWidget(QtGui.QDialog):
     self.placeholderWidget.setEnabled(False)    
     self.progressBar.setVisible(True)
     
-    self._workerThread = _GetMovieThread(movie_types.MovieSearchParams(utils.toString(self.searchEdit.text())), self._isLucky)
+    search_text = utils.toString(self.searchEdit.text())
+    self._workerThread = _GetMovieThread(movie_types.MovieSearchParams(search_text, self._isLucky))
     self._workerThread.newDataSignal.connect(self._onMovieInfo)
     self._workerThread.finished.connect(self._onThreadFinished)
     self._workerThread.terminated.connect(self._onThreadFinished)    
@@ -256,7 +257,7 @@ class EditMovieWidget(QtGui.QDialog):
     #utils.verifyType(info, movie_types.MovieInfo)
     self.titleEdit.setText(info.title)
     self.yearEdit.setText(info.year or "")
-    self.genreEdit.setText(info.genres[0] if info.genres else "")  
+    self.genreEdit.setText(info.getGenre())  
     
   def setSeriesList(self, l):
     #utils.verifyType(l, list)

@@ -9,8 +9,9 @@ import time
 
 from PyQt4 import QtCore
 
+from common import utils
+
 import collections
-import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 def prettyTime(startTime):
@@ -21,7 +22,7 @@ def prettyTime(startTime):
   mins = secs / 60
   if mins < 60:
     return "{:.1f} mins".format(mins)
-  hours = seconds / (60 * 60)
+  hours = secs / (60 * 60)
   return "{:.1f} hours".format(hours)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -61,20 +62,22 @@ class WorkItem(object):
     self.obj = obj
     self.result = result
     self.log = log
-    
+
 # --------------------------------------------------------------------------------------------------------------------
 class AdvancedWorkerThread(WorkerThread):
   """ 'simplified' version of WorkerThread were all summary messages are handled consistently """ 
   def __init__(self, name):
     super(AdvancedWorkerThread, self).__init__(name)
+    self._i = 0
+    self._numItems = 0
 
   def _getAllItems(self):
-    raise NotImplementedError("WorkerThreadBase._getAllItems not implemented")
+    raise NotImplementedError("AdvancedWorkerThread._getAllItems not implemented")
 
   def _applyToItem(self, item):
-    raise NotImplementedError("WorkerThreadBase._applyToItem not implemented")
+    raise NotImplementedError("AdvancedWorkerThread._applyToItem not implemented")
     
-  def run(self):
+  def run(self):  
     """ obfuscation for the win!! wow. this is madness. sorry """
     items = self._getAllItems()
     itemCount = 0
@@ -92,7 +95,7 @@ class AdvancedWorkerThread(WorkerThread):
       if self._userStopped:
         self._onLog(utils.LogItem(utils.LogLevel.INFO, 
                                      self._name,
-                                     "User cancelled. {} of {} processed.".format(self._i + 1, self._numItems)))              
+                                     "User cancelled. {} of {} processed.".format(self._i + 1, self._numItems)))
         break
       self._onProgress(int(100.0 * (self._i + 1) / self._numItems))
     

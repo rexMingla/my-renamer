@@ -7,8 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 from base import client as base_client
 from common import utils
-
-import types as tv_types
+from tv import types as tv_types
 
 hasTvdb = False
 try:
@@ -73,7 +72,8 @@ class TvdbClient(BaseTvInfoClient):
 # --------------------------------------------------------------------------------------------------------------------
 class TvRageClient(BaseTvInfoClient):
   def __init__(self):
-    super(TvRageClient, self).__init__("python-tvrage", "tvrage.com", "http://pypi.python.org/pypi/python-tvrage/0.1.4", 
+    super(TvRageClient, self).__init__("python-tvrage", "tvrage.com", 
+                                       "http://pypi.python.org/pypi/python-tvrage/0.1.4", 
                                        hasLib=hasTvRage, 
                                        requiresKey=False)
     

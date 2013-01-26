@@ -6,9 +6,9 @@
 # Website:             http://code.google.com/p/dps-x509/
 # Purpose of document: Config data
 # --------------------------------------------------------------------------------------------------------------------
-import extension
-import interfaces
-import utils
+from common import extension
+from common import interfaces
+from common import utils
 
 CONFIG_VERSION = "1.0"
     

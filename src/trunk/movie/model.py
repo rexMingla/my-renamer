@@ -12,10 +12,7 @@ from PyQt4 import QtGui
 
 from common import file_helper
 from common import utils
-
 from base import model as base_model
-
-import types as movie_types
 
 # --------------------------------------------------------------------------------------------------------------------
 class SortFilterModel(QtGui.QSortFilterProxyModel):
@@ -66,7 +63,7 @@ class MovieItem(object):
     return self.movie.fileExists() and self.movie.info == other.movie.info
       
 # --------------------------------------------------------------------------------------------------------------------
-class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
+class MovieModel(QtCore.QAbstractTableModel):
   """ 
   Represents 0 or more movies
   """
@@ -80,8 +77,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
                  base_model.BaseWorkBenchModel.ACTION_MOVIE)  
   
   def __init__(self, parent=None):
-    super(QtCore.QAbstractTableModel, self).__init__(parent)
-    super(base_model.BaseWorkBenchModel, self).__init__()
+    super(MovieModel, self).__init__(parent)
     self._movies = []
     self._bulkProcessing = False
     self._requireYear = True
@@ -114,7 +110,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     ret[base_model.BaseWorkBenchModel.ACTION_MOVIE] = hasIndex
     return ret
     
-  def columnCount(self, parent):
+  def columnCount(self, _parent):
     return Columns.NUM_COLS
 
   def data(self, index, role):
@@ -194,8 +190,6 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
       return QtCore.Qt.NoItemFlags
     
     item = self._movies[index.row()]
-    movie = item.movie
-    
     f = QtCore.Qt.ItemIsSelectable
     if self._isItemValid(item) or index.column() != Columns.COL_CHECK:
       f |= QtCore.Qt.ItemIsEnabled 
@@ -224,7 +218,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     elif section == Columns.COL_SERIES:
       return "Series"
 
-  def rowCount(self, parent=None):
+  def rowCount(self, _parent=None):
     return len(self._movies)
   
   def clear(self):
@@ -358,3 +352,5 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
       if item.duplicates:
         self._updateItemStatus(item)
     self.endRemoveRows()
+
+base_model.BaseWorkBenchModel.register(MovieModel)

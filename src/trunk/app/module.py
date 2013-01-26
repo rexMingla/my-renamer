@@ -126,9 +126,9 @@ class RenamerModule(QtCore.QObject):
       return
 
     for w in self._widgets:
-      w.startExploring()
+      w.start_exploring()
       
-    self._workerThread = getSearchThread(self.mode, self._manager, self.inputWidget.getConfig()) 
+    self._workerThread = getSearchThread(self.mode, self._manager, self.inputWidget.get_config()) 
     self._workerThread.progressSignal.connect(self.inputWidget.progressBar.setValue)
     self._workerThread.newDataSignal.connect(self.workBenchWidget.addItem)
     self._workerThread.logSignal.connect(self.logSignal)
@@ -143,7 +143,7 @@ class RenamerModule(QtCore.QObject):
     for w in self._widgets:
       w.startActioning()
 
-    self._renamer.config = self.outputWidget.getConfig()
+    self._renamer.config = self.outputWidget.get_config()
     self._workerThread = RenameThread("rename {}".format(self.mode), self._renamer, 
         self.workBenchWidget.actionableItems())
     self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
@@ -165,7 +165,7 @@ class RenamerModule(QtCore.QObject):
   def _onThreadFinished(self):    
     if not self._isShuttingDown:
       for w in self._widgets:
-        w.stopExploring()
+        w.stop_exploring()
         w.stopActioning()
       
   def _stopRename(self):

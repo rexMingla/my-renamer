@@ -9,14 +9,11 @@ import os
 import re
 import shutil
 import string
-import unicodedata
-
-import utils
 
 _BLOCK_SIZE = pow(2, 15)
 _VALID_BASENAME_CHARACTERS = "".join([string.ascii_letters,
                                       string.digits,
-                                      " !#$%&'()+,-.\\/;=@[\]^_`{}~"]) # string.punctuation without :?"<>| 
+                                      r" !#$%&'()+,-.\\/;=@[\]^_`{}~"]) # string.punctuation without :?"<>| 
 _RE_PATH = re.compile(r"(\\|/+)")
 _RE_INALID_FILENAME = re.compile("[^{}]".format(re.escape(_VALID_BASENAME_CHARACTERS)))
 _RE_VALID_FILENAME = re.compile("^([{}])*$".format(re.escape(_VALID_BASENAME_CHARACTERS)))
@@ -97,8 +94,7 @@ class FileHelper:
   @staticmethod
   def isValidFilename(f):
     #utils.verifyType(f, str)
-    drive, tail = FileHelper.splitDrive(f)
-    parts = _RE_PATH.split(tail)   
+    _, tail = FileHelper.splitDrive(f)
     isOk = bool(_RE_VALID_FILENAME.match(tail))
     return isOk
     

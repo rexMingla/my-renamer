@@ -9,7 +9,7 @@ import abc
 import re
 
 from common import utils
-from file_helper import FileHelper
+from common import file_helper
 
 CONDITIONAL_START = "%("
 CONDITIONAL_END = ")%"
@@ -37,7 +37,7 @@ class BaseNameFormatter(object):
     return self.getNameFromInfo(fmt, item.getInfo(), item.ext, folder)
     
   def getNameFromInfo(self, fmt, info, ext="", folder=""):
-    ret = FileHelper.joinPath(folder, fmt)
+    ret = file_helper.FileHelper.joinPath(folder, fmt)
     keyValues = self.getValues(info).items()    
     for match in _RE_CONDITIONAL.finditer(ret):
       text = match.group(1)
@@ -67,7 +67,6 @@ class TvNameFormatter(BaseNameFormatter):
     
   def getValues(self, info):
     ret = {}
-    info = info or self.info
     if info:
       ret = {TvNameFormatter.KEY_SHOW_NAME:  info.showName,
              TvNameFormatter.KEY_SERIES_NUM: _leftPad(info.seasonNum),
@@ -90,7 +89,6 @@ class MovieNameFormatter(BaseNameFormatter):
     
   def getValues(self, info):
     ret = {}
-    info = info or self.info
     if info:
       ret = {MovieNameFormatter.KEY_TITLE: info.title,
              MovieNameFormatter.KEY_YEAR:  str(info.year),

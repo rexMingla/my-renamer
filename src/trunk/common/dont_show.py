@@ -6,7 +6,6 @@
 # Purpose of document: don't show this again prompt
 # --------------------------------------------------------------------------------------------------------------------
 from PyQt4 import QtGui
-from PyQt4 import uic
 
 # --------------------------------------------------------------------------------------------------------------------
 class _DontShowAgainDialog(QtGui.QDialog):
@@ -53,9 +52,9 @@ class DontShowManager:
       return d.button
     
   @classmethod
-  def getConfig(cls):
+  def get_config(cls):
     return cls._dontShows
 
   @classmethod
-  def setConfig(cls, data):
+  def set_config(cls, data):
     cls._dontShows = data

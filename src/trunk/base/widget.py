@@ -177,7 +177,7 @@ class EditSourcesWidget(QtGui.QDialog):
     self._model.updateItem(self._currentIndex, item)
       
 # --------------------------------------------------------------------------------------------------------------------
-class InputWidget(interfaces.LoadWidgetInterface):
+class InputWidget(interfaces.ActionWidgetInterface):
   """ Widget allowing for the configuration of source folders """
   exploreSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
@@ -212,7 +212,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
     self.folderEdit.setCompleter(completer)
     
     self.stopActioning()
-    self.stopExploring()
+    self.stop_exploring()
     
   def _setMovieMode(self):
     pass #load cfg
@@ -220,14 +220,14 @@ class InputWidget(interfaces.LoadWidgetInterface):
   def _setTvMode(self):
     pass #load cfg
   
-  def startExploring(self):
+  def start_exploring(self):
     self.progressBar.setValue(0)
     self.progressBar.setVisible(True)
     self.stopButton.setVisible(True)
     self.stopButton.setEnabled(True)
     self.searchButton.setVisible(False)
   
-  def stopExploring(self):
+  def stop_exploring(self):
     self.progressBar.setVisible(False)
     self.stopButton.setVisible(False)
     self.searchButton.setVisible(True)
@@ -243,7 +243,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
     if folder:
       self.folderEdit.setText(folder)
       
-  def getConfig(self):
+  def get_config(self):
     data = config.InputConfig()
     data.folder = utils.toString(self.folderEdit.text())
     data.recursive = self.isRecursiveCheckBox.isChecked()
@@ -252,10 +252,10 @@ class InputWidget(interfaces.LoadWidgetInterface):
     data.allFileSizes = self.anySizeRadioButton.isChecked()
     data.minFileSizeBytes = utils.stringToBytes("{} {}".format(self.sizeSpinBox.value(), 
                                                                self.sizeComboBox.currentText()))
-    data.sources = self._holder.getConfig()
+    data.sources = self._holder.get_config()
     return data
   
-  def setConfig(self, data):
+  def set_config(self, data):
     data = data or config.InputConfig()
     
     self.folderEdit.setText(data.folder or os.path.abspath(os.path.curdir))
@@ -272,7 +272,7 @@ class InputWidget(interfaces.LoadWidgetInterface):
     fileSize, fileDenom = utils.bytesToString(data.minFileSizeBytes).split()
     self.sizeSpinBox.setValue(int(float(fileSize)))
     self.sizeComboBox.setCurrentIndex(self.sizeComboBox.findText(fileDenom))
-    self._holder.setConfig(data.sources or [])
+    self._holder.set_config(data.sources or [])
     self.onSourcesWidgetFinished()
     
   def onSourcesWidgetFinished(self):
@@ -290,7 +290,7 @@ class NameFormatHelper:
     self.previewInfo = previewInfo
     
 # --------------------------------------------------------------------------------------------------------------------
-class OutputWidget(interfaces.LoadWidgetInterface):
+class OutputWidget(interfaces.ActionWidgetInterface):
   """ Widget allowing for the configuration of output settings """
   renameSignal = QtCore.pyqtSignal()
   stopSignal = QtCore.pyqtSignal()
@@ -330,10 +330,10 @@ class OutputWidget(interfaces.LoadWidgetInterface):
   def isExecuting(self):
     return self._isActioning
       
-  def startExploring(self):
+  def start_exploring(self):
     self.renameButton.setEnabled(False)
   
-  def stopExploring(self):
+  def stop_exploring(self):
     self.renameButton.setEnabled(True)
 
   def startActioning(self):
@@ -389,7 +389,7 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     if folder:
       self.specificDirectoryEdit.setText(folder)
 
-  def getConfig(self):
+  def get_config(self):
     data = config.OutputConfig()
     data.format = utils.toString(self.formatEdit.text())
     data.folder = utils.toString(self.specificDirectoryEdit.text())
@@ -398,10 +398,11 @@ class OutputWidget(interfaces.LoadWidgetInterface):
     data.dontOverwrite = self.doNotOverwriteCheckBox.isChecked()
     data.showHelp = self.helpGroupBox.isVisible()
     data.actionSubtitles = self.subtitleCheckBox.isChecked()
-    data.subtitleExtensions = extension.FileExtensions(utils.toString(self.subtitleExtensionsEdit.text())).extensionString()
+    ext = utils.toString(self.subtitleExtensionsEdit.text())
+    data.subtitleExtensions = extension.FileExtensions(ext).extensionString()
     return data
   
-  def setConfig(self, data):
+  def set_config(self, data):
     data = data or config.OutputConfig()
     
     self.formatEdit.setText(data.format or self._helper.formatter.DEFAULT_FORMAT_STR)
@@ -451,7 +452,7 @@ class _ActionHolder:
     self.index = index # to keep them ordered
       
 # --------------------------------------------------------------------------------------------------------------------
-class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
+class BaseWorkBenchWidget(interfaces.ActionWidgetInterface):
   """ hacky and horrible base workbench widget """
   workBenchChangedSignal = QtCore.pyqtSignal(bool)
   showEditSourcesSignal = QtCore.pyqtSignal()
@@ -554,13 +555,13 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
   def stopWorkBenching(self):
     self._enable()
         
-  def startExploring(self):
+  def start_exploring(self):
     self._model.clear()
     self._disable()
     self._onSelectionChanged()
     self._model.beginUpdate()
   
-  def stopExploring(self):
+  def stop_exploring(self):
     self._enable()
     self.editEpisodeButton.setEnabled(False)    
     self.editSeasonButton.setEnabled(False)
@@ -578,12 +579,6 @@ class BaseWorkBenchWidget(interfaces.LoadWidgetInterface):
     self.tvView.expandAll()    
     self._enable()
     
-  def getConfig(self):
-    raise NotImplementedError("BaseWorkBenchWidget.getConfig not implemented")
-  
-  def setConfig(self, data):
-    raise NotImplementedError("BaseWorkBenchWidget.getConfig not implemented")
-
   def _setOverallCheckedState(self, state):
     self._disable()
     self._model.setOverallCheckedState(state)

@@ -54,17 +54,17 @@ class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
     self.movieGroupBox.setVisible(False)
     self._onSelectionChanged()
     
-  def getConfig(self):
+  def get_config(self):
     ret = config.TvWorkBenchConfig()
     ret.state = utils.toString(self.tvView.header().saveState().toBase64())
     return ret
   
-  def setConfig(self, data):
+  def set_config(self, data):
     data = data or config.TvWorkBenchConfig()
     self.tvView.header().restoreState(QtCore.QByteArray.fromBase64(data.state))
     
-  def stopExploring(self):
-    super(TvWorkBenchWidget, self).stopExploring()
+  def stop_exploring(self):
+    super(TvWorkBenchWidget, self).stop_exploring()
     self.tvView.expandAll()
             
   def _onSelectionChanged(self, selection=None):
@@ -133,7 +133,7 @@ class EditSeasonWidget(QtGui.QDialog):
   showEditSourcesSignal = QtCore.pyqtSignal()
   """ The widget allows the user to search and modify tv info. """
   def __init__(self, parent=None):
-    super(QtGui.QDialog, self).__init__(parent)
+    super(EditSeasonWidget, self).__init__(parent)
     uic.loadUi("ui/ui_ChangeSeason.ui", self)
     self.setWindowModality(True)
     self._workerThread = None
@@ -170,7 +170,6 @@ class EditSeasonWidget(QtGui.QDialog):
     self.showLabel.setVisible(False)
     
   def __del__(self):
-    self._isShuttingDown = True
     self._stopThread()
     
   def showEvent(self, e):
@@ -290,7 +289,7 @@ class EditSeasonWidget(QtGui.QDialog):
   def _updateColumnHeaders(self):
     startIndex = self.indexSpinBox.value()
     rowCount = self.episodeTable.rowCount()
-    self.episodeTable.setVerticalHeaderLabels(map(str, range(startIndex, rowCount + startIndex)))
+    self.episodeTable.setVerticalHeaderLabels([str(i) for i in range(startIndex, rowCount + startIndex)])
   
   def setData(self, s):
     """ Fill the dialog with the data prior to being shown """
@@ -311,9 +310,9 @@ class EditSeasonWidget(QtGui.QDialog):
     maxValue = max([ep.epNum for ep in info.episodes] or [-1])
     self.indexSpinBox.setValue(minValue)
     
-    epNums = map(str, range(minValue, maxValue + 1))
+    epNums = [i for i in range(minValue, maxValue + 1)]
     self.episodeTable.setRowCount(len(epNums))
-    for i, epNum in enumerate(epNums):
+    for i in epNums:
       ep = info.episodes[i]
       item = QtGui.QTableWidgetItem(ep.epName)
       item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)
@@ -348,7 +347,7 @@ class EditEpisodeWidget(QtGui.QDialog):
     self.pickFromListRadio.toggled.connect(self.episodeComboBox.setEnabled)
     self.setWindowModality(True)
     
-  def showEvent(self, event):
+  def showEvent(self, _event):
     """ protected Qt function """
     utils.verify(self.episodeComboBox.count() > 0, "No items in list")
     self.setMaximumHeight(self.sizeHint().height())

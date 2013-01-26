@@ -5,10 +5,11 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Model and other classes pertaining to the set of tv seasons to be modified in the workbench
 # --------------------------------------------------------------------------------------------------------------------
+import abc
 import copy
 
-from PyQt4 import QtCore
 from PyQt4 import QtGui
+from PyQt4 import QtCore
 
 from base import model as base_model
 from common import file_helper
@@ -32,6 +33,8 @@ RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
 # --------------------------------------------------------------------------------------------------------------------
 class BaseItem(object):
   """ Individual item in the workbench model. The item may represent a season or a moveItemCandidate. """ 
+  __metaclass__ = abc.ABCMeta
+  
   def __init__(self, rawData=None, parent=None):
     super(BaseItem, self).__init__()
     self.parent = parent
@@ -61,20 +64,25 @@ class BaseItem(object):
   def isEpisode(self):
     return isinstance(self.raw, tv_types.EpisodeRenameItem)
   
+  @abc.abstractmethod
   def setData(self, model, index, value, role):
-    raise NotImplementedError("BaseItem.setData not implemented")    
+    pass
 
+  @abc.abstractmethod
   def data(self, index, role=QtCore.Qt.DisplayRole):
-    raise NotImplementedError("BaseItem.data not implemented")
-  
+    pass
+
+  @abc.abstractmethod
   def canCheck(self):
-    raise NotImplementedError("BaseItem.canCheck not implemented")
+    pass
 
+  @abc.abstractmethod
   def checkState(self):
-    raise NotImplementedError("BaseItem.checkState not implemented")
+    pass
 
+  @abc.abstractmethod
   def setCheckState(self, cs):
-    raise NotImplementedError("BaseItem.setCheckState not implemented")
+    pass
 
   def canEdit(self):
     return False
@@ -219,7 +227,7 @@ class LeafItem(BaseItem):
     return bool(self.raw.filename)
 
 # --------------------------------------------------------------------------------------------------------------------
-class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
+class TvModel(QtCore.QAbstractItemModel):
   """ 
   Represents 0 or more tv seasons. Each folder (season) contains a collection of moveItemCandiates. 
   At the moment folder can not be nested, but it is foreseeable that this this would be handy in the future.
@@ -236,7 +244,6 @@ class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
 
   def __init__(self, parent=None):
     super(QtCore.QAbstractItemModel, self).__init__(parent)
-    super(base_model.BaseWorkBenchModel, self).__init__()
     self.rootItem = None
     self._bulkProcessing = False
     self.clear()
@@ -485,3 +492,5 @@ class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
     newCheckedState = self.overallCheckedState()
     if oldCheckedState != newCheckedState:
       self._emitWorkBenchChanged()
+      
+base_model.BaseWorkBenchModel.register(TvModel)

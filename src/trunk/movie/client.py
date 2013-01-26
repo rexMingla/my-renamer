@@ -7,8 +7,7 @@
 # --------------------------------------------------------------------------------------------------------------------
 from base import client as base_client
 from common import utils
-
-import types as movie_types
+from movie import types as movie_types
 
 _hasPymdb = False
 try:
@@ -70,7 +69,7 @@ class ImdbClient(BaseMovieInfoClient):
     ret  = []
     info = None
     try:
-      m = pymdb.Movie("{} {}".format(searchParams.title, searchParams.year))
+      m = pymdb.Movie(str(searchParams))
       title = utils.sanitizeString(m.title or searchParams.title)
       info = movie_types.MovieInfo(title, searchParams.year)
       ret.append(info)
@@ -95,7 +94,7 @@ class ImdbPyClient(BaseMovieInfoClient):
     ret = []
     try:
       db = IMDb("http")
-      m = db.search_movie("{} {}".format(searchParams.title, searchParams.year))
+      m = db.search_movie(str(searchParams))
       info = movie_types.MovieInfo(utils.sanitizeString(m.title or searchParams.title), searchParams.year)
       ret.append(info)
       info.year = utils.sanitizeString(m.year or searchParams.year)
@@ -115,7 +114,7 @@ class TheMovieDbClient(BaseMovieInfoClient):
   def _getInfos(self, searchParams):
     ret = []
     try:
-      prettyTitle = searchParams.title if not searchParams.year else "{} ({})".format(searchParams.title, searchParams.year)
+      prettyTitle = str(searchParams)
       db = tmdb.MovieDb()
       results = db.search(prettyTitle)
       for r in results:
@@ -125,7 +124,7 @@ class TheMovieDbClient(BaseMovieInfoClient):
         ret.append(info)
         i = r.info()
         genres = i["categories"]["genre"].keys() if ("categories" in i and "genre" in i["categories"]) else []
-        info.genres = map(utils.sanitizeString, genres)
+        info.genres = [utils.sanitizeString(g) for g in genres]
     except tmdb.TmdBaseError as e:
       utils.logWarning("Lib: {} Title: {} Error {}: {}".format(self.displayName, searchParams.title, type(e), e), 
                        title="{} lookup".format(self.displayName))
@@ -141,7 +140,7 @@ class RottenTomatoesClient(BaseMovieInfoClient):
   def _getInfos(self, searchParams):
     ret = []
     try:
-      prettyTitle = title if not year else "{} ({})".format(searchParams.title, searchParams.year)
+      prettyTitle = str(searchParams)
       rt = RT(self.key)
       results = rt.search(prettyTitle)
       for r in results:
