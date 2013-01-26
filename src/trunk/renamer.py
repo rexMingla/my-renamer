@@ -5,13 +5,13 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: main entry point of the program
 # --------------------------------------------------------------------------------------------------------------------
+import argparse
 import os
 import sys
 
 from PyQt4 import QtGui
 
 from app import widget
-from app import command_line
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -53,13 +53,13 @@ def _runTests():
 def main():
   utils.initLogging("log.txt") # TODO: make this configurable
   utils.logInfo("Starting app")
-  
-  cl = command_line.CommandLineParser()
-  if cl.show_help:
-    utils.logError(cl.usage_message())
-    return
-  
-  if cl.test_only:
+    
+  parser = argparse.ArgumentParser(description="run renamer app or unit tests")
+  parser.add_argument("-u", "--unit-test", help="run unit tests", dest="is_test_only", 
+                      action="store_true", default=False)
+  args = parser.parse_args()
+
+  if args.is_test_only:
     _runTests()
   else:
     _runGUI()
