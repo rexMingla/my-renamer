@@ -15,11 +15,11 @@ import unittest
 
 from common import formatting
 
-from tv import types as tv_types
-from tv import client as tv_client
-from tv import manager as tv_manager
+from media.tv import types as tv_types
+from media.tv import client as tv_client
+from media.tv import manager as tv_manager
 
-from movie import types as movie_types
+from media.movie import types as movie_types
 
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
