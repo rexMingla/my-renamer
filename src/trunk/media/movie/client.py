@@ -5,8 +5,9 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module that connects to movie info sources
 # --------------------------------------------------------------------------------------------------------------------
-from common import infoClient
+from media.base import client as base_client
 from common import utils
+from media.movie import types as movie_types
 
 _hasPymdb = False
 try:
@@ -37,37 +38,7 @@ except ImportError:
   pass
 
 # --------------------------------------------------------------------------------------------------------------------
-class MovieInfo(infoClient.BaseInfo):
-  def __init__(self, title="", year=None, genres=None, series=""):
-    super(MovieInfo, self).__init__()
-    self.title = title
-    self.year = year
-    self.genres = genres or []
-    self.series = series
-    
-  def __copy__(self):
-    return MovieInfo(self.title, self.year, list(self.genres), self.series)
-  
-  def __str__(self):
-    return self.title if not self.year else "{} ({})".format(self.title, self.year)
-  
-  def toSearchParams(self):
-    return MovieSearchParams(self.title, self.year)
-
-# --------------------------------------------------------------------------------------------------------------------
-class MovieSearchParams(infoClient.BaseInfoClientSearchParams):
-  def __init__(self, title, year=""):
-    self.title = title
-    self.year = year
-    
-  def getKey(self):
-    return self.title if not self.year else utils.sanitizeString("{} ({})".format(self.title, self.year))
-  
-  def toInfo(self):
-    return MovieInfo(self.title, self.year)
-
-# --------------------------------------------------------------------------------------------------------------------
-class MovieInfoStoreHolder(infoClient.BaseInfoStoreHolder):
+class MovieInfoStoreHolder(base_client.BaseInfoStoreHolder):
   pass
 
 _STORE = None
@@ -84,7 +55,7 @@ def getStoreHolder():
   return _STORE
   
 # --------------------------------------------------------------------------------------------------------------------
-class BaseMovieInfoClient(infoClient.BaseInfoClient):
+class BaseMovieInfoClient(base_client.BaseInfoClient):
   pass
   
 # --------------------------------------------------------------------------------------------------------------------
@@ -98,9 +69,9 @@ class ImdbClient(BaseMovieInfoClient):
     ret  = []
     info = None
     try:
-      m = pymdb.Movie("{} {}".format(searchParams.title, searchParams.year))
+      m = pymdb.Movie(str(searchParams))
       title = utils.sanitizeString(m.title or searchParams.title)
-      info = MovieInfo(title, searchParams.year)
+      info = movie_types.MovieInfo(title, searchParams.year)
       ret.append(info)
       info.year = utils.sanitizeString(m.year or searchParams.year)
       info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
@@ -123,8 +94,8 @@ class ImdbPyClient(BaseMovieInfoClient):
     ret = []
     try:
       db = IMDb("http")
-      m = db.search_movie("{} {}".format(searchParams.title, searchParams.year))
-      info = MovieInfo(utils.sanitizeString(m.title or searchParams.title), searchParams.year)
+      m = db.search_movie(str(searchParams))
+      info = movie_types.MovieInfo(utils.sanitizeString(m.title or searchParams.title), searchParams.year)
       ret.append(info)
       info.year = utils.sanitizeString(m.year or searchParams.year)
       info.genres = [utils.sanitizeString(g) for g in m.genre] or info.genres
@@ -143,17 +114,17 @@ class TheMovieDbClient(BaseMovieInfoClient):
   def _getInfos(self, searchParams):
     ret = []
     try:
-      prettyTitle = searchParams.title if not searchParams.year else "{} ({})".format(searchParams.title, searchParams.year)
+      prettyTitle = str(searchParams)
       db = tmdb.MovieDb()
       results = db.search(prettyTitle)
       for r in results:
         title = utils.sanitizeString(r.get("name", searchParams.title))
         year = str(r.get("released", searchParams.year))[:4]
-        info = MovieInfo(title, year)
+        info = movie_types.MovieInfo(title, year)
         ret.append(info)
         i = r.info()
         genres = i["categories"]["genre"].keys() if ("categories" in i and "genre" in i["categories"]) else []
-        info.genres = map(utils.sanitizeString, genres)
+        info.genres = [utils.sanitizeString(g) for g in genres]
     except tmdb.TmdBaseError as e:
       utils.logWarning("Lib: {} Title: {} Error {}: {}".format(self.displayName, searchParams.title, type(e), e), 
                        title="{} lookup".format(self.displayName))
@@ -169,13 +140,13 @@ class RottenTomatoesClient(BaseMovieInfoClient):
   def _getInfos(self, searchParams):
     ret = []
     try:
-      prettyTitle = title if not year else "{} ({})".format(searchParams.title, searchParams.year)
+      prettyTitle = str(searchParams)
       rt = RT(self.key)
       results = rt.search(prettyTitle)
       for r in results:
         title = utils.sanitizeString(r.get("title", searchParams.title))
         year = str(r.get("year", searchParams.year))
-        info = MovieInfo(title, year)
+        info = movie_types.MovieInfo(title, year)
         #no genre without more effort
         ret.append(info)
     except Exception as e: #bad need to find a better exception
