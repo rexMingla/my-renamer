@@ -9,17 +9,17 @@ from common import interfaces
 from common import renamer
 from common import formatting
 
-from base import widget as base_widget
+from media.base import widget as base_widget
 
-from tv import client as tv_client
-from tv import manager as tv_manager
-from tv import types as tv_types
-from tv import widget as tv_widget
+from media.tv import client as tv_client
+from media.tv import manager as tv_manager
+from media.tv import types as tv_types
+from media.tv import widget as tv_widget
 
-from movie import client as movie_client
-from movie import manager as movie_manager
-from movie import types as movie_types
-from movie import widget as movie_widget
+from media.movie import client as movie_client
+from media.movie import manager as movie_manager
+from media.movie import types as movie_types
+from media.movie import widget as movie_widget
 
 # --------------------------------------------------------------------------------------------------------------------
 class Factory:
