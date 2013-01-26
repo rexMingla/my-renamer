@@ -47,10 +47,10 @@ def _runTests():
   ])
   
   runner = unittest.TextTestRunner(verbosity=2)
-  result = runner.run(suite)
+  return runner.run(suite)
   
 # --------------------------------------------------------------------------------------------------------------------
-def main(argv):
+def main():
   utils.initLogging("log.txt") # TODO: make this configurable
   utils.logInfo("Starting app")
   
@@ -66,5 +66,5 @@ def main(argv):
 
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
-  main(sys.argv)  
+  main()  
   

@@ -14,7 +14,6 @@ import unittest
 
 from common import file_helper
 from common import renamer
-from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 def createTestFile(name):

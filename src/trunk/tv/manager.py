@@ -5,19 +5,19 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Helper functions associated with tv series 
 # --------------------------------------------------------------------------------------------------------------------
-import copy
 import os
 import re
 
 from base import manager as base_manager
 from common import file_helper
+from tv import types as tv_types
+from tv import client as tv_client
 
-import types as tv_types
-import client as tv_client
-
-_RE_FOLDER_MATCH_1 = re.compile(r"^.*{0}(?P<name>.*){0}(?:season|series)\s+(?P<num>\d+)[^{0}]*$".format(re.escape(os.sep)), 
+_RE_FOLDER_MATCH_1 = re.compile(r"^.*{0}(?P<name>.*){0}"
+                                r"(?:season|series)\s+(?P<num>\d+)[^{0}]*$".format(re.escape(os.sep)), 
                                 flags=re.IGNORECASE) #/show/season
-_RE_FOLDER_MATCH_2 = re.compile(r"^.*{0}(?P<name>.*)\s+\-\s+(?:season|series)\s+(?P<num>\d+)[^{0}]*$".format(re.escape(os.sep)), 
+_RE_FOLDER_MATCH_2 = re.compile(r"^.*{0}(?P<name>.*)\s+\-\s+(?:season|series)"
+                                r"\s+(?P<num>\d+)[^{0}]*$".format(re.escape(os.sep)), 
                                 flags=re.IGNORECASE) #/show - season
 _RE_EPISODE_MATCH = re.compile(r"^.*?(?P<epNum>\d\d?)\D*\.[^\.]*$")
 
@@ -39,9 +39,9 @@ class TvHelper:
   
   @staticmethod
   def getSourcesFromFilenames(filenames):
-    def getCandidateEpisodeNumsFromFilename(filename):
+    def getCandidateEpisodeNumsFromFilename(f):
       """ returns a list of numbers for the filename """
-      return [int(m[-2:]) for m in re.findall("\d+", file_helper.FileHelper.basename(filename))] or [tv_types.UNRESOLVED_KEY]
+      return [int(m[-2:]) for m in re.findall(r"\d+", file_helper.FileHelper.basename(f))] or [tv_types.UNRESOLVED_KEY]
 
     if not filenames:
       return tv_types.SourceFiles()
@@ -69,22 +69,12 @@ class TvManager(base_manager.BaseManager):
   def __init__(self):
     super(TvManager, self).__init__(tv_client.getStoreHolder())
 
-  def getSeasonsForFolders(self, rootFolder, isRecursive, extensionFilter):
-    #utils.verifyType(rootFolder, str)
-    #utils.verifyType(isRecursive, bool)
-    #utils.verifyType(extensionFilter, extension.FileExtensions)
-    seasons = []
-    dirs = TvHelper.getFolders(rootFolder, isRecursive)
-    for d in enumerate(dirs):
-      s= self.getSeasonForFolder(d.rstrip(os.sep) or os.sep, extensionFilter)
-      seasons.append(s)
-    return seasons
-
   def getSeasonForFolder(self, folder, extensionFilter, minFileSizeBytes):
     #utils.verifyType(minFileSizeBytes, int)    
     searchParams = TvHelper.seasonFromFolderName(folder)
     tempFiles = [file_helper.FileHelper.joinPath(folder, f) for f in extensionFilter.filterFiles(os.listdir(folder))]
-    files = [f for f in tempFiles if file_helper.FileHelper.isFile(f) and file_helper.FileHelper.getFileSize(f) > minFileSizeBytes]
+    files = [f for f in tempFiles 
+             if file_helper.FileHelper.isFile(f) and file_helper.FileHelper.getFileSize(f) > minFileSizeBytes]
     s = None
     if not searchParams.showName == tv_types.UNRESOLVED_NAME or len(files):
       sources = TvHelper.getSourcesFromFilenames(files)

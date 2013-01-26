@@ -76,10 +76,15 @@ class EpisodeRenameItem(base_types.BaseRenameItem):
   
   @staticmethod
   def typeStr(t):
-    if t == EpisodeRenameItem.READY:            return "Ready"
-    elif t == EpisodeRenameItem.MISSING_NEW:    return "No Matching Episode"
-    elif t == EpisodeRenameItem.MISSING_OLD:    return "No Matching File"
-    else: assert(False);                      return "Unknown"      
+    if t == EpisodeRenameItem.READY:            
+      return "Ready"
+    elif t == EpisodeRenameItem.MISSING_NEW:    
+      return "No Matching Episode"
+    elif t == EpisodeRenameItem.MISSING_OLD:    
+      return "No Matching File"
+    else: 
+      assert(False)  
+      return "Unknown"      
   
   def __init__(self, filename, info):
     super(EpisodeRenameItem, self).__init__(filename)
@@ -203,11 +208,17 @@ class Season:
   
   @staticmethod
   def resultStr(result):
-    if   result == Season.OK:                return "Ok"
-    elif result == Season.UNBALANCED_FILES:  return "Partially resolved"
-    elif result == Season.SEASON_NOT_FOUND:  return "Season not found"
-    elif result == Season.SEASON_UNRESOLVED: return "Season unknown"
-    else:                                    assert(false); return "Unknown"
+    if   result == Season.OK:                
+      return "Ok"
+    elif result == Season.UNBALANCED_FILES:  
+      return "Partially resolved"
+    elif result == Season.SEASON_NOT_FOUND:  
+      return "Season not found"
+    elif result == Season.SEASON_UNRESOLVED: 
+      return "Season unknown"
+    else:                                    
+      assert(False)
+      return "Unknown"
   
   def __str__(self):
     if self.status == Season.SEASON_NOT_FOUND:
@@ -224,6 +235,8 @@ class Season:
     self.info = info
     self.performMove = True #wtf? #HACK:
     self.inputFolder = inputFolder
+    self.status = None
+    self.episodeMoveItems = []
     self._resolveEpisodeMoveItems()
     self._resolveStatus() 
     

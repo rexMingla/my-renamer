@@ -5,7 +5,6 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Class associated with all things FileExtensions
 # --------------------------------------------------------------------------------------------------------------------
-import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class FileExtensions:
@@ -21,6 +20,7 @@ class FileExtensions:
   ALL_FILES = ".*"
   
   def __init__(self, extensions):
+    self._extensions = []
     if isinstance(extensions, basestring):
       self.setExtensionsFromString(extensions)
     else:
@@ -51,12 +51,12 @@ class FileExtensions:
         else:
           sanitized.append(item)
     if isAll:
-      self._extensions_ = [FileExtensions.ALL_FILES] #make a copy
+      self._extensions = [FileExtensions.ALL_FILES] #make a copy
     else:
-      self._extensions_ = sanitized
+      self._extensions = sanitized
   
   def extensionString(self):
-    return FileExtensions.delimiter().join(self._extensions_)
+    return FileExtensions.delimiter().join(self._extensions)
   
   def filterFiles(self, files):
     """ Return list of files matching extension filter """
@@ -65,7 +65,7 @@ class FileExtensions:
     if self == ALL_FILE_EXTENSIONS:
       ret = files
     else:
-      ret = [f for f in files for ext in self._extensions_ if f.lower().endswith(ext)]
+      ret = [f for f in files for ext in self._extensions if f.lower().endswith(ext)]
     return ret
   
 ALL_FILE_EXTENSIONS         = FileExtensions([FileExtensions.ALL_FILES])

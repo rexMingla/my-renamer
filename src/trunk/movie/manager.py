@@ -13,8 +13,8 @@ from base import manager as base_manager
 from common import file_helper
 from common import utils
 
-import types as movie_types
-import client as movie_client
+from movie import types as movie_types
+from movie import client as movie_client
 
 _PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
 _MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")

@@ -180,13 +180,13 @@ class MainWindow(QtGui.QMainWindow):
     data.state = utils.toString(self.saveState().toBase64())
     data.mode = self._mode
     data.autoStart = self._autoStart
-    data.dontShows = dont_show.DontShowManager.getConfig()
+    data.dontShows = dont_show.DontShowManager.get_config()
     data.configVersion = config.CONFIG_VERSION
     self._config_manager.setData("mw", data)
 
     for m in self._modeToModule.values():
       for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
-        self._config_manager.setData(w.configName, w.getConfig())
+        self._config_manager.setData(w.config_name, w.get_config())
     self._config_manager.saveConfig(self._configFile)
     
   def _saveCache(self):
@@ -206,7 +206,7 @@ class MainWindow(QtGui.QMainWindow):
       data = self._config_manager.getData("mw", config.MainWindowConfig())
       self.restoreGeometry(QtCore.QByteArray.fromBase64(data.geo))
       self.restoreState(QtCore.QByteArray.fromBase64(data.state))
-      dont_show.DontShowManager.setConfig(data.dontShows)
+      dont_show.DontShowManager.set_config(data.dontShows)
       if not data.mode in interfaces.VALID_MODES:
         data.mode = interfaces.Mode.TV_MODE
       self._setMode(data.mode)
@@ -214,7 +214,7 @@ class MainWindow(QtGui.QMainWindow):
       
       for m in self._modeToModule.values():
         for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
-          w.setConfig(self._config_manager.getData(w.configName, None))    
+          w.set_config(self._config_manager.getData(w.config_name, None))    
     except (ValueError, TypeError, IndexError, KeyError) as e:
       utils.logWarning("Unable to load config file. reason: {}".format(e))
       if not self._restoringDefaults:
@@ -288,11 +288,11 @@ class LogWidget(QtGui.QWidget):
   def _clearLog(self):
     self._model.clearItems()
     
-  def setConfig(self, data):
+  def set_config(self, data):
     """ Update from settings """
     self.autoClearCheckBox.setChecked(data.get("autoClear", False))
   
-  def getConfig(self):
+  def get_config(self):
     return {"autoClear" : self.autoClearCheckBox.isChecked()}
 
 # --------------------------------------------------------------------------------------------------------------------

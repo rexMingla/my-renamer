@@ -48,7 +48,7 @@ class MovieInfo(base_types.BaseInfo):
   
   def __eq__(self, other):
     return (self.title == other.title and self.year == other.year and 
-            self.part == other.part and self.movie.getGenre() == other.getGenre())
+            self.part == other.part and self.getGenre() == other.getGenre())
   
   def getGenre(self, default=""):
     return self.genres[0] if self.genres else default

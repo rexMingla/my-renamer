@@ -36,13 +36,13 @@ class BaseInfoStoreHolder(object):
   def getAllActiveNames(self):
     return [store.prettyName() for store in self.stores if store.isActive()]  
   
-  def getConfig(self):
+  def get_config(self):
     ret = []
     for i, s in enumerate(self.stores):
       ret.append({"name": s.prettyName(), "isEnabled": s.isEnabled, "key": s.key, "index": i})
     return ret
   
-  def setConfig(self, data):
+  def set_config(self, data):
     for i, values in enumerate(data):
       index = self.getStoreIndex(values["name"])
       if index != -1 and index != i:

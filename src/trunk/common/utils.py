@@ -57,8 +57,8 @@ def initLogging(logfile):
                       filename=logfile,
                       filemode="a")
 
-  for log in ("PyQt4", "requests", "tvdb_api"):
-    logging.getLogger(log).setLevel(logging.CRITICAL)
+  for logName in ("PyQt4", "requests", "tvdb_api"):
+    logging.getLogger(logName).setLevel(logging.CRITICAL)
 
   console = logging.StreamHandler()
   console.setFormatter(logging.Formatter("%(name)-12s %(levelname)-8s %(message)s"))
@@ -92,7 +92,7 @@ def verify(test, message):
     raise AssertionError(text)      
 
 # --------------------------------------------------------------------------------------------------------------------
-def verifyType(obj, class_or_type_or_tuple, msg=""):
+def verifyType(obj, class_or_type_or_tuple, _msg=""):
   """ Compare type and object are of the same class. If not true print and throw. """
   if not isinstance(obj, class_or_type_or_tuple):
     text = "{} type mismatch: {} is not {}. real type: {}".format(stackFunctionName(2), 
@@ -105,7 +105,7 @@ def verifyType(obj, class_or_type_or_tuple, msg=""):
 # --------------------------------------------------------------------------------------------------------------------
 def toString(value, defaultIfError=""):
   """ Attempt to convert string. returns defaultIfError if null. """
-  verify(isinstance(defaultIfError, str), "type mismatch: defaultIfError") #will go recursive if we use verifyType() here
+  verify(isinstance(defaultIfError, str), "type mismatch: defaultIfError") 
   v = defaultIfError
   try:
     v = str(value)
@@ -133,7 +133,7 @@ def printTiming(func):
     t1 = time.time()
     res = func(*arg)
     t2 = time.time()
-    logDebug("{}({}) took {:.2} ms".format(func.func_name, ",".join(map(str, arg)), (t2-t1) * 1000.0))
+    logDebug("{}({}) took {:.2} ms".format(func.func_name, ",".join([str(a) for a in arg]), (t2-t1) * 1000.0))
     return res
   return wrapper
 
@@ -147,6 +147,8 @@ def stringToBytes(text):
 def bytesToString(bytes_):
   bytes_ = bytes_ if bytes_ > 0 else MIN_VIDEO_SIZE_BYTES
   denoms = ["B", "KB", "MB", "GB"]
+
+  i, denom = None, None
   for i, denom in enumerate(denoms):
     if bytes_ < pow(1024, i + 1):
       break
