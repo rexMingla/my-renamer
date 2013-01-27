@@ -17,12 +17,12 @@ class BaseRenameItem(object):
   def __init__(self, filename):
     super(BaseRenameItem, self).__init__()
     self.filename = filename
-    self.fileSize = file_helper.FileHelper.getFileSize(filename)
+    self.file_size = file_helper.FileHelper.get_file_size(filename)
     self.ext = file_helper.FileHelper.extension(filename)
-    self.outputFolder = file_helper.FileHelper.dirname(self.filename)
+    self.output_folder = file_helper.FileHelper.dirname(self.filename)
   
   @abc.abstractmethod  
-  def getInfo(self):
+  def get_info(self):
     pass
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -31,10 +31,10 @@ class BaseInfo(object):
   __metaclass__ = abc.ABCMeta
   
   @abc.abstractmethod
-  def toSearchParams(self):
+  def to_search_params(self):
     pass
   
-  def hasData(self):
+  def has_data(self):
     return True
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -44,10 +44,10 @@ class BaseInfoClientSearchParams(object):
   __metaclass__ = abc.ABCMeta
     
   @abc.abstractmethod
-  def getKey(self):
+  def get_key(self):
     pass
   
   @abc.abstractmethod
-  def toInfo(self):
+  def to_info(self):
     pass
     

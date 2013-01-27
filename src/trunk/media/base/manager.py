@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+  #!/usr/bin/env python
 # --------------------------------------------------------------------------------------------------------------------
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
@@ -19,36 +19,36 @@ class BaseManager(object):
     self._holder = holder
     
   @staticmethod
-  def getFolders(rootFolder, isRecursive):
+  def get_folders(root_folder, is_recursive):
     folders = []
-    for root, dirs, files in os.walk(file_helper.FileHelper.replaceSeparators(rootFolder, os.sep)):
+    for root, _dirs, _files in os.walk(file_helper.FileHelper.replace_separators(root_folder, os.sep)):
       folders.append(root)      
-      if not isRecursive:
+      if not is_recursive:
         break
     return folders 
 
-  def setCache(self, data):
-    #utils.verifyType(data, dict)
+  def set_cache(self, data):
+    #utils.verify_type(data, dict)
     self._cache = data
 
   def cache(self):
     return self._cache
   
-  def getItem(self, searchParams, useCache=True):
+  def get_item(self, search_params, use_cache=True):
     """ retrieves season from cache or holder's InfoClients if not present """
     item = None
     
-    cacheKey = searchParams.getKey()
-    if useCache and cacheKey in self._cache:
-      item = self._cache[cacheKey]
+    cache_key = search_params.get_key()
+    if use_cache and cache_key in self._cache:
+      item = self._cache[cache_key]
     else:
-      item = self._holder.getInfo(searchParams, default=searchParams.toInfo())
-      if item and item.hasData():
-        newKey = item.toSearchParams().getKey()
-        cachedItem = copy.copy(item)
-        self._cache[newKey] = cachedItem
-        self._cache[cacheKey] = cachedItem
+      item = self._holder.get_info(search_params, default=search_params.to_info())
+      if item and item.has_data():
+        new_key = item.to_search_params().get_key()
+        cached_item = copy.copy(item)
+        self._cache[new_key] = cached_item
+        self._cache[cache_key] = cached_item
     return item    
   
-  def setItem(self, item): 
-    self._cache[item.toSearchParams().getKey()] = item
+  def set_item(self, item): 
+    self._cache[item.to_search_params().get_key()] = item

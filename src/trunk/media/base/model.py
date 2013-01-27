@@ -5,9 +5,12 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module that connects to movie info sources
 # --------------------------------------------------------------------------------------------------------------------
+import abc
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseWorkBenchModel(object):
+  __metaclass__ = abc.ABCMeta
+  
   ACTION_DELETE = "Delete"
   ACTION_LAUNCH = "Launch File"
   ACTION_OPEN = "Open Location"
@@ -20,17 +23,23 @@ class BaseWorkBenchModel(object):
   def __init__(self):
     super(BaseWorkBenchModel, self).__init__()
     
-  def getFile(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.fileLocation not implemented")
+  @abc.abstractmethod
+  def get_file(self, index):
+    pass
   
-  def getFolder(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.folder not implemented")
+  @abc.abstractmethod
+  def get_folder(self, index):
+    pass
   
-  def getDeleteItem(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.getDeleteItem not implemented")
+  @abc.abstractmethod
+  def get_delete_item(self, index):
+    pass
   
-  def getAvailableActions(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.getAvailableActions not implemented")
+  @abc.abstractmethod
+  def get_available_actions(self, index):
+    pass
   
-  def getRenameItem(self, index):
-    raise NotImplementedError("BaseWorkBenchModel.getRenameItem not implemented")  
+  @abc.abstractmethod
+  def get_rename_item(self, index):
+    pass
+  
