@@ -24,7 +24,7 @@
     <number>4</number>
    </property>
    <item>
-    <widget class="QTableView" name="movieView">
+    <widget class="QTableView" name="movie_view">
      <property name="editTriggers">
       <set>QAbstractItemView::AllEditTriggers</set>
      </property>
@@ -49,7 +49,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QTreeView" name="tvView">
+    <widget class="QTreeView" name="tv_view">
      <property name="editTriggers">
       <set>QAbstractItemView::NoEditTriggers</set>
      </property>
@@ -61,7 +61,7 @@
       <number>4</number>
      </property>
      <item>
-      <widget class="QPushButton" name="openButton">
+      <widget class="QPushButton" name="open_button">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -74,7 +74,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="launchButton">
+      <widget class="QPushButton" name="launch_button">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -103,7 +103,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="editSeasonButton">
+      <widget class="QPushButton" name="edit_season_button">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -116,7 +116,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="editMovieButton">
+      <widget class="QPushButton" name="edit_movie_button">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -129,7 +129,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="editEpisodeButton">
+      <widget class="QPushButton" name="edit_episode_button">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -142,7 +142,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="movieGroupBox">
+      <widget class="QGroupBox" name="movie_group_box">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -160,7 +160,7 @@
          <number>4</number>
         </property>
         <item>
-         <widget class="QCheckBox" name="yearCheckBox">
+         <widget class="QCheckBox" name="require_year_check_box">
           <property name="toolTip">
            <string>Check this if year data is required</string>
           </property>
@@ -170,7 +170,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="genreCheckBox">
+         <widget class="QCheckBox" name="require_genre_check_box">
           <property name="toolTip">
            <string>Check this if genre data is required</string>
           </property>
@@ -180,7 +180,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="duplicateCheckBox">
+         <widget class="QCheckBox" name="require_non_duplicate_box">
           <property name="toolTip">
            <string>If a file matches name, year and other attributes it is considered a duplicate</string>
           </property>
@@ -193,7 +193,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="selectAllCheckBox">
+      <widget class="QCheckBox" name="select_all_check_box">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -222,7 +222,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="deleteButton">
+      <widget class="QPushButton" name="delete_button">
        <property name="enabled">
         <bool>true</bool>
        </property>

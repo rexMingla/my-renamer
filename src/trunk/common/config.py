@@ -11,6 +11,7 @@ from common import interfaces
 from common import utils
 
 CONFIG_VERSION = "1.0"
+CACHE_VERSION = "1.0"
     
 # --------------------------------------------------------------------------------------------------------------------
 class BaseConfig(object):
@@ -22,17 +23,17 @@ class InputConfig(BaseConfig):
     super(InputConfig, self).__init__()
     self.folder = ""
     self.recursive = True
-    self.allExtensions = False
-    self.extensions = extension.DEFAULT_VIDEO_EXTENSIONS.extensionString()
-    self.allFileSizes = False
-    self.minFileSizeBytes = utils.MIN_VIDEO_SIZE_BYTES
+    self.all_extensions = False
+    self.extensions = extension.DEFAULT_VIDEO_EXTENSIONS.extension_string()
+    self.all_file_sizes = False
+    self.min_file_size_bytes = utils.MIN_VIDEO_SIZE_BYTES
     self.sources = []
   
-  def getExtensions(self):
-    return extension.ALL_FILE_EXTENSIONS if self.allExtensions else extension.FileExtensions(self.extensions.split())
+  def get_extensions(self):
+    return extension.ALL_FILE_EXTENSIONS if self.all_extensions else extension.FileExtensions(self.extensions.split())
 
-  def getMinFileSizeBytes(self):
-    return 0 if self.allFileSizes else self.minFileSizeBytes
+  def get_min_file_size_bytes(self):
+    return 0 if self.all_file_sizes else self.min_file_size_bytes
 
 # --------------------------------------------------------------------------------------------------------------------
 class WorkbenchConfig(BaseConfig):
@@ -44,18 +45,18 @@ class OutputConfig(BaseConfig):
   def __init__(self):
     self.format = None
     self.folder = ""
-    self.useSource = True
-    self.isMove = True
-    self.dontOverwrite = True
-    self.showHelp = True
-    self.actionSubtitles = True
-    self.subtitleExtensions = extension.DEFAULT_SUBTITLE_EXTENSIONS.extensionString()
+    self.use_source = True
+    self.is_move = True
+    self.dont_overwrite = True
+    self.show_help = True
+    self.action_subtitles = True
+    self.subtitle_exts = extension.DEFAULT_SUBTITLE_EXTENSIONS.extension_string()
     
-  def getOutputFolder(self):
-    return self.folder if self.useSource else ""
+  def get_output_folder(self):
+    return self.folder if self.use_source else ""
 
-  def getSubtitles(self):
-    return [] if not self.actionSubtitles else extension.FileExtensions(self.subtitleExtensions).extensionString().split()
+  def get_subtitles(self):
+    return [] if not self.action_subtitles else extension.FileExtensions(self.subtitle_exts).extension_string().split()
     
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindowConfig(BaseConfig):
@@ -63,10 +64,10 @@ class MainWindowConfig(BaseConfig):
     super(MainWindowConfig, self).__init__()
     self.geo = "AdnQywABAAAAAABbAAAACQAABEsAAALmAAAAYwAAACcAAARDAAAC3gAAAAAAAA=="
     self.state = "AAAA/wAAAAD9AAAAAgAAAAIAAAPhAAAAsvwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAAD4QAAAKMA////AAAAAwAAA+EAAADU/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAnIAAAGIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAJ2AAABawAAAHsA////AAAD4QAAAPMAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABoAYQBjAHQAaQBvAG4AVABvAG8AbABCAGEAcgEAAAAA/////wAAAAAAAAAA"
-    self.dontShows = {}
-    self.mode = interfaces.Mode.MOVIE_MODE
-    self.autoStart = False
-    self.configVersion = "0.0"
+    self.dont_shows = {}
+    self.mode = interfaces.MOVIE_MODE
+    self.auto_start = False
+    self.config_version = CONFIG_VERSION
     
 # --------------------------------------------------------------------------------------------------------------------
 class TvWorkBenchConfig(BaseConfig):
@@ -78,8 +79,8 @@ class TvWorkBenchConfig(BaseConfig):
 class MovieWorkBenchConfig(BaseConfig):
   def __init__(self):
     super(MovieWorkBenchConfig, self).__init__()
-    self.noYearAsError = True
-    self.noGenreAsError = True
-    self.duplicateAsError = True
+    self.no_year_as_error = True
+    self.no_genre_as_error = True
+    self.duplicate_as_error = True
     self.state = "AAAA/wAAAAAAAAABAAAAAQAAAAABAAAAAAAAAAAAAAAAAAAAAAAAA14AAAAJAAEAAQAAAAAAAAAAAAAAAGT/////AAAAhAAAAAAAAAAJAAAAGQAAAAEAAAACAAAAmQAAAAEAAAAAAAAA4wAAAAEAAAAAAAAAQgAAAAEAAAAAAAAAPwAAAAEAAAAAAAAAZAAAAAEAAAAAAAAAUAAAAAEAAAAAAAAARQAAAAEAAAAAAAAATwAAAAEAAAAA"
-    self.seriesList = []    
+    self.series_list = []    

@@ -10,7 +10,8 @@
 class FileExtensions:
   """ 
   Handling of file extensions. Extensions can be loaded from a string or a list. 
-  Strings will be FileExtensions.delimiter separated before being cleaned as follows (using mpg as the example extension):
+  Strings will be FileExtensions.delimiter separated before being cleaned as follows 
+  (using mpg as the example extension):
   *.mpg -> .mpg
   .mpg  -> .mpg
   mpg   -> .mpg
@@ -22,25 +23,25 @@ class FileExtensions:
   def __init__(self, extensions):
     self._extensions = []
     if isinstance(extensions, basestring):
-      self.setExtensionsFromString(extensions)
+      self.set_extension_from_string(extensions)
     else:
-      self.setExtensionsFromList(extensions)
+      self.set_extension_from_list(extensions)
   
   @staticmethod
   def delimiter():
     return " "
 
-  def setExtensionsFromString(self, s):
-    #utils.verifyType(s, str)
-    self.setExtensionsFromList(s.split(FileExtensions.delimiter()))
+  def set_extension_from_string(self, text):
+    #utils.verify_type(text, str)
+    self.set_extension_from_list(text.split(FileExtensions.delimiter()))
 
-  def setExtensionsFromList(self, l):
-    #utils.verifyType(l, list)
-    isAll = not l
+  def set_extension_from_list(self, obj):
+    #utils.verify_type(l, list)
+    is_all = not obj
     sanitized = []
-    for item in l:
+    for item in obj:
       if item in ["", "*", "*.*", ".*"]:
-        isAll = True
+        is_all = True
         break
       else:
         #leave in format of .ext
@@ -50,22 +51,22 @@ class FileExtensions:
           sanitized.append(".{}".format(item))
         else:
           sanitized.append(item)
-    if isAll:
+    if is_all:
       self._extensions = [FileExtensions.ALL_FILES] #make a copy
     else:
       self._extensions = sanitized
   
-  def extensionString(self):
+  def extension_string(self):
     return FileExtensions.delimiter().join(self._extensions)
   
-  def filterFiles(self, files):
+  def filter_files(self, files):
     """ Return list of files matching extension filter """
-    #utils.verifyType(files, list)
+    #utils.verify_type(files, list)
     ret = []
     if self == ALL_FILE_EXTENSIONS:
       ret = files
     else:
-      ret = [f for f in files for ext in self._extensions if f.lower().endswith(ext)]
+      ret = [filename for filename in files for ext in self._extensions if filename.lower().endswith(ext)]
     return ret
   
 ALL_FILE_EXTENSIONS         = FileExtensions([FileExtensions.ALL_FILES])

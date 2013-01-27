@@ -30,7 +30,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="filenameEdit">
+      <widget class="QLineEdit" name="filename_edit">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -56,14 +56,14 @@
          <number>4</number>
         </property>
         <item>
-         <widget class="QRadioButton" name="pickFromListRadio">
+         <widget class="QRadioButton" name="pick_from_list_radio">
           <property name="text">
            <string>Pick From List</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="episodeComboBox">
+         <widget class="QComboBox" name="episode_combo_box">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -75,7 +75,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QRadioButton" name="ignoreRadio">
+       <widget class="QRadioButton" name="ignore_radio">
         <property name="text">
          <string>Ignore File</string>
         </property>

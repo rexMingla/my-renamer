@@ -51,8 +51,8 @@ def _runTests():
   
 # --------------------------------------------------------------------------------------------------------------------
 def main():
-  utils.initLogging("log.txt") # TODO: make this configurable
-  utils.logInfo("Starting app")
+  utils.init_logging("log.txt") # TODO: make this configurable
+  utils.log_info("Starting app")
     
   parser = argparse.ArgumentParser(description="run renamer app or unit tests")
   parser.add_argument("-u", "--unit-test", help="run unit tests", dest="is_test_only", 

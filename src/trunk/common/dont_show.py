@@ -17,44 +17,44 @@ class _DontShowAgainDialog(QtGui.QDialog):
     super(_DontShowAgainDialog, self).__init__(parent)
 
     self.setWindowTitle(title)
-    self._dontShowCheckBox = QtGui.QCheckBox("Don't show this dialog again", self)
+    self._dont_show_check_box = QtGui.QCheckBox("Don't show this dialog again", self)
 
-    self._buttonBox = QtGui.QDialogButtonBox(options, parent=self, accepted=self.accept, rejected=self.reject)
-    self._buttonBox.clicked.connect(self._buttonClicked)
+    self._button_box = QtGui.QDialogButtonBox(options, parent=self, accepted=self.accept, rejected=self.reject)
+    self._button_box.clicked.connect(self._button_clicked)
     
-    l = QtGui.QVBoxLayout(self)
-    l.addWidget(QtGui.QLabel(text, self))
-    l.addWidget(self._dontShowCheckBox)
-    l.addWidget(self._buttonBox)
-    l.setSizeConstraint(QtGui.QLayout.SetFixedSize)
-    self.setLayout(l)
+    layout = QtGui.QVBoxLayout(self)
+    layout.addWidget(QtGui.QLabel(text, self))
+    layout.addWidget(self._dont_show_check_box)
+    layout.addWidget(self._button_box)
+    layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+    self.setLayout(layout)
     self.button = None
     
-  def _buttonClicked(self, button):
-    self.button = self._buttonBox.standardButton(button)
+  def _button_clicked(self, button):
+    self.button = self._button_box.standardButton(button)
     
-  def isChecked(self):
-    return self._dontShowCheckBox.isChecked()
+  def is_checked(self):
+    return self._dont_show_check_box.isChecked()
   
 # --------------------------------------------------------------------------------------------------------------------
 class DontShowManager:
   """ displays 'don't show this message again' dialog if previously not shown, otherwise returns result """
-  _dontShows = {}
+  _dont_shows = {}
   
   @classmethod
-  def getAnswer(cls, title, text, key, options=QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, parent=None): 
-    if key in cls._dontShows:
-      return cls._dontShows[key]
+  def get_answer(cls, title, text, key, options=QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, parent=None): 
+    if key in cls._dont_shows:
+      return cls._dont_shows[key]
     else:
-      d = _DontShowAgainDialog(title, text, options, parent)
-      if d.exec_() == QtGui.QDialog.Accepted and d.isChecked():
-        cls._dontShows[key] = d.button
-      return d.button
+      dialog = _DontShowAgainDialog(title, text, options, parent)
+      if dialog.exec_() == QtGui.QDialog.Accepted and dialog.is_checked():
+        cls._dont_shows[key] = dialog.button
+      return dialog.button
     
   @classmethod
   def get_config(cls):
-    return cls._dontShows
+    return cls._dont_shows
 
   @classmethod
   def set_config(cls, data):
-    cls._dontShows = data
+    cls._dont_shows = data

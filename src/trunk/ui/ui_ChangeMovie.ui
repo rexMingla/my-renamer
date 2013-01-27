@@ -56,7 +56,7 @@
         </widget>
        </item>
        <item row="0" column="1" colspan="2">
-        <widget class="QLineEdit" name="filenameEdit">
+        <widget class="QLineEdit" name="filename_edit">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -82,12 +82,12 @@
         </widget>
        </item>
        <item row="1" column="1" colspan="2">
-        <widget class="QLineEdit" name="searchEdit"/>
+        <widget class="QLineEdit" name="search_edit"/>
        </item>
        <item row="2" column="0" colspan="3">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QPushButton" name="searchButton">
+          <widget class="QPushButton" name="search_button">
            <property name="toolTip">
             <string>Search TVDB database</string>
            </property>
@@ -106,7 +106,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="stopButton">
+          <widget class="QPushButton" name="stop_button">
            <property name="toolTip">
             <string>Cancel Search</string>
            </property>
@@ -116,7 +116,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="luckyCheckBox">
+          <widget class="QCheckBox" name="is_lucky_check_box">
            <property name="toolTip">
             <string>Stop on first result</string>
            </property>
@@ -142,7 +142,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QProgressBar" name="progressBar">
+          <widget class="QProgressBar" name="progress_bar">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>1</horstretch>
@@ -173,7 +173,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="sourceButton">
+          <widget class="QPushButton" name="show_source_button">
            <property name="toolTip">
             <string>Configure which data sources are used and the order of searching.</string>
            </property>
@@ -216,7 +216,7 @@
            </widget>
           </item>
           <item row="0" column="2">
-           <widget class="QLineEdit" name="titleEdit"/>
+           <widget class="QLineEdit" name="title_edit"/>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_3">
@@ -238,7 +238,7 @@
            </widget>
           </item>
           <item row="1" column="2">
-           <widget class="QLineEdit" name="yearEdit">
+           <widget class="QLineEdit" name="year_edit">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -255,7 +255,7 @@
            </widget>
           </item>
           <item row="2" column="2">
-           <widget class="QLineEdit" name="genreEdit">
+           <widget class="QLineEdit" name="genre_edit">
             <property name="minimumSize">
              <size>
               <width>20</width>
@@ -272,7 +272,7 @@
            </widget>
           </item>
           <item row="3" column="2">
-           <widget class="QLineEdit" name="seriesEdit">
+           <widget class="QLineEdit" name="series_edit">
             <property name="toolTip">
              <string>Set a tag intended for use as a prefix to keep series together</string>
             </property>
@@ -282,7 +282,7 @@
         </widget>
        </item>
        <item row="4" column="0" colspan="2">
-        <widget class="QCheckBox" name="partCheckBox">
+        <widget class="QCheckBox" name="part_check_box">
          <property name="layoutDirection">
           <enum>Qt::RightToLeft</enum>
          </property>
@@ -294,7 +294,7 @@
        <item row="4" column="2">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QSpinBox" name="partSpinBox">
+          <widget class="QSpinBox" name="part_spin_box">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -353,7 +353,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="hideLabel">
+          <widget class="QLabel" name="hide_label">
            <property name="toolTip">
             <string>Hide list of format options</string>
            </property>
@@ -370,7 +370,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="showLabel">
+          <widget class="QLabel" name="show_label">
            <property name="toolTip">
             <string>Hide list of format options</string>
            </property>
@@ -403,7 +403,7 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
-     <widget class="QFrame" name="placeholderWidget">
+     <widget class="QFrame" name="placeholder_widget">
       <property name="minimumSize">
        <size>
         <width>180</width>

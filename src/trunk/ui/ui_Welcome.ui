@@ -34,7 +34,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QRadioButton" name="movieRadio">
+    <widget class="QRadioButton" name="movie_radio">
      <property name="text">
       <string>Movies</string>
      </property>
@@ -44,7 +44,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QRadioButton" name="tvRadio">
+    <widget class="QRadioButton" name="tv_radio">
      <property name="text">
       <string>Tv shows</string>
      </property>
@@ -60,7 +60,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QCheckBox" name="autoStartCheckBox">
+      <widget class="QCheckBox" name="is_auto_start_check_box">
        <property name="text">
         <string>In future always start from the last used mode</string>
        </property>

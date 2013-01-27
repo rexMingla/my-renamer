@@ -9,19 +9,19 @@ from media.base import client as base_client
 from common import utils
 from media.tv import types as tv_types
 
-hasTvdb = False
+_HAS_TVDB = False
 try:
   import tvdb_api
   import tvdb_exceptions  
-  hasTvdb = True
+  _HAS_TVDB = True
 except ImportError:
   pass
 
-hasTvRage = False
+_HAS_TVRAGE = False
 try:
   import tvrage.api
   import tvrage.exceptions
-  hasTvRage = True
+  _HAS_TVRAGE = True
 except ImportError:
   pass
   
@@ -32,12 +32,12 @@ class TvInfoStoreHolder(base_client.BaseInfoStoreHolder):
 _STORE = None
 
 # --------------------------------------------------------------------------------------------------------------------
-def getStoreHolder():
+def get_store_helper():
   global _STORE
   if not _STORE:
     _STORE = TvInfoStoreHolder()
-    _STORE.addStore(TvdbClient())  
-    _STORE.addStore(TvRageClient())  
+    _STORE.add_store(TvdbClient())  
+    _STORE.add_store(TvRageClient())  
   return _STORE
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -48,25 +48,26 @@ class BaseTvInfoClient(base_client.BaseInfoClient):
 class TvdbClient(BaseTvInfoClient):
   def __init__(self):
     super(TvdbClient, self).__init__("tvdb_api", "thetvdb.com", "https://github.com/dbr/tvdb_api/", 
-                                     hasLib=hasTvdb, 
-                                     requiresKey=False)
+                                     has_lib=_HAS_TVDB, 
+                                     requires_key=False)
     
-  def _getInfos(self, searchParams):
+  def _get_all_info(self, search_params):
     ret = []
     try:
-      tv = tvdb_api.Tvdb()
-      season = tv[searchParams.showName][searchParams.seasonNum]
-      eps = tv_types.SeasonInfo(utils.sanitizeString(tv[searchParams.showName]["seriesname"], "") or 
-                                          searchParams.showName, searchParams.seasonNum)
+      source = tvdb_api.Tvdb()
+      season = source[search_params.show_name][search_params.season_num]
+      eps = tv_types.SeasonInfo(utils.sanitize_string(source[search_params.show_name]["seriesname"], "") or 
+                                          search_params.show_name, search_params.season_num)
       ret.append(eps)
       for i in season:
-        ep = season[i]
-        show = tv_types.EpisodeInfo(int(ep["episodenumber"]), utils.sanitizeString(ep["episodename"] or ""))
+        episode = season[i]
+        show = tv_types.EpisodeInfo(int(episode["episodenumber"]), 
+                                    utils.sanitize_string(episode["episodename"] or ""))
         eps.episodes.append(show)
-    except tvdb_exceptions.tvdb_exception as e:
-      utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 
-                                                                            searchParams.seasonNum, type(e), e), 
-                       title="{} lookup".format(self.displayName))
+    except tvdb_exceptions.tvdb_exception as ex:
+      utils.log_warning("Lib: {} Show: {} season_num: {} Error {}: {}".format(self.display_name, search_params.show_name, 
+                                                                            search_params.season_num, type(ex), ex), 
+                       title="{} lookup".format(self.display_name))
     return ret
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -74,22 +75,22 @@ class TvRageClient(BaseTvInfoClient):
   def __init__(self):
     super(TvRageClient, self).__init__("python-tvrage", "tvrage.com", 
                                        "http://pypi.python.org/pypi/python-tvrage/0.1.4", 
-                                       hasLib=hasTvRage, 
-                                       requiresKey=False)
+                                       has_lib=_HAS_TVRAGE, 
+                                       requires_key=False)
     
-  def _getInfos(self, searchParams):
+  def _get_all_info(self, search_params):
     ret = []
     try:
-      tv = tvrage.api.Show(searchParams.showName)
-      season = tv.season(searchParams.seasonNum)
-      eps = tv_types.SeasonInfo(utils.sanitizeString(tv.name) or searchParams.showName, searchParams.seasonNum)
+      source = tvrage.api.Show(search_params.show_name)
+      season = source.season(search_params.season_num)
+      eps = tv_types.SeasonInfo(utils.sanitize_string(source.name) or search_params.show_name, search_params.season_num)
       ret.append(eps)
-      for ep in season.values():
-        show = tv_types.EpisodeInfo(int(ep.number), utils.sanitizeString(ep.title))
+      for i in season.values():
+        show = tv_types.EpisodeInfo(int(i.number), utils.sanitize_string(i.title))
         eps.episodes.append(show)
-    except tvrage.exceptions.BaseError as e:
-      utils.logWarning("Lib: {} Show: {} seasonNum: {} Error {}: {}".format(self.displayName, searchParams.showName, 
-                                                                            searchParams.seasonNum, type(e), e), 
-                       title="{} lookup".format(self.displayName))
+    except tvrage.exceptions.BaseError as ex:
+      utils.log_warning("Lib: {} Show: {} season_num: {} Error {}: {}".format(self.display_name, search_params.show_name, 
+                                                                            search_params.season_num, type(ex), ex), 
+                       title="{} lookup".format(self.display_name))
     return ret
   

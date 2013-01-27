@@ -15,11 +15,11 @@ CONDITIONAL_START = "%("
 CONDITIONAL_END = ")%"
 _RE_CONDITIONAL = re.compile("({}.*?{})".format(re.escape(CONDITIONAL_START), re.escape(CONDITIONAL_END)))
 
-def _leftPad(val, places=2):
-  ret = utils.toString(val).zfill(places)
+def _left_pad(val, places=2):
+  ret = utils.to_string(val).zfill(places)
   return ret
 
-def _wrapReplaceStr(val):
+def _wrap_replace_str(val):
   return "<{}>".format(val)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -31,68 +31,68 @@ class BaseNameFormatter(object):
   def __init__(self):
     super(BaseNameFormatter, self).__init__()
     
-  def getName(self, fmt, item, folder=None):
+  def get_name(self, fmt, item, folder=None):
     if folder is None:
-      folder = item.outputFolder
-    return self.getNameFromInfo(fmt, item.getInfo(), item.ext, folder)
+      folder = item.output_folder
+    return self.get_name_from_info(fmt, item.get_info(), item.ext, folder)
     
-  def getNameFromInfo(self, fmt, info, ext="", folder=""):
-    ret = file_helper.FileHelper.joinPath(folder, fmt)
-    keyValues = self.getValues(info).items()    
+  def get_name_from_info(self, fmt, info, ext="", folder=""):
+    ret = file_helper.FileHelper.join_path(folder, fmt)
+    key_values = self.get_values(info).items()    
     for match in _RE_CONDITIONAL.finditer(ret):
       text = match.group(1)
-      newText = ""
-      if any(key in text and value for key, value in keyValues):
-        newText = self.getNameFromInfo(text[len(CONDITIONAL_START):-len(CONDITIONAL_END)], info) #strip delimiters
-      ret = ret.replace(text, newText)
-    for key, value in keyValues: #TODO: fix this. i'm sure there is a built in function for this.
+      new_text = ""
+      if any(key in text and value for key, value in key_values):
+        new_text = self.get_name_from_info(text[len(CONDITIONAL_START):-len(CONDITIONAL_END)], info) #strip delimiters
+      ret = ret.replace(text, new_text)
+    for key, value in key_values: #TODO: fix this. i'm sure there is a built in function for this.
       ret = ret.replace(key, str(value))
     return "".join([ret, ext])
   
   @abc.abstractmethod
-  def getValues(self, info):
+  def get_values(self, info):
     pass
     
 # --------------------------------------------------------------------------------------------------------------------
 class TvNameFormatter(BaseNameFormatter):
   """ Configurable attributes for output. """
-  KEY_SHOW_NAME  = _wrapReplaceStr("show")
-  KEY_SERIES_NUM = _wrapReplaceStr("s_num")
-  KEY_EP_NUM     = _wrapReplaceStr("ep_num") 
-  KEY_EP_NAME    = _wrapReplaceStr("ep_name")  
+  KEY_SHOW_NAME  = _wrap_replace_str("show")
+  KEY_SERIES_NUM = _wrap_replace_str("s_num")
+  KEY_EP_NUM     = _wrap_replace_str("ep_num") 
+  KEY_EP_NAME    = _wrap_replace_str("ep_name")  
   DEFAULT_FORMAT_STR = "<show> - S<s_num>E<ep_num> - <ep_name>"
 
   def __init__(self):
     super(TvNameFormatter, self).__init__()    
     
-  def getValues(self, info):
+  def get_values(self, info):
     ret = {}
     if info:
-      ret = {TvNameFormatter.KEY_SHOW_NAME:  info.showName,
-             TvNameFormatter.KEY_SERIES_NUM: _leftPad(info.seasonNum),
-             TvNameFormatter.KEY_EP_NUM:     _leftPad(info.epNum),
-             TvNameFormatter.KEY_EP_NAME:    info.epName}  
+      ret = {TvNameFormatter.KEY_SHOW_NAME:  info.show_name,
+             TvNameFormatter.KEY_SERIES_NUM: _left_pad(info.season_num),
+             TvNameFormatter.KEY_EP_NUM:     _left_pad(info.ep_num),
+             TvNameFormatter.KEY_EP_NAME:    info.ep_name}  
     return ret
     
 # --------------------------------------------------------------------------------------------------------------------
 class MovieNameFormatter(BaseNameFormatter):
   """ Configurable attributes for output. """
-  KEY_TITLE  = _wrapReplaceStr("t")
-  KEY_YEAR   = _wrapReplaceStr("y")
-  KEY_GENRE  = _wrapReplaceStr("g")  
-  KEY_DISC   = _wrapReplaceStr("p")  
-  KEY_SERIES = _wrapReplaceStr("s")
+  KEY_TITLE  = _wrap_replace_str("t")
+  KEY_YEAR   = _wrap_replace_str("y")
+  KEY_GENRE  = _wrap_replace_str("g")  
+  KEY_DISC   = _wrap_replace_str("p")  
+  KEY_SERIES = _wrap_replace_str("s")
   DEFAULT_FORMAT_STR = "<g>/%(<s> - )%<t> (<y>)%( - Disc <p>)%"
 
   def __init__(self):
     super(MovieNameFormatter, self).__init__()
     
-  def getValues(self, info):
+  def get_values(self, info):
     ret = {}
     if info:
       ret = {MovieNameFormatter.KEY_TITLE: info.title,
              MovieNameFormatter.KEY_YEAR:  str(info.year),
-             MovieNameFormatter.KEY_GENRE: info.getGenre(""),
+             MovieNameFormatter.KEY_GENRE: info.get_genre(""),
              MovieNameFormatter.KEY_DISC: str(info.part or ""),
              MovieNameFormatter.KEY_SERIES: info.series}
     return ret

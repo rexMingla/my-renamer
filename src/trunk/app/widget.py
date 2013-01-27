@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+  #!/usr/bin/env python
 # --------------------------------------------------------------------------------------------------------------------
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
@@ -23,73 +23,74 @@ from app import factory
 # --------------------------------------------------------------------------------------------------------------------
 class MainWindow(QtGui.QMainWindow):
   """ main window for the app """
-  def __init__(self, configFile="config.txt", cacheFile="cache.txt", parent = None):
+  def __init__(self, config_file="config.txt", cache_file="cache.txt", parent=None):
     super(MainWindow, self).__init__(parent)
     self.setWindowIcon(QtGui.QIcon("img/icon.ico"))
-    self._configFile = configFile
-    self._cacheFile = cacheFile
+    self._config_file = config_file
+    self._cache_file = cache_file
     
     uic.loadUi("ui/ui_MainWindow.ui", self)
     
-    self._inputStackWidget = QtGui.QStackedWidget(parent)
-    self._workBenchStackWidget = QtGui.QStackedWidget(parent)
-    self._outputStackWidget = QtGui.QStackedWidget(parent)
-    self._logWidget = LogWidget(parent)
-    self.setCentralWidget(self._workBenchStackWidget)
+    self._input_widget = QtGui.QStackedWidget(parent)
+    self._work_bench_widget = QtGui.QStackedWidget(parent)
+    self._output_widget = QtGui.QStackedWidget(parent)
+    self._log_widget = LogWidget(parent)
+    self.setCentralWidget(self._work_bench_widget)
     
-    self._modeToAction = {interfaces.Mode.MOVIE_MODE : self.actionMovieMode, 
-                          interfaces.Mode.TV_MODE: self.actionTvMode}
+    self._mode_to_action = {interfaces.MOVIE_MODE : self.action_movie_mode, 
+                            interfaces.TV_MODE: self.action_tv_mode}
                 
     #dock widgets
-    dockAreas = QtCore.Qt.AllDockWidgetAreas
-    self._addDockWidget(self._inputStackWidget, dockAreas, QtCore.Qt.TopDockWidgetArea, "Input Settings")
-    self._addDockWidget(self._outputStackWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
-    self._addDockWidget(self._logWidget, dockAreas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
+    dock_areas = QtCore.Qt.AllDockWidgetAreas
+    self._add_dock_widget(self._input_widget, dock_areas, QtCore.Qt.TopDockWidgetArea, "Input Settings")
+    self._add_dock_widget(self._output_widget, dock_areas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
+    self._add_dock_widget(self._log_widget, dock_areas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
     
     self._config_manager = config_manager.ConfigManager()
-    self._cacheManager = config_manager.ConfigManager()
+    self._cache_manager = config_manager.ConfigManager()
     
-    self._modeToModule = {}
+    self._mode_to_module = {}
     for mode in interfaces.VALID_MODES:
-      self._addModule(module.RenamerModule(mode, self))
+      self._add_module(module.RenamerModule(mode, self))
     self._mode = None
-    self._autoStart = False
+    self._auto_start = False
     
     #menu actions
-    self.actionMovieMode.triggered.connect(self._setMovieMode)
-    self.actionMovieMode.setIcon(QtGui.QIcon("img/movie.png"))
-    self.actionTvMode.triggered.connect(self._setTvMode)
-    self.actionTvMode.setIcon(QtGui.QIcon("img/tv.png"))                                     
-    self.actionExit.triggered.connect(self.close)
-    self.actionAbout.triggered.connect(self._showAbout)
-    self.actionAbout.setIcon(QtGui.QIcon("img/info.png"))
-    self.actionSave.triggered.connect(self._saveSettings)
-    self.actionRestoreDefaults.triggered.connect(self._restoreDefaults)
-    self.actionClearCache.triggered.connect(self._clearCache)
-    self.actionEditTvSources.triggered.connect(self._modeToModule[interfaces.Mode.TV_MODE].editSourcesWidget.show)
-    self.actionEditMovieSources.triggered.connect(self._modeToModule[interfaces.Mode.MOVIE_MODE].editSourcesWidget.show)
+    self.action_movie_mode.triggered.connect(self._set_movie_mode)
+    self.action_movie_mode.setIcon(QtGui.QIcon("img/movie.png"))
+    self.action_tv_mode.triggered.connect(self._set_tv_mode)
+    self.action_tv_mode.setIcon(QtGui.QIcon("img/tv.png"))                                     
+    self.action_exit.triggered.connect(self.close)
+    self.action_about.triggered.connect(self._show_about)
+    self.action_about.setIcon(QtGui.QIcon("img/info.png"))
+    self.action_save.triggered.connect(self._save_settings)
+    self.action_restore_defaults.triggered.connect(self._restore_defaults)
+    self.action_clear_cache.triggered.connect(self._clear_cache)
+    self.action_edit_tv_sources.triggered.connect(self._mode_to_module[interfaces.TV_MODE].edit_sources_widget.show)
+    self.action_edit_movie_sources.triggered.connect(
+      self._mode_to_module[interfaces.MOVIE_MODE].edit_sources_widget.show)
     
-    self.actionToolBar.addAction(self.actionMovieMode)
-    self.actionToolBar.addAction(self.actionTvMode)
+    self.action_toolbar.addAction(self.action_movie_mode)
+    self.action_toolbar.addAction(self.action_tv_mode)
     
-    self._restoringDefaults = False # used to check we aren't recursively trying to restore defaults
-    self._loadSettings()
+    self._is_restoring_defaults = False # used to check we aren't recursively trying to restore defaults
+    self._load_settings()
     
-  def _showAbout(self):
+  def _show_about(self):
     def href(link, title=""):
       return "<a href=\"{}\">{}</a>".format(link, title or link)
     
-    def getText(mode):
+    def get_text(mode):
       info = []
-      holder = factory.Factory.getStoreHolder(mode)
-      for s in holder.stores:
-        info.append("<li>{} (interface to {})</li>".format(href(s.url, s.displayName), href(s.sourceName)))
+      holder = factory.Factory.get_store_helper(mode)
+      for store in holder.stores:
+        info.append("<li>{} (interface to {})</li>".format(href(store.url, store.display_name), href(store.source_name)))
       info.append("</ul>")
       return "{} libraries:<ul>{}</ul>".format(mode.capitalize(), "\n".join(info))
     
     text = []
     for mode in interfaces.VALID_MODES:
-      text.append(getText(mode))
+      text.append(get_text(mode))
     
     msg = ("<html><p>{} is written in python with PyQt.<p/>\n"
           "<p>Special thanks to the following:</p>\n{}"
@@ -103,139 +104,151 @@ class MainWindow(QtGui.QMainWindow):
                             href("http://code.google.com/p/my-renamer/", "google code"))
     QtGui.QMessageBox.about(self, "About {}".format(app.__NAME__), msg)
     
-  def _addModule(self, mod):
-    self._modeToModule[mod.mode] = mod
-    self._inputStackWidget.addWidget(mod.inputWidget)
-    self._workBenchStackWidget.addWidget(mod.workBenchWidget)
-    self._outputStackWidget.addWidget(mod.outputWidget) 
-    mod.logSignal.connect(self._logWidget.appendMessage)
+  def _add_module(self, mod):
+    self._mode_to_module[mod.mode] = mod
+    self._input_widget.addWidget(mod.input_widget)
+    self._work_bench_widget.addWidget(mod.work_bench)
+    self._output_widget.addWidget(mod.output_widget) 
+    mod.log_signal.connect(self._log_widget.append_message)
     
   def showEvent(self, event):
     super(MainWindow, self).showEvent(event)
-    if not self._autoStart:
-      ww = WelcomeWidget(self._mode, self)
-      ww.exec_()
-      self._setMode(ww.mode())
-      self._autoStart = ww.isAutoStart()
+    if not self._auto_start:
+      welcome_widget = WelcomeWidget(self._mode, self)
+      welcome_widget.exec_()
+      self._set_mode(welcome_widget.mode())
+      self._auto_start = welcome_widget.is_auto_start()
     event.accept()
     
   def closeEvent(self, event):
-    mod = self._modeToModule[self._mode]
-    if mod.outputWidget.isExecuting():
+    mod = self._mode_to_module[self._mode]
+    if mod.output_widget.is_executing():
       response = QtGui.QMessageBox.warning(self, "You have unfinished renames", 
                                            "Do you want to keep your pending renames?", 
                                            QtGui.QMessageBox.Discard, QtGui.QMessageBox.Cancel)
       if response == QtGui.QMessageBox.Cancel:
         event.ignore()
         return
-    self._saveSettings()
+    self._save_settings()
     event.accept()
     
-  def _addDockWidget(self, widget, areas, defaultArea, name):
-    #utils.verifyType(widget, QtGui.QWidget)
-    #utils.verifyType(areas, int)
-    #utils.verifyType(defaultArea, int)
-    #utils.verifyType(name, str)
+  def _add_dock_widget(self, widget, areas, default_area, name):
+    #utils.verify_type(widget, QtGui.QWidget)
+    #utils.verify_type(areas, int)
+    #utils.verify_type(default_area, int)
+    #utils.verify_type(name, str)
     dock = QtGui.QDockWidget(name, widget.parent())
     dock.setObjectName(name)
     dock.setWidget(widget)
     dock.setAllowedAreas(areas)
-    self.addDockWidget(defaultArea, dock)
+    self.addDockWidget(default_area, dock)
     return dock
   
-  def _setMovieMode(self):
-    self._setMode(interfaces.Mode.MOVIE_MODE)
+  def _set_movie_mode(self):
+    self._set_mode(interfaces.MOVIE_MODE)
   
-  def _setTvMode(self):
-    self._setMode(interfaces.Mode.TV_MODE)
+  def _set_tv_mode(self):
+    self._set_mode(interfaces.TV_MODE)
 
-  def _setMode(self, mode):
+  def _set_mode(self, mode):
     assert(mode in interfaces.VALID_MODES)
-    for m, action in self._modeToAction.items():
-      action.setChecked(m == mode)
+    for _mode, action in self._mode_to_action.items():
+      action.setChecked(_mode == mode)
     
     if self._mode:
-      self._modeToModule[self._mode].setInactive()
+      self._mode_to_module[self._mode].set_inactive()
     
     self._mode = mode
-    mod = self._modeToModule[self._mode]
-    self._inputStackWidget.setCurrentWidget(mod.inputWidget)
-    self._workBenchStackWidget.setCurrentWidget(mod.workBenchWidget)
-    self._outputStackWidget.setCurrentWidget(mod.outputWidget)
-    mod.setActive()
+    mod = self._mode_to_module[self._mode]
+    self._input_widget.setCurrentWidget(mod.input_widget)
+    self._work_bench_widget.setCurrentWidget(mod.work_bench)
+    self._output_widget.setCurrentWidget(mod.output_widget)
+    mod.set_active()
     self.setWindowTitle("{} [{} mode]".format(app.__NAME__, self._mode.capitalize()))
 
-    self.menuAction.clear()
-    self.menuAction.addActions(self._modeToModule[self._mode].inputWidget.actions())
-    self.menuAction.addSeparator()
-    self.menuAction.addActions(self._modeToModule[self._mode].workBenchWidget.actions())
+    self.menu_action.clear()
+    self.menu_action.addActions(self._mode_to_module[self._mode].input_widget.actions())
+    self.menu_action.addSeparator()
+    self.menu_action.addActions(self._mode_to_module[self._mode].work_bench.actions())
   
-  def _saveSettings(self):
-    self._saveSettingsConfig()
-    self._saveCache()
+  def _save_settings(self):
+    self._save_settings_config()
+    self._save_cache()
   
-  def _saveSettingsConfig(self):
+  def _save_settings_config(self):
     data = config.MainWindowConfig()
-    data.geo = utils.toString(self.saveGeometry().toBase64())
-    data.state = utils.toString(self.saveState().toBase64())
+    data.geo = utils.to_string(self.saveGeometry().toBase64())
+    data.state = utils.to_string(self.saveState().toBase64())
     data.mode = self._mode
-    data.autoStart = self._autoStart
-    data.dontShows = dont_show.DontShowManager.get_config()
-    data.configVersion = config.CONFIG_VERSION
-    self._config_manager.setData("mw", data)
+    data.auto_start = self._auto_start
+    data.dont_shows = dont_show.DontShowManager.get_config()
+    self._config_manager.set_data("mw", data)
 
-    for m in self._modeToModule.values():
-      for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
-        self._config_manager.setData(w.config_name, w.get_config())
-    self._config_manager.saveConfig(self._configFile)
+    for module in self._mode_to_module.values():
+      for widget in [module.input_widget, module.output_widget, module.work_bench]:
+        self._config_manager.set_data(widget.config_name, widget.get_config())
+    self._config_manager.save_config(self._config_file)
     
-  def _saveCache(self):
+  def _save_cache(self):
+    self._cache_manager.set_data("version", config.CACHE_VERSION)    
     for m in interfaces.VALID_MODES:
-      manager = factory.Factory.getManager(m)
-      self._cacheManager.setData("cache/{}".format(m), manager.cache())  
-    self._cacheManager.saveConfig(self._cacheFile)
+      manager = factory.Factory.get_manager(m)
+      self._cache_manager.set_data("cache/{}".format(m), manager.cache())  
+    self._cache_manager.save_config(self._cache_file)
       
-  def _loadSettings(self):
-    self._loadSettingsConfig()
-    self._loadCache()
+  def _load_settings(self):
+    self._load_settings_config()
+    self._load_cache()
     
-  def _loadSettingsConfig(self):
-    self._config_manager.loadConfig(self._configFile)
+  def _load_settings_config(self):
+    self._config_manager.load_config(self._config_file)
   
     try:
-      data = self._config_manager.getData("mw", config.MainWindowConfig())
+      data = self._config_manager.get_data("mw", config.MainWindowConfig())
+      config_version = data.config_version if isinstance(data, config.MainWindowConfig) else "0.0"
+      if config_version != config.CONFIG_VERSION:
+        utils.log_debug(
+            "config version of out date, loading default. old={} new={}".format(config_version, config.CONFIG_VERSION))
+        return
+      
       self.restoreGeometry(QtCore.QByteArray.fromBase64(data.geo))
       self.restoreState(QtCore.QByteArray.fromBase64(data.state))
-      dont_show.DontShowManager.set_config(data.dontShows)
+      dont_show.DontShowManager.set_config(data.dont_shows)
       if not data.mode in interfaces.VALID_MODES:
-        data.mode = interfaces.Mode.TV_MODE
-      self._setMode(data.mode)
-      self._autoStart = data.autoStart
+        data.mode = interfaces.TV_MODE
+      self._set_mode(data.mode)
+      self._auto_start = data.auto_start
       
-      for m in self._modeToModule.values():
-        for w in [m.inputWidget, m.outputWidget, m.workBenchWidget]:
-          w.set_config(self._config_manager.getData(w.config_name, None))    
-    except (ValueError, TypeError, IndexError, KeyError) as e:
-      utils.logWarning("Unable to load config file. reason: {}".format(e))
-      if not self._restoringDefaults:
-        self._restoreDefaults()
+      for module in self._mode_to_module.values():
+        for widget in [module.input_widget, module.output_widget, module.work_bench]:
+          widget.set_config(self._config_manager.get_data(widget.config_name, None))    
+    except (AttributeError, ValueError, TypeError, IndexError, KeyError) as ex:
+      utils.log_warning("Unable to load config file. reason: {}".format(ex))
+      if not self._is_restoring_defaults:
+        self._restore_defaults()
       else:
         QtGui.QMessageBox.warning(self, "Config error", "Default config is in a bad state. Fix me!")
           
-  def _loadCache(self):
-    self._cacheManager.loadConfig(self._cacheFile)
-    for m in interfaces.VALID_MODES:
-      factory.Factory.getManager(m).setCache(self._cacheManager.getData("cache/{}".format(m), {}))    
-  
-  def _restoreDefaults(self):
-    self._restoringDefaults = True
-    file_helper.FileHelper.removeFile(self._configFile)
-    self._loadSettingsConfig()
-    self._restoringDefaults = False
+  def _load_cache(self):
+    self._cache_manager.load_config(self._cache_file)
+    cache_version = self._cache_manager.get_data("version", "0.0")
+    if cache_version != config.CACHE_VERSION:
+      utils.log_debug(
+          "cache version of out date, loading default. old={} new={}".format(cache_version, config.CACHE_VERSION))
+      return
     
-  def _clearCache(self):
-    file_helper.FileHelper.removeFile(self._cacheFile)
-    self._loadCache()
+    for mode in interfaces.VALID_MODES:
+      factory.Factory.get_manager(mode).set_cache(self._cache_manager.get_data("cache/{}".format(mode), {}))    
+  
+  def _restore_defaults(self):
+    self._is_restoring_defaults = True
+    file_helper.FileHelper.remove_file(self._config_file)
+    self._load_settings_config()
+    self._is_restoring_defaults = False
+    
+  def _clear_cache(self):
+    file_helper.FileHelper.remove_file(self._cache_file)
+    self._load_cache()
     
 # --------------------------------------------------------------------------------------------------------------------
 class WelcomeWidget(QtGui.QDialog):
@@ -247,16 +260,16 @@ class WelcomeWidget(QtGui.QDialog):
     self.setWindowTitle("Welcome to {}".format(app.__NAME__))
     self.setWindowModality(True)
     
-    if mode == interfaces.Mode.MOVIE_MODE:
-      self.movieRadio.setChecked(True)
+    if mode == interfaces.MOVIE_MODE:
+      self.movie_radio.setChecked(True)
     else:
-      self.tvRadio.setChecked(True)
+      self.tv_radio.setChecked(True)
   
   def mode(self):
-    return interfaces.Mode.MOVIE_MODE if self.movieRadio.isChecked() else interfaces.Mode.TV_MODE
+    return interfaces.MOVIE_MODE if self.movie_radio.isChecked() else interfaces.TV_MODE
   
-  def isAutoStart(self):
-    return self.autoStartCheckBox.isChecked()
+  def is_auto_start(self):
+    return self.is_auto_start_check_box.isChecked()
 
 # --------------------------------------------------------------------------------------------------------------------
 class LogWidget(QtGui.QWidget):
@@ -264,29 +277,29 @@ class LogWidget(QtGui.QWidget):
   def __init__(self, parent=None):
     super(LogWidget, self).__init__(parent)
     uic.loadUi("ui/ui_LogWidget.ui", self)
-    self.clearButton.clicked.connect(self._clearLog)
-    self.clearButton.setIcon(QtGui.QIcon("img/clear.png"))    
-    self.clearButton.setEnabled(True)
+    self.clear_button.clicked.connect(self._clear_log)
+    self.clear_button.setIcon(QtGui.QIcon("img/clear.png"))    
+    self.clear_button.setEnabled(True)
 
     self._model = _LogModel(self)
-    self.logView.setModel(self._model)
-    self.logView.horizontalHeader().setResizeMode(_LogColumns.COL_ACTION, QtGui.QHeaderView.Interactive)
-    self.logView.horizontalHeader().resizeSection(_LogColumns.COL_ACTION, 75)
-    self.logView.horizontalHeader().setResizeMode(_LogColumns.COL_MESSAGE, QtGui.QHeaderView.Interactive)
-    self.logView.horizontalHeader().setStretchLastSection(True)
+    self.log_view.setModel(self._model)
+    self.log_view.horizontalHeader().setResizeMode(_LogColumns.COL_ACTION, QtGui.QHeaderView.Interactive)
+    self.log_view.horizontalHeader().resizeSection(_LogColumns.COL_ACTION, 75)
+    self.log_view.horizontalHeader().setResizeMode(_LogColumns.COL_MESSAGE, QtGui.QHeaderView.Interactive)
+    self.log_view.horizontalHeader().setStretchLastSection(True)
     
-    self._isUpdating = False
+    self._is_updating = False
     
-  def onRename(self):
+  def on_rename(self):
     if self.autoClearCheckBox.isChecked():
-      self._clearLog()
+      self._clear_log()
     
-  def appendMessage(self, item):
-    #utils.verifyType(item, LogItem)
-    self._model.addItem(item)
+  def append_message(self, item):
+    #utils.verify_type(item, LogItem)
+    self._model.add_item(item)
     
-  def _clearLog(self):
-    self._model.clearItems()
+  def _clear_log(self):
+    self._model.clear_items()
     
   def set_config(self, data):
     """ Update from settings """
@@ -326,17 +339,17 @@ class _LogModel(QtCore.QAbstractTableModel):
       return None
     
     item = self.items[index.row()]
-    if role == QtCore.Qt.ForegroundRole and item.logLevel >= utils.LogLevel.ERROR:
+    if role == QtCore.Qt.ForegroundRole and item.log_level >= utils.LogLevel.ERROR:
       return QtGui.QBrush(QtCore.Qt.red)      
     elif role == _LogModel.LOG_LEVEL_ROLE:
-      return item.logLevel
+      return item.log_level
     elif index.column() == _LogColumns.COL_ACTION:
       return item.action
     elif index.column() == _LogColumns.COL_MESSAGE: 
       if role == QtCore.Qt.DisplayRole:
-        return item.shortMessage
+        return item.short_message
       else:
-        return item.longMessage
+        return item.long_message
     else: 
       return None  
   
@@ -352,15 +365,15 @@ class _LogModel(QtCore.QAbstractTableModel):
       return "Message"
     return None
     
-  def addItem(self, item):
-    #utils.verifyType(item, LogItem)
-    utils.log(item.logLevel, msg=item.shortMessage, longMsg=item.longMessage, title=item.action)
+  def add_item(self, item):
+    #utils.verify_type(item, LogItem)
+    utils.log(item.log_level, msg=item.short_message, long_msg=item.long_message, title=item.action)
     count = self.rowCount(QtCore.QModelIndex())
     self.beginInsertRows(QtCore.QModelIndex(), count, count)
     self.items.append(item)
     self.endInsertRows()
     
-  def clearItems(self):
+  def clear_items(self):
     count = self.rowCount(QtCore.QModelIndex())
     if count:
       self.beginResetModel()

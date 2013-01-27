@@ -9,13 +9,10 @@ import abc
 
 from PyQt4 import QtGui
 
-# --------------------------------------------------------------------------------------------------------------------
-class Mode:
-  """ modes of operation for the app """
-  MOVIE_MODE = "movie"
-  TV_MODE = "tv"
+MOVIE_MODE = "movie"
+TV_MODE = "tv"
   
-VALID_MODES = (Mode.MOVIE_MODE, Mode.TV_MODE)
+VALID_MODES = (MOVIE_MODE, TV_MODE)
 
 # --------------------------------------------------------------------------------------------------------------------
 class WorkBenchActions:
@@ -48,7 +45,7 @@ class ActionInterface(object):
     pass
   
   @abc.abstractmethod
-  def stopActioning(self):
+  def stop_actioning(self):
     pass
   
   @abc.abstractmethod

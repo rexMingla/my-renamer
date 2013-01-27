@@ -23,119 +23,118 @@ class FileHelper:
   """ Collection of static functions abstracting the python libraries. """
   
   @staticmethod
-  def isFile(f):
-    #utils.verifyType(f, str)
-    return os.path.isfile(f)
+  def is_file(file_obj):
+    #utils.verify_type(file_obj, str)
+    return os.path.isfile(file_obj)
 
   @staticmethod
-  def isDir(d):
-    #utils.verifyType(d, str)
-    return os.path.isdir(d)
+  def is_dir(dir_obj):
+    #utils.verify_type(dir_obj, str)
+    return os.path.isdir(dir_obj)
 
   @staticmethod
-  def dirname(f):
-    #utils.verifyType(f, str)
-    return os.path.dirname(f)
+  def dirname(file_obj):
+    #utils.verify_type(file_obj, str)
+    return os.path.dirname(file_obj)
   
   @staticmethod
-  def basename(f):
-    #utils.verifyType(f, str)
-    return os.path.basename(f)
+  def basename(file_obj):
+    #utils.verify_type(file_obj, str)
+    return os.path.basename(file_obj)
   
   @staticmethod
-  def splitDrive(p):
-    #utils.verifyType(p, str)
-    return os.path.splitdrive(p)
+  def split_drive(path):
+    #utils.verify_type(p, str)
+    return os.path.splitdrive(path)
   
   @staticmethod
-  def extension(f):
-    #utils.verifyType(f, str)
-    return os.path.splitext(f)[1]
+  def extension(file_obj):
+    #utils.verify_type(file_obj, str)
+    return os.path.splitext(file_obj)[1]
   
   @staticmethod
-  def joinPath(d, f):
-    #utils.verifyType(d, str)
-    #utils.verifyType(f, str)
-    ret = os.path.join(d, f)
+  def join_path(dir_obj, file_obj):
+    #utils.verify_type(dir_obj, str)
+    #utils.verify_type(file_obj, str)
+    ret = os.path.join(dir_obj, file_obj)
     return ret
 
   @staticmethod
-  def dirExists(d):
-    #utils.verifyType(d, str)
-    return os.path.exists(d) and FileHelper.isDir(d)
+  def dir_exists(dir_obj):
+    #utils.verify_type(dir_obj, str)
+    return os.path.exists(dir_obj) and FileHelper.is_dir(dir_obj)
   
   @staticmethod
-  def createDir(d):
-    #utils.verifyType(d, str)
+  def create_dir(dir_obj):
+    #utils.verify_type(dir_obj, str)
     ret = True
-    if not FileHelper.dirExists(d):
+    if not FileHelper.dir_exists(dir_obj):
       try:
-        os.makedirs(d)
+        os.makedirs(dir_obj)
       except os.error:
         ret = False
     return ret
   
   @staticmethod
-  def removeDir(d):
-    #utils.verifyType(d, str)
+  def remove_dir(dir_obj):
+    #utils.verify_type(dir_obj, str)
     ret = True
-    if FileHelper.dirExists(d):
+    if FileHelper.dir_exists(dir_obj):
       try:
-        shutil.rmtree(d)
+        shutil.rmtree(dir_obj)
       except shutil.Error:
         ret = False
     return ret
 
   @staticmethod
-  def fileExists(f):
-    #utils.verifyType(f, str)
-    return os.path.exists(f) and FileHelper.isFile(f)
+  def file_exists(file_obj):
+    #utils.verify_type(file_obj, str)
+    return os.path.exists(file_obj) and FileHelper.is_file(file_obj)
  
   @staticmethod
-  def isValidFilename(f):
-    #utils.verifyType(f, str)
-    _, tail = FileHelper.splitDrive(f)
-    isOk = bool(_RE_VALID_FILENAME.match(tail))
-    return isOk
+  def is_valid_filename(file_obj):
+    #utils.verify_type(file_obj, str)
+    _, tail = FileHelper.split_drive(file_obj)
+    return bool(_RE_VALID_FILENAME.match(tail))
     
   @staticmethod
-  def sanitizeFilename(f, replaceChar="-"):
-    #utils.verifyType(f, str)
-    #utils.verifyType(replaceChar, str)
-    drive, tail = FileHelper.splitDrive(f)
-    tail = _RE_INALID_FILENAME.sub(replaceChar, tail)
-    ret = FileHelper.replaceSeparators("".join([drive, tail]), os.sep)
+  def sanitize_filename(file_obj, replace_char="-"):
+    #utils.verify_type(file_obj, str)
+    #utils.verify_type(replace_char, str)
+    drive, tail = FileHelper.split_drive(file_obj)
+    tail = _RE_INALID_FILENAME.sub(replace_char, tail)
+    ret = FileHelper.replace_separators("".join([drive, tail]), os.sep)
     return ret
   
   @staticmethod
-  def getFileSize(f):
-    return os.path.getsize(f) if FileHelper.fileExists(f) else 0
+  def get_file_size(file_obj):
+    return os.path.getsize(file_obj) if FileHelper.file_exists(file_obj) else 0
   
   @staticmethod
-  def replaceSeparators(name, replaceChar="-"):
-    return name.replace("\\", replaceChar).replace("/", replaceChar)
+  def replace_separators(name, replace_char="-"):
+    return name.replace("\\", replace_char).replace("/", replace_char)
   
   @staticmethod
-  def removeFile(f):
-    #utils.verifyType(f, str)
+  def remove_file(file_obj):
+    #utils.verify_type(file_obj, str)
     ret = True
-    if FileHelper.fileExists(f):
+    if FileHelper.file_exists(file_obj):
       try:
-        os.remove(f)
+        os.remove(file_obj)
       except os.error:
         ret = False
     return ret
   
   @staticmethod
-  def changeExtension(f, ext):
-    return "{}{}".format(os.path.splitext(f)[0], ext)
+  def change_extension(file_obj, ext):
+    return "{}{}".format(os.path.splitext(file_obj)[0], ext)
 
   @staticmethod
-  def moveFile(source, dest, progressCb=None):
-    #utils.verifyType(source, str)
-    #utils.verifyType(dest, str)
+  def move_file(source, dest, progress_cb=None):
+    #utils.verify_type(source, str)
+    #utils.verify_type(dest, str)
     
-    def safeMoveFile(source, dest):
+    def safe_move_file(source, dest):
       ret = False
       try:
         shutil.move(source, dest)
@@ -144,35 +143,35 @@ class FileHelper:
         pass
       return ret
       
-    def unsafeMoveFile(source, dest, progressCb):
-      ret = FileHelper.copyFile(source, dest, progressCb) and FileHelper.removeFile(source)
+    def unsafe_move_file(source, dest, progress_cb):
+      ret = FileHelper.copy_file(source, dest, progress_cb) and FileHelper.remove_file(source)
       return ret
       
     ret = False
-    if FileHelper.fileExists(source):
-      destFolder = FileHelper.dirname(dest)
-      if not destFolder or FileHelper.createDir(destFolder):
-        if os.path.commonprefix([source, dest]) or not progressCb or FileHelper.getFileSize(source) < _BLOCK_SIZE:         
-          ret = safeMoveFile(source, dest)
+    if FileHelper.file_exists(source):
+      dest_folder = FileHelper.dirname(dest)
+      if not dest_folder or FileHelper.create_dir(dest_folder):
+        if os.path.commonprefix([source, dest]) or not progress_cb or FileHelper.get_file_size(source) < _BLOCK_SIZE:
+          ret = safe_move_file(source, dest)
         else:
-          ret = unsafeMoveFile(source, dest, progressCb)
+          ret = unsafe_move_file(source, dest, progress_cb)
 
     return ret
   
   @staticmethod
-  def copyFile(source, dest, progressCb=None):
-    #utils.verifyType(source, str)
-    #utils.verifyType(dest, str)
+  def copy_file(source, dest, progress_cb=None):
+    #utils.verify_type(source, str)
+    #utils.verify_type(dest, str)
 
-    def unsafeCopyFile(s, d, progressCb):
+    def unsafe_copy_file(source_name, dest_name, progress_cb):
       """ bitwise copy so that we can be more responsive to user cancels etc. """
-      assert(progressCb)
+      assert(progress_cb)
       copied = 0
       ret = False
       try:
-        sourceSize = FileHelper.getFileSize(s)
-        with open(s, "rb") as source:
-          with open(d, "wb") as dest:
+        source_size = FileHelper.get_file_size(source_name)
+        with open(source_name, "rb") as source:
+          with open(dest_name, "wb") as dest:
             chunk = ""
             while True:
               chunk = source.read(_BLOCK_SIZE)
@@ -181,16 +180,16 @@ class FileHelper:
               copied += len(chunk)
               dest.write(chunk)
               # why 90%? closing of file handles can take a while after
-              if not progressCb(int(90.0 * copied / sourceSize)): 
+              if not progress_cb(int(90.0 * copied / source_size)): 
                 break
-            ret = FileHelper.getFileSize(d) == sourceSize
+            ret = FileHelper.get_file_size(dest_name) == source_size
       except os.error:
         pass
       if not ret:
-        FileHelper.removeFile(d)
+        FileHelper.remove_file(dest_name)
       return ret
       
-    def safeCopyFile(source, dest):
+    def safe_copy_file(source, dest):
       ret = False
       try:
         shutil.copy2(source, dest)
@@ -200,13 +199,13 @@ class FileHelper:
       return ret
     
     ret = False
-    if FileHelper.fileExists(source):
-      destFolder = FileHelper.dirname(dest)
-      if not destFolder or FileHelper.createDir(destFolder):
-        if FileHelper.getFileSize(source) < _BLOCK_SIZE or not progressCb:         
-          ret = safeCopyFile(source, dest)
+    if FileHelper.file_exists(source):
+      dest_folder = FileHelper.dirname(dest)
+      if not dest_folder or FileHelper.create_dir(dest_folder):
+        if FileHelper.get_file_size(source) < _BLOCK_SIZE or not progress_cb:         
+          ret = safe_copy_file(source, dest)
         else:
-          ret = unsafeCopyFile(source, dest, progressCb)
+          ret = unsafe_copy_file(source, dest, progress_cb)
     return ret
 
 

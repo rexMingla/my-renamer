@@ -15,56 +15,56 @@ UNRESOLVED_NAME = ""
   
 # --------------------------------------------------------------------------------------------------------------------
 class TvSearchParams(base_types.BaseInfoClientSearchParams):
-  def __init__(self, showName, seasonNum):
+  def __init__(self, show_name, season_num):
     super(TvSearchParams, self).__init__()
-    self.showName = showName
-    self.seasonNum = seasonNum    
+    self.show_name = show_name
+    self.season_num = season_num    
     
-  def getKey(self):
-    return utils.sanitizeString("{} ({})".format(self.showName, self.seasonNum))
+  def get_key(self):
+    return utils.sanitize_string("{} ({})".format(self.show_name, self.season_num))
 
-  def toInfo(self):
-    return SeasonInfo(self.showName, self.seasonNum)  
+  def to_info(self):
+    return SeasonInfo(self.show_name, self.season_num)  
   
 # --------------------------------------------------------------------------------------------------------------------
 class EpisodeInfo(object):
   """ Information about an output file """
-  def __init__(self, epNum, epName):
+  def __init__(self, ep_num, ep_name):
     super(EpisodeInfo, self).__init__()
-    #utils.verifyType(epNum, int)
-    #utils.verifyType(epName, basestring)
-    self.epNum = epNum
-    self.epName = epName
+    #utils.verify_type(ep_num, int)
+    #utils.verify_type(ep_name, basestring)
+    self.ep_num = ep_num
+    self.ep_name = ep_name
     
   @staticmethod
-  def createUnresolvedEpisode():
+  def create_unresolved_episode():
     return EpisodeInfo(UNRESOLVED_KEY, UNRESOLVED_NAME)
 
   def __str__(self):
-    return "<EpisodeInfo: #:{} name:{}>".format(self.epNum, self.epName)   
+    return "<EpisodeInfo: #:{} name:{}>".format(self.ep_num, self.ep_name)   
 
   def __eq__(self, other):
-    return self.epNum == other.epNum and self.epName == other.epName
+    return self.ep_num == other.ep_num and self.ep_name == other.ep_name
   
   #def __hash__(self):
-  #  return hash(self.epNum) + hash(self.epName)
+  #  return hash(self.ep_num) + hash(self.ep_name)
 
   def __copy__(self):
-    return EpisodeInfo(self.epNum, self.epName)
+    return EpisodeInfo(self.ep_num, self.ep_name)
 
 # --------------------------------------------------------------------------------------------------------------------
 class AdvancedEpisodeInfo(EpisodeInfo):
   """ Information about an output file """
-  def __init__(self, showName, seasonNum, epNum, epName):
-    super(AdvancedEpisodeInfo, self).__init__(epNum, epName)
-    self.showName = showName
-    self.seasonNum = seasonNum
+  def __init__(self, show_name, season_num, ep_num, ep_name):
+    super(AdvancedEpisodeInfo, self).__init__(ep_num, ep_name)
+    self.show_name = show_name
+    self.season_num = season_num
     
   def __str__(self):
-    return "<AdvancedEpisodeInfo: #:{} name:{}>".format(self.epNum, self.epName)   
+    return "<AdvancedEpisodeInfo: #:{} name:{}>".format(self.ep_num, self.ep_name)   
 
   def __copy__(self):
-    return AdvancedEpisodeInfo(self.showName, self.seasonNum, self.epNum, self.epName)
+    return AdvancedEpisodeInfo(self.show_name, self.season_num, self.ep_num, self.ep_name)
   
 # -----------------------------------------------------------------------------------
 class EpisodeRenameItem(base_types.BaseRenameItem):
@@ -75,12 +75,12 @@ class EpisodeRenameItem(base_types.BaseRenameItem):
   UNKNOWN        = 4
   
   @staticmethod
-  def typeStr(t):
-    if t == EpisodeRenameItem.READY:            
+  def type_str(text):
+    if text == EpisodeRenameItem.READY:            
       return "Ready"
-    elif t == EpisodeRenameItem.MISSING_NEW:    
+    elif text == EpisodeRenameItem.MISSING_NEW:    
       return "No Matching Episode"
-    elif t == EpisodeRenameItem.MISSING_OLD:    
+    elif text == EpisodeRenameItem.MISSING_OLD:    
       return "No Matching File"
     else: 
       assert(False)  
@@ -88,17 +88,17 @@ class EpisodeRenameItem(base_types.BaseRenameItem):
   
   def __init__(self, filename, info):
     super(EpisodeRenameItem, self).__init__(filename)
-    #utils.verifyType(filename, basestring)
-    #utils.verifyType(info, EpisodeInfo)
+    #utils.verify_type(filename, basestring)
+    #utils.verify_type(info, EpisodeInfo)
     self.info = info
-    mt = self.matchType()
-    self.canMove = mt == EpisodeRenameItem.READY #can execute
-    self.canEdit = mt in (EpisodeRenameItem.READY, EpisodeRenameItem.MISSING_NEW) #can edit
-    self.performMove = self.canMove                             #will move
+    match_text = self.match_type()
+    self.can_move = match_text == EpisodeRenameItem.READY #can execute
+    self.can_edit = match_text in (EpisodeRenameItem.READY, EpisodeRenameItem.MISSING_NEW) #can edit
+    self.perform_move = self.can_move                             #will move
   
-  def matchType(self):
+  def match_type(self):
     ret = EpisodeRenameItem.MISSING_OLD
-    if self.info.epNum == UNRESOLVED_KEY:
+    if self.info.ep_num == UNRESOLVED_KEY:
       ret = EpisodeRenameItem.MISSING_NEW
     elif self.filename:
       ret = EpisodeRenameItem.READY
@@ -112,94 +112,94 @@ class EpisodeRenameItem(base_types.BaseRenameItem):
     
   def __str__(self):
     return "[{}] {}: {} -> {}".format( self.filename, 
-                                       self.info.epNum, 
-                                       self.info.epName,
-                                       EpisodeRenameItem.typeStr(self.matchType()) )
+                                       self.info.ep_num, 
+                                       self.info.ep_name,
+                                       EpisodeRenameItem.type_str(self.match_type()) )
   
-  def getInfo(self):
+  def get_info(self):
     return self.info
 
 # -----------------------------------------------------------------------------------
 class SourceFile(object):
-  def __init__(self, epNum, filename):
+  def __init__(self, ep_num, filename):
     super(SourceFile, self).__init__()
-    self.epNum = epNum
+    self.ep_num = ep_num
     self.filename = filename
     
   def __eq__(self, other):
-    return other and self.epNum == other.epNum and self.filename == other.filename
+    return other and self.ep_num == other.ep_num and self.filename == other.filename
 
 # -----------------------------------------------------------------------------------
 class SourceFiles(list):
   """ episode to filename map """
-  def removeFile(self, filename):
-    source = self.getItemByFilename(filename)
+  def remove_file(self, filename):
+    source = self.get_item_by_filename(filename)
     assert(source)
     self.remove(source) 
         
-  def getItemByEpisodeNum(self, epNum):
+  def get_item_by_episode_num(self, ep_num):
     for source in self:
-      if source.epNum == epNum:
+      if source.ep_num == ep_num:
         return source
   
-  def getItemByFilename(self, filename):
+  def get_item_by_filename(self, filename):
     for source in self:
       if source.filename == filename:
         return source
       
-  def setEpisodeForFilename(self, key, filename):
-    newEp = self.getItemByFilename(filename)
-    oldEp = self.getItemByEpisodeNum(key)
-    if not newEp or oldEp == newEp:
+  def set_episode_for_filename(self, key, filename):
+    new_ep = self.get_item_by_filename(filename)
+    old_ep = self.get_item_by_episode_num(key)
+    if not new_ep or old_ep == new_ep:
       return
-    if oldEp:
-      oldEp.epNum = UNRESOLVED_KEY
-    newEp.epNum = key
+    if old_ep:
+      old_ep.ep_num = UNRESOLVED_KEY
+    new_ep.ep_num = key
       
   def append(self, item):
     if not isinstance(item, SourceFile):
       raise TypeError("item is not of type {}".format(SourceFile))
-    if self.getItemByEpisodeNum(item.epNum):
-      item.epNum = UNRESOLVED_KEY
+    if self.get_item_by_episode_num(item.ep_num):
+      item.ep_num = UNRESOLVED_KEY
     super(SourceFiles, self).append(item)
     
 # -----------------------------------------------------------------------------------
 class SeasonInfo(base_types.BaseInfo):
   """ contains list of """
-  def __init__(self, showName="", seasonNum=""):
+  def __init__(self, show_name="", season_num=""):
     super(SeasonInfo, self).__init__()
-    self.showName = showName
-    self.seasonNum = seasonNum
+    self.show_name = show_name
+    self.season_num = season_num
     self.episodes = []
     
-  def getEpisodeByNum(self, epNum):
-    for ep in self.episodes:
-      if ep.epNum == epNum:
-        return ep
-    return EpisodeInfo.createUnresolvedEpisode()
+  def get_episode_by_episode_num(self, ep_num):
+    for episode in self.episodes:
+      if episode.ep_num == ep_num:
+        return episode
+    return EpisodeInfo.create_unresolved_episode()
     
-  def getEpisodeByFilename(self, filename):
-    for ep in self.episodes:
-      if ep.filename == filename:
-        return ep    
+  #def get_episode_by_filename(self, filename):
+  #  for episode in self.episodes:
+  #    if episode.filename == filename:
+  #      return episode    
     
   def __copy__(self):
-    ret = SeasonInfo(self.showName, self.seasonNum)
+    ret = SeasonInfo(self.show_name, self.season_num)
     ret.episodes = list(self.episodes)
     return ret
     
   def __str__(self):
-    return "{} season {} - # episodes: {}".format(self.showName, self.seasonNum, len(self.episodes))
+    return "{} season {} - # episodes: {}".format(self.show_name, self.season_num, len(self.episodes))
 
-  def toSearchParams(self):
-    return TvSearchParams(self.showName, self.seasonNum)
+  def to_search_params(self):
+    return TvSearchParams(self.show_name, self.season_num)
   
-  def hasData(self):
+  def has_data(self):
     return bool(self.episodes)
   
 # --------------------------------------------------------------------------------------------------------------------
 class Season:
-  """ Creates a list of episodeMoveItems given a source and destination input map. """
+  """ Creates a list of episode_move_items given a source and destination input map. """
   OK                = 1
   UNBALANCED_FILES  = -1
   SEASON_UNRESOLVED = -2
@@ -207,7 +207,7 @@ class Season:
   UNKNOWN           = -4
   
   @staticmethod
-  def resultStr(result):
+  def result_str(result):
     if   result == Season.OK:                
       return "Ok"
     elif result == Season.UNBALANCED_FILES:  
@@ -222,80 +222,76 @@ class Season:
   
   def __str__(self):
     if self.status == Season.SEASON_NOT_FOUND:
-      return "Season: {} #: ???".format(self.info.showName)
+      return "Season: {} #: ???".format(self.info.show_name)
     else:
-      return "Season: {} #: {}".format(self.info.showName, self.info.seasonNum)
+      return "Season: {} #: {}".format(self.info.show_name, self.info.season_num)
   
-  def __init__(self, inputFolder, info, sources):
-    #utils.verifyType(inputFolder, str)
-    #utils.verifyType(sources, SourceFiles)
-    #utils.verifyType(info, SeasonInfo)
+  def __init__(self, input_folder, info, sources):
+    #utils.verify_type(input_folder, str)
+    #utils.verify_type(sources, SourceFiles)
+    #utils.verify_type(info, SeasonInfo)
     
     self.sources = sources
     self.info = info
-    self.performMove = True #wtf? #HACK:
-    self.inputFolder = inputFolder
+    self.perform_move = True #wtf? #HACK:
+    self.input_folder = input_folder
     self.status = None
-    self.episodeMoveItems = []
-    self._resolveEpisodeMoveItems()
-    self._resolveStatus() 
+    self.episode_move_items = []
+    self._resolve_episode_move_items()
+    self._resolve_status() 
     
-  def setInputFolder(self, folder):
-    #utils.verifyType(folder, basestring)
-    self.inputFolder = folder
+  def remove_source_file(self, filename):
+    #utils.verify_type(f, basestring)
+    self.sources.remove_file(filename)
+    self.update_source(self.sources)
     
-  def removeSourceFile(self, f):
-    #utils.verifyType(f, basestring)
-    self.sources.removeFile(f)
-    self.updateSource(self.sources)
-    
-  def updateSeasonInfo(self, info):
-    #utils.verifyType(info, SeasonInfo)
+  def update_season_info(self, info):
+    #utils.verify_type(info, SeasonInfo)
     self.info = info
-    self._resolveEpisodeMoveItems()
-    self._resolveStatus()    
+    self._resolve_episode_move_items()
+    self._resolve_status()    
     
-  def updateSource(self, sources):
-    #utils.verifyType(sources, SourceFiles)
+  def update_source(self, sources):
+    #utils.verify_type(sources, SourceFiles)
     self.sources = sources
-    self._resolveEpisodeMoveItems()
-    self._resolveStatus()    
+    self._resolve_episode_move_items()
+    self._resolve_status()    
           
-  def _resolveEpisodeMoveItems(self):
-    self.episodeMoveItems = []
-    tempSeasonInfo = copy.copy(self.info)
-    takenKeys = [] #dodgy...
+  def _resolve_episode_move_items(self):
+    self.episode_move_items = []
+    temp_season_info = copy.copy(self.info)
+    taken_keys = [] #dodgy...
     for source in self.sources:
-      destEp = EpisodeInfo.createUnresolvedEpisode()
-      if source.epNum != UNRESOLVED_KEY and not source.epNum in takenKeys:
-        destEp = tempSeasonInfo.getEpisodeByNum(source.epNum)
-        if destEp.epNum != UNRESOLVED_KEY:
-          tempSeasonInfo.episodes.remove(destEp)
-        takenKeys.append(source.epNum)
-      destEp = AdvancedEpisodeInfo(self.info.showName, self.info.seasonNum, destEp.epNum, destEp.epName)
-      self.episodeMoveItems.append(EpisodeRenameItem(source.filename, destEp))
+      dest_ep = EpisodeInfo.create_unresolved_episode()
+      if source.ep_num != UNRESOLVED_KEY and not source.ep_num in taken_keys:
+        dest_ep = temp_season_info.get_episode_by_episode_num(source.ep_num)
+        if dest_ep.ep_num != UNRESOLVED_KEY:
+          temp_season_info.episodes.remove(dest_ep)
+        taken_keys.append(source.ep_num)
+      dest_ep = AdvancedEpisodeInfo(self.info.show_name, self.info.season_num, dest_ep.ep_num, dest_ep.ep_name)
+      self.episode_move_items.append(EpisodeRenameItem(source.filename, dest_ep))
       
-    for ep in tempSeasonInfo.episodes:
-      self.episodeMoveItems.append(EpisodeRenameItem("", AdvancedEpisodeInfo(self.info.showName, self.info.seasonNum, 
-                                                                             ep.epNum, ep.epName)))
+    for episode in temp_season_info.episodes:
+      self.episode_move_items.append(EpisodeRenameItem("", 
+          AdvancedEpisodeInfo(self.info.show_name, self.info.season_num, episode.ep_num, episode.ep_name)))
         
-    self.episodeMoveItems = sorted(self.episodeMoveItems, key=lambda item: item.info.epNum)
+    self.episode_move_items = sorted(self.episode_move_items, key=lambda item: item.info.ep_num)
           
-  def _resolveStatus(self):
+  def _resolve_status(self):
     if not self.info:
       self.status = Season.SEASON_NOT_FOUND
-    if all([item.info.epNum != UNRESOLVED_KEY and item.filename for item in self.episodeMoveItems]):
+    if all([item.info.ep_num != UNRESOLVED_KEY and item.filename for item in self.episode_move_items]):
       self.status = Season.OK      
     else:
       self.status = Season.UNBALANCED_FILES  
   
-  def setEpisodeForFilename(self, key, filename):
-    self.sources.setEpisodeForFilename(key, filename)
-    self.updateSource(self.sources)
+  def set_episode_for_filename(self, key, filename):
+    self.sources.set_episode_for_filename(key, filename)
+    self.update_source(self.sources)
       
-  def getInfo(self):
+  def get_info(self):
     return self.info
 
   def isValid(self):
-    return self.info.hasData()
+    return self.info.has_data()
  
