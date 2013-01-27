@@ -7,15 +7,18 @@
 # Purpose of document: All the generic functions that don't have a more appropriate home
 # --------------------------------------------------------------------------------------------------------------------
 import logging
+import logging.handlers
 import inspect
 import re
 import time
 
 UNDECODABLE_ERROR_MESSAGE = "<could not decode>"
 MIN_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 # 20 MB
+MAX_LOG_SIZE_BYTES = 1024 * 1024 # 1 MB
+LOG_NAME = "renamer"
 
 # --------------------------------------------------------------------------------------------------------------------
-def stackFunctionName(index=2): #1 is calling, 2 parent etc.
+def stack_function_name(index=2): #1 is calling, 2 parent etc.
   """ Print the function name. Useful in debugging """
   ret = "??"
   try:
@@ -27,15 +30,15 @@ def stackFunctionName(index=2): #1 is calling, 2 parent etc.
 # --------------------------------------------------------------------------------------------------------------------
 class LogItem:
   """ Information contained in a log entry. """
-  def __init__(self, logLevel, action, shortMessage, longMessage=""):
-    #utils.verifyType(logLevel, int)
-    #utils.verifyType(action, str)
-    #utils.verifyType(shortMessage, str)
-    #utils.verifyType(longMessage, str)
-    self.logLevel = logLevel
+  def __init__(self, log_level, action, short_message, long_message=""):
+    #utils.verify_type(log_level, int)
+    #utils.verify_type(action, str)
+    #utils.verify_type(short_message, str)
+    #utils.verify_type(long_message, str)
+    self.log_level = log_level
     self.action = action
-    self.shortMessage = shortMessage
-    self.longMessage = longMessage or shortMessage
+    self.short_message = short_message
+    self.long_message = long_message or short_message
     
 # --------------------------------------------------------------------------------------------------------------------
 class LogLevel:
@@ -50,101 +53,103 @@ class LogLevel:
   NOTSET = 0
 
 # --------------------------------------------------------------------------------------------------------------------
-def initLogging(logfile):
+def init_logging(logfile):
   logging.basicConfig(level=logging.DEBUG,
-                      format="%(asctime)s %(title)-12s %(name)-12s %(levelname)-8s %(message)s",
-                      datefmt="%Y-%m-%d %H:%M",
-                      filename=logfile,
-                      filemode="a")
+                      format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
+                      datefmt="%Y-%m-%d %H:%M")
 
-  for logName in ("PyQt4", "requests", "tvdb_api"):
-    logging.getLogger(logName).setLevel(logging.CRITICAL)
+  for log_name in ("PyQt4", "requests", "tvdb_api"):
+    logging.getLogger(log_name).setLevel(logging.CRITICAL)
 
+  handler = logging.handlers.RotatingFileHandler(logfile, "a", maxBytes=MAX_LOG_SIZE_BYTES, backupCount=5)
+            
   console = logging.StreamHandler()
   console.setFormatter(logging.Formatter("%(name)-12s %(levelname)-8s %(message)s"))
   console.setLevel(logging.INFO)
-  logging.getLogger("renamer").addHandler(console)
+  
+  logging.getLogger(LOG_NAME).addHandler(console)
+  logging.getLogger(LOG_NAME).addHandler(handler)
 
-def logNotSet(msg, longMsg="", title=""):
-  log(LogLevel.NOTSET, msg, longMsg, title)
+def log_not_set(msg, long_msg="", title=""):
+  log(LogLevel.NOTSET, msg, long_msg, title)
 
-def logDebug(msg, longMsg="", title=""):
-  log(LogLevel.DEBUG, msg, longMsg, title)
+def log_debug(msg, long_msg="", title=""):
+  log(LogLevel.DEBUG, msg, long_msg, title)
 
-def logInfo(msg, longMsg="", title=""):
-  log(LogLevel.INFO, msg, longMsg, title)
+def log_info(msg, long_msg="", title=""):
+  log(LogLevel.INFO, msg, long_msg, title)
 
-def logWarning(msg, longMsg="", title=""):
-  log(LogLevel.WARNING, msg, longMsg, title)
+def log_warning(msg, long_msg="", title=""):
+  log(LogLevel.WARNING, msg, long_msg, title)
 
-def logError(msg, longMsg="", title=""):
-  log(LogLevel.ERROR, msg, longMsg, title)
+def log_error(msg, long_msg="", title=""):
+  log(LogLevel.ERROR, msg, long_msg, title)
 
-def log(level, msg, longMsg="", title=""):
-  logging.getLogger("renamer").log(level, msg or longMsg, extra={"title":title}) 
+def log(level, msg, long_msg="", title=""):
+  logging.getLogger("renamer").log(level, msg or long_msg, extra={"title":title}) 
 
 # --------------------------------------------------------------------------------------------------------------------
 def verify(test, message):
   """ If test is not true print and throw. """
   if not test:
-    text = "assertion failed: {} stack: {}".format(message, stackFunctionName(2))
-    logNotSet(text, title="utils.verify")
+    text = "assertion failed: {} stack: {}".format(message, stack_function_name(2))
+    log_not_set(text, title="utils.verify")
     raise AssertionError(text)      
 
 # --------------------------------------------------------------------------------------------------------------------
-def verifyType(obj, class_or_type_or_tuple, _msg=""):
+def verify_type(obj, class_or_type_or_tuple, _msg=""):
   """ Compare type and object are of the same class. If not true print and throw. """
   if not isinstance(obj, class_or_type_or_tuple):
-    text = "{} type mismatch: {} is not {}. real type: {}".format(stackFunctionName(2), 
-                                                                  toString(obj), 
+    text = "{} type mismatch: {} is not {}. real type: {}".format(stack_function_name(2), 
+                                                                  to_string(obj), 
                                                                   str(class_or_type_or_tuple), 
                                                                   type(obj))
-    logNotSet(text, title="utils.verifyType")
+    log_not_set(text, title="utils.verify_type")
     #raise AssertionError(text)
 
 # --------------------------------------------------------------------------------------------------------------------
-def toString(value, defaultIfError=""):
-  """ Attempt to convert string. returns defaultIfError if null. """
-  verify(isinstance(defaultIfError, str), "type mismatch: defaultIfError") 
-  v = defaultIfError
+def to_string(value, default_if_error=""):
+  """ Attempt to convert string. returns default_if_error if null. """
+  verify(isinstance(default_if_error, str), "type mismatch: default_if_error") 
+  ret = default_if_error
   try:
-    v = str(value)
+    ret = str(value)
   except ValueError:
     pass
 
-  return v
+  return ret
 
 # --------------------------------------------------------------------------------------------------------------------
-def sanitizeString(value, defaultIfError=UNDECODABLE_ERROR_MESSAGE):
+def sanitize_string(value, default_if_error=UNDECODABLE_ERROR_MESSAGE):
   """ Attempt to convert string. returns defaultIfNull if null. """
-  verify(isinstance(value, basestring), "type mismatch: sanitizeString")
-  ret = defaultIfError
-  for t in ("utf-8", "latin1", "ascii"):
+  verify(isinstance(value, basestring), "type mismatch: sanitize_string")
+  ret = default_if_error
+  for text_type in ("utf-8", "latin1", "ascii"):
     try:
-      ret = str(value.decode(t, "replace"))
+      ret = str(value.decode(text_type, "replace"))
       break
     except UnicodeEncodeError:
       pass
   return ret
 
 # --------------------------------------------------------------------------------------------------------------------
-def printTiming(func):
+def print_timing(func):
   def wrapper(*arg):
-    t1 = time.time()
+    start = time.time()
     res = func(*arg)
-    t2 = time.time()
-    logDebug("{}({}) took {:.2} ms".format(func.func_name, ",".join([str(a) for a in arg]), (t2-t1) * 1000.0))
+    end = time.time()
+    log_debug("{}({}) took {:.2} ms".format(func.func_name, ",".join([str(a) for a in arg]), (end - start) * 1000.0))
     return res
   return wrapper
 
 # --------------------------------------------------------------------------------------------------------------------
-def stringToBytes(text):
+def string_to_bytes(text):
   vals = ["B", "KB", "MB", "GB"]
-  m = re.match(r"^(\d+)\s+({})$".format("|".join(vals)), text, re.IGNORECASE)
-  return int(m.group(1)) * pow(1024, vals.index(m.group(2).upper())) if m else 0
+  match = re.match(r"^(\d+)\s+({})$".format("|".join(vals)), text, re.IGNORECASE)
+  return int(match.group(1)) * pow(1024, vals.index(match.group(2).upper())) if match else 0
 
 # --------------------------------------------------------------------------------------------------------------------
-def bytesToString(bytes_):
+def bytes_to_string(bytes_):
   bytes_ = bytes_ if bytes_ > 0 else MIN_VIDEO_SIZE_BYTES
   denoms = ["B", "KB", "MB", "GB"]
 

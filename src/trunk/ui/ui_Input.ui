@@ -48,14 +48,14 @@
       <number>4</number>
      </property>
      <item>
-      <widget class="QLineEdit" name="folderEdit">
+      <widget class="QLineEdit" name="folder_edit">
        <property name="toolTip">
         <string>Folder location to explore</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="folderButton">
+      <widget class="QPushButton" name="folder_button">
        <property name="minimumSize">
         <size>
          <width>24</width>
@@ -104,7 +104,7 @@
        <number>4</number>
       </property>
       <item>
-       <widget class="QRadioButton" name="anyExtRadioButton">
+       <widget class="QRadioButton" name="any_extension_radio_button">
         <property name="toolTip">
          <string>Accept all files regardless of extension</string>
         </property>
@@ -117,7 +117,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="restrictedExtRadioButton">
+       <widget class="QRadioButton" name="restricted_extension_radio_button">
         <property name="minimumSize">
          <size>
           <width>84</width>
@@ -133,7 +133,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="fileExtensionEdit">
+       <widget class="QLineEdit" name="file_extension_edit">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -165,7 +165,7 @@
        <number>4</number>
       </property>
       <item>
-       <widget class="QRadioButton" name="anySizeRadioButton">
+       <widget class="QRadioButton" name="any_size_radio_button">
         <property name="toolTip">
          <string>Accept all files regardless of size</string>
         </property>
@@ -178,7 +178,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="restrictedSizeRadioButton">
+       <widget class="QRadioButton" name="restricted_size_radio_button">
         <property name="toolTip">
          <string>Only include files of a certain size</string>
         </property>
@@ -190,7 +190,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QSpinBox" name="sizeSpinBox">
+         <widget class="QSpinBox" name="filesize_spin_box">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -203,7 +203,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="sizeComboBox">
+         <widget class="QComboBox" name="filesize_combo_box">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -263,7 +263,7 @@
    <item row="3" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
-      <widget class="QLineEdit" name="sourcesEdit">
+      <widget class="QLineEdit" name="sources_edit">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -273,7 +273,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="sourceButton">
+      <widget class="QPushButton" name="show_source_button">
        <property name="minimumSize">
         <size>
          <width>24</width>
@@ -297,7 +297,7 @@
     </layout>
    </item>
    <item row="4" column="0">
-    <widget class="QCheckBox" name="isRecursiveCheckBox">
+    <widget class="QCheckBox" name="is_recursive_check_box">
      <property name="toolTip">
       <string>Include/ignore sub folders</string>
      </property>
@@ -312,7 +312,7 @@
       <number>4</number>
      </property>
      <item>
-      <widget class="QPushButton" name="searchButton">
+      <widget class="QPushButton" name="search_button">
        <property name="toolTip">
         <string>Explore contents of folder</string>
        </property>
@@ -335,7 +335,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="stopButton">
+      <widget class="QPushButton" name="stop_button">
        <property name="toolTip">
         <string>Cancel search</string>
        </property>
@@ -345,7 +345,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QProgressBar" name="progressBar">
+      <widget class="QProgressBar" name="progress_bar">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>1</horstretch>

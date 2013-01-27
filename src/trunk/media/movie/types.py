@@ -20,13 +20,13 @@ class MovieRenameItem(base_types.BaseRenameItem):
     ret = MovieRenameItem(self.filename, copy.copy(self.info))
     return ret
   
-  def fileExists(self):
-    return self.fileSize > 0
+  def file_exists(self):
+    return self.file_size > 0
   
   def __str__(self):
     return str(self.info)
   
-  def getInfo(self):
+  def get_info(self):
     return self.info
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -48,12 +48,12 @@ class MovieInfo(base_types.BaseInfo):
   
   def __eq__(self, other):
     return (self.title == other.title and self.year == other.year and 
-            self.part == other.part and self.getGenre() == other.getGenre())
+            self.part == other.part and self.get_genre() == other.get_genre())
   
-  def getGenre(self, default=""):
+  def get_genre(self, default=""):
     return self.genres[0] if self.genres else default
   
-  def toSearchParams(self):
+  def to_search_params(self):
     return MovieSearchParams(self.title, self.year)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -63,10 +63,10 @@ class MovieSearchParams(base_types.BaseInfoClientSearchParams):
     self.title = title
     self.year = year
     
-  def getKey(self):
-    return self.title if not self.year else utils.sanitizeString("{} ({})".format(self.title, self.year))
+  def get_key(self):
+    return self.title if not self.year else utils.sanitize_string("{} ({})".format(self.title, self.year))
   
-  def toInfo(self):
+  def to_info(self):
     return MovieInfo(self.title, self.year)
 
   

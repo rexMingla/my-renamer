@@ -24,39 +24,37 @@ class ConfigManager(object):
   def __init__(self):
     self._data = {}
     
-  def getData(self, key, default=""):
+  def get_data(self, key, default=""):
     return self._data.get(key, default)
   
-  def setData(self, key, value):
+  def set_data(self, key, value):
     self._data[key] = value
     
-  def loadConfig(self, filename):
+  def load_config(self, filename):
     self._data = {}
-    if file_helper.FileHelper.fileExists(filename):
-      f = open(filename, "r")
+    if file_helper.FileHelper.file_exists(filename):
+      file_obj = open(filename, "r")
       try:
-        self._data = jsonpickle.decode(f.read())
-      except (ValueError, TypeError, IndexError, KeyError) as e:
-        utils.logWarning("loadConfig error: {}".format(e))
+        self._data = jsonpickle.decode(file_obj.read())
+      except (ValueError, TypeError, IndexError, KeyError) as ex:
+        utils.log_warning("load_config error: {}".format(ex))
     if not isinstance(self._data, dict):
       self._data = {}
   
-  def saveConfig(self, filename):
-    tmpFile = "{}.bak".format(filename)
+  def save_config(self, filename):
+    tmp_file = "{}.bak".format(filename)
     try:
       #write a temp file and swap on success
-      f = open(tmpFile, "w")
-      f.write(jsonpickle.encode(self._data))
-      f.close()
+      file_obj = open(tmp_file, "w")
+      file_obj.write(jsonpickle.encode(self._data))
+      file_obj.close()
       if os.path.exists(filename):
         os.remove(filename)
-      os.rename(tmpFile, filename)
-    except Exception as e: #json catches Exception so I guess we have to too
-      mb = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
+      os.rename(tmp_file, filename)
+    except Exception as ex: #json pickle catches Exception so I guess we have to too
+      message_box = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
                              "An error occured", "Unable to save to settings file:\n{}".format(filename))
-      errorText = ["Error:\n{}\n\n".format(str(e)),
-                   "Exception:\n",
-                   "".join(traceback.format_exception(*sys.exc_info()))]
-      mb.setDetailedText("".join(errorText))
-      mb.exec_()
+      error = ["Error:\n{}\n\n".format(str(ex)), "Exception:\n", "".join(traceback.format_exception(*sys.exc_info()))]
+      message_box.setDetailedText("".join(error))
+      message_box.exec_()
       #raise #for debugging

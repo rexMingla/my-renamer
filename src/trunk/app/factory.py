@@ -26,23 +26,23 @@ class Factory:
   """ creates components for the application based on mode value """  
     
   @staticmethod
-  def getEditSourceWidget(mode, parent=None):
-    store = Factory.getStoreHolder(mode)
+  def get_edit_source_widget(mode, parent=None):
+    store = Factory.get_store_helper(mode)
     return base_widget.EditSourcesWidget(mode, store, parent)
   
   @staticmethod
-  def getInputWidget(mode, parent=None):
-    store = Factory.getStoreHolder(mode)
+  def get_input_widget(mode, parent=None):
+    store = Factory.get_store_helper(mode)
     return base_widget.InputWidget(mode, store, parent)
     
   @staticmethod
-  def getOutputWidget(mode, parent=None):
-    helper = Factory.getNameFormatHelper(mode)    
+  def get_output_widget(mode, parent=None):
+    helper = Factory.get_name_format_helper(mode)    
     return base_widget.OutputWidget(mode, helper, parent)
     
   @staticmethod
-  def getNameFormatHelper(mode):
-    if mode == interfaces.Mode.MOVIE_MODE:
+  def get_name_format_helper(mode):
+    if mode == interfaces.MOVIE_MODE:
       return base_widget.NameFormatHelper(formatting.MovieNameFormatter(),
                                            movie_types.MovieInfo("Title", "Year", 
                                                                      "Genre", "Part", "Series"),
@@ -54,31 +54,31 @@ class Factory:
                                            tv_types.AdvancedEpisodeInfo("Seinfeld", 9, 3, "The Serenity Now"))
     
   @staticmethod
-  def getWorkBenchWidget(mode, parent=None):
-    manager = Factory.getManager(mode)
-    if mode == interfaces.Mode.MOVIE_MODE:
+  def get_work_bench_widget(mode, parent=None):
+    manager = Factory.get_manager(mode)
+    if mode == interfaces.MOVIE_MODE:
       return movie_widget.MovieWorkBenchWidget(manager, parent) 
     else:
       return tv_widget.TvWorkBenchWidget(manager, parent)
     
   @staticmethod
-  def getRenameItemGenerator(mode):
-    if mode == interfaces.Mode.MOVIE_MODE:
+  def get_rename_item_generator(mode):
+    if mode == interfaces.MOVIE_MODE:
       return renamer.RenameItemGenerator(formatting.MovieNameFormatter())
     else:  
       return renamer.RenameItemGenerator(formatting.TvNameFormatter())
     
   @staticmethod
-  def getStoreHolder(mode):
-    if mode == interfaces.Mode.MOVIE_MODE:
-      return movie_client.getStoreHolder()
+  def get_store_helper(mode):
+    if mode == interfaces.MOVIE_MODE:
+      return movie_client.get_store_helper()
     else:
-      return tv_client.getStoreHolder()
+      return tv_client.get_store_helper()
     
   @staticmethod
-  def getManager(mode):
-    if mode == interfaces.Mode.MOVIE_MODE:
-      return movie_manager.getManager()
+  def get_manager(mode):
+    if mode == interfaces.MOVIE_MODE:
+      return movie_manager.get_manager()
     else:
-      return tv_manager.getManager()
+      return tv_manager.get_manager()
     

@@ -19,17 +19,17 @@ class RenameThread(thread.AdvancedWorkerThread):
     self._renamer = renamer
     self._items = items
     
-  def _getAllItems(self):
-    return [self._renamer.getRenameItem(item) for item in self._items]
+  def _get_all_items(self):
+    return [self._renamer.get_rename_item(item) for item in self._items]
    
-  def _applyToItem(self, item):
-    ret = item.performAction(self._onPercentageComplete)
-    return thread.WorkItem(item, item.resultStr(ret), item.resultToLogItem(ret))
+  def _apply_to_item(self, item):
+    ret = item.perform_action(self._on_percentage_complete)
+    return thread.WorkItem(item, item.result_str(ret), item.result_to_log_item(ret))
   
-  def _onPercentageComplete(self, percentage):
+  def _on_percentage_complete(self, percentage):
     overall = int((percentage + 100.0 * self._i) / self._numItems)
-    self._onProgress(overall)
-    return not self._userStopped
+    self._on_progress(overall)
+    return not self._user_stopped
   
 # --------------------------------------------------------------------------------------------------------------------
 class SearchThread(thread.AdvancedWorkerThread):  
@@ -38,49 +38,49 @@ class SearchThread(thread.AdvancedWorkerThread):
     self._manager = manager
     self._config = config
 
-  def _getAllItems(self):
-    raise NotImplementedError("SearchThread._getAllItems not implemented")
+  def _get_all_items(self):
+    raise NotImplementedError("SearchThread._get_all_items not implemented")
    
-  def _applyToItem(self, item):
-    raise NotImplementedError("SearchThread._applyToItem not implemented")
+  def _apply_to_item(self, item):
+    raise NotImplementedError("SearchThread._apply_to_item not implemented")
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvSearchThread(SearchThread):
   """ class that performs a search for tv folders and their episode files """  
   def __init__(self, manager, config):
-    super(TvSearchThread, self).__init__(interfaces.Mode.TV_MODE, manager, config)  
+    super(TvSearchThread, self).__init__(interfaces.TV_MODE, manager, config)  
     
-  def _getAllItems(self):
-    return self._manager.getFolders(self._config.folder, self._config.recursive)
+  def _get_all_items(self):
+    return self._manager.get_folders(self._config.folder, self._config.recursive)
     
-  def _applyToItem(self, item):
-    season = self._manager.getSeasonForFolder(item, self._config.getExtensions(), self._config.getMinFileSizeBytes()) 
+  def _apply_to_item(self, item):
+    season = self._manager.get_season_for_folder(item, self._config.get_extensions(), self._config.get_min_file_size_bytes()) 
     ret = None
     if season:
-      ret = thread.WorkItem(season, season.resultStr(season.status))
+      ret = thread.WorkItem(season, season.result_str(season.status))
     return ret
   
 # --------------------------------------------------------------------------------------------------------------------
 class MovieSearchThread(SearchThread):
   """ class that performs a search for movie files """  
   def __init__(self, manager, config):
-    super(MovieSearchThread, self).__init__(interfaces.Mode.MOVIE_MODE, manager, config)
+    super(MovieSearchThread, self).__init__(interfaces.MOVIE_MODE, manager, config)
    
-  def _getAllItems(self):
-    return self._manager.helper.getFiles(self._config.folder, 
-                                         self._config.getExtensions(), 
+  def _get_all_items(self):
+    return self._manager.helper.get_files(self._config.folder, 
+                                         self._config.get_extensions(), 
                                          self._config.recursive, 
-                                         self._config.getMinFileSizeBytes())
+                                         self._config.get_min_file_size_bytes())
     
-  def _applyToItem(self, item):
-    item = self._manager.processFile(item)
+  def _apply_to_item(self, item):
+    item = self._manager.process_file(item)
     ret = None
     if item:
-      ret = thread.WorkItem(item, "File exists" if item.fileExists() else "File not found")
+      ret = thread.WorkItem(item, "File exists" if item.file_exists() else "File not found")
     return ret
 
-def getSearchThread(mode, manager, config):
-  if mode == interfaces.Mode.MOVIE_MODE:
+def get_search_thread(mode, manager, config):
+  if mode == interfaces.MOVIE_MODE:
     return MovieSearchThread(manager, config)
   else:
     return TvSearchThread(manager, config)
@@ -88,90 +88,90 @@ def getSearchThread(mode, manager, config):
 # --------------------------------------------------------------------------------------------------------------------
 class RenamerModule(QtCore.QObject):
   """ Class responsible for the input, output and workbench components and manages their interactions. """  
-  logSignal = QtCore.pyqtSignal(object)
+  log_signal = QtCore.pyqtSignal(object)
   
   def __init__(self, mode, parent=None):
     super(RenamerModule, self).__init__(parent)
     
     self.mode = mode
-    self.editSourcesWidget = factory.Factory.getEditSourceWidget(mode, parent)
-    self.editSourcesWidget.setVisible(False)    
-    self.inputWidget = factory.Factory.getInputWidget(mode, parent)
-    self.outputWidget = factory.Factory.getOutputWidget(mode, parent)
-    self.workBenchWidget = factory.Factory.getWorkBenchWidget(mode, parent)
-    self._manager = factory.Factory.getManager(mode)
-    self._renamer = factory.Factory.getRenameItemGenerator(mode)
-    self._widgets = (self.inputWidget, self.outputWidget, self.workBenchWidget)
+    self.edit_sources_widget = factory.Factory.get_edit_source_widget(mode, parent)
+    self.edit_sources_widget.setVisible(False)    
+    self.input_widget = factory.Factory.get_input_widget(mode, parent)
+    self.output_widget = factory.Factory.get_output_widget(mode, parent)
+    self.work_bench = factory.Factory.get_work_bench_widget(mode, parent)
+    self._manager = factory.Factory.get_manager(mode)
+    self._renamer = factory.Factory.get_rename_item_generator(mode)
+    self._widgets = (self.input_widget, self.output_widget, self.work_bench)
     
-    self.workBenchWidget.workBenchChangedSignal.connect(self.outputWidget.renameButton.setEnabled)
-    self.outputWidget.renameSignal.connect(self._rename)
-    self.outputWidget.stopSignal.connect(self._stopRename)
-    self.workBenchWidget.renameItemChangedSignal.connect(self.outputWidget.onRenameItemChanged)    
-    self.workBenchWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
-    self.inputWidget.showEditSourcesSignal.connect(self.editSourcesWidget.show)
-    self.editSourcesWidget.accepted.connect(self.inputWidget.onSourcesWidgetFinished)
+    self.work_bench.workbench_changed_signal.connect(self.output_widget.rename_button.setEnabled)
+    self.output_widget.renameSignal.connect(self._rename)
+    self.output_widget.stop_signal.connect(self._stop_rename)
+    self.work_bench.renameItemChangedSignal.connect(self.output_widget.on_rename_item_changed)    
+    self.work_bench.show_edit_sources_signal.connect(self.edit_sources_widget.show)
+    self.input_widget.show_edit_sources_signal.connect(self.edit_sources_widget.show)
+    self.edit_sources_widget.accepted.connect(self.input_widget.on_sources_widget_finished)
     
-    self.inputWidget.exploreSignal.connect(self._explore)
-    self.inputWidget.stopSignal.connect(self._stopSearch)    
+    self.input_widget.explore_signal.connect(self._explore)
+    self.input_widget.stop_signal.connect(self._stop_search)    
     
-    self._workerThread = None
-    self._isShuttingDown = False
+    self._worker_thread = None
+    self._is_shutting_down = False
     
   def __del__(self):
-    self._isShuttingDown = True
-    self._stopThread()
+    self._is_shutting_down = True
+    self._stop_thread()
     
   def _explore(self):
-    if self._workerThread and self._workerThread.isRunning():
+    if self._worker_thread and self._worker_thread.isRunning():
       return
 
-    for w in self._widgets:
-      w.start_exploring()
+    for widget in self._widgets:
+      widget.start_exploring()
       
-    self._workerThread = getSearchThread(self.mode, self._manager, self.inputWidget.get_config()) 
-    self._workerThread.progressSignal.connect(self.inputWidget.progressBar.setValue)
-    self._workerThread.newDataSignal.connect(self.workBenchWidget.addItem)
-    self._workerThread.logSignal.connect(self.logSignal)
-    self._workerThread.finished.connect(self._onThreadFinished)
-    self._workerThread.terminated.connect(self._onThreadFinished)    
-    self._workerThread.start()
+    self._worker_thread = get_search_thread(self.mode, self._manager, self.input_widget.get_config()) 
+    self._worker_thread.progress_signal.connect(self.input_widget.progress_bar.setValue)
+    self._worker_thread.new_data_signal.connect(self.work_bench.add_item)
+    self._worker_thread.log_signal.connect(self.log_signal)
+    self._worker_thread.finished.connect(self._on_thread_finished)
+    self._worker_thread.terminated.connect(self._on_thread_finished)    
+    self._worker_thread.start()
     
   def _rename(self):
-    if self._workerThread and self._workerThread.isRunning():
+    if self._worker_thread and self._worker_thread.isRunning():
       return
     
-    for w in self._widgets:
-      w.startActioning()
+    for widget in self._widgets:
+      widget.start_actioning()
 
-    self._renamer.config = self.outputWidget.get_config()
-    self._workerThread = RenameThread("rename {}".format(self.mode), self._renamer, 
-        self.workBenchWidget.actionableItems())
-    self._workerThread.progressSignal.connect(self.outputWidget.progressBar.setValue)
-    self._workerThread.logSignal.connect(self.logSignal)
-    self._workerThread.finished.connect(self._onThreadFinished)
-    self._workerThread.terminated.connect(self._onThreadFinished)    
-    self._workerThread.start()
+    self._renamer.config = self.output_widget.get_config()
+    self._worker_thread = RenameThread("rename {}".format(self.mode), self._renamer, 
+        self.work_bench.actionable_items())
+    self._worker_thread.progress_signal.connect(self.output_widget.progress_bar.setValue)
+    self._worker_thread.log_signal.connect(self.log_signal)
+    self._worker_thread.finished.connect(self._on_thread_finished)
+    self._worker_thread.terminated.connect(self._on_thread_finished)    
+    self._worker_thread.start()
     
-  def setActive(self):
+  def set_active(self):
     pass
         
-  def setInactive(self):
-    self._stopThread() #TODO: maybe prompt? In future, run in background.
+  def set_inactive(self):
+    self._stop_thread() #TODO: maybe prompt? In future, run in background.
     
-  def _stopThread(self):
-    if self._workerThread:
-      self._workerThread.join()
+  def _stop_thread(self):
+    if self._worker_thread:
+      self._worker_thread.join()
     
-  def _onThreadFinished(self):    
-    if not self._isShuttingDown:
-      for w in self._widgets:
-        w.stop_exploring()
-        w.stopActioning()
+  def _on_thread_finished(self):    
+    if not self._is_shutting_down:
+      for widget in self._widgets:
+        widget.stop_exploring()
+        widget.stop_actioning()
       
-  def _stopRename(self):
-    self.outputWidget.stopButton.setEnabled(False)
-    self._stopThread()
+  def _stop_rename(self):
+    self.output_widget.stop_button.setEnabled(False)
+    self._stop_thread()
    
-  def _stopSearch(self):
-    self.inputWidget.stopButton.setEnabled(False)
-    self._stopThread()     
+  def _stop_search(self):
+    self.input_widget.stop_button.setEnabled(False)
+    self._stop_thread()     

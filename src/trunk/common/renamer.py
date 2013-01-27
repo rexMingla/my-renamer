@@ -15,13 +15,12 @@ class BaseRenameItemGenerator(object):
   """ converts an item a BaseRenamer object """
   __metaclass__ = abc.ABCMeta
   
-  def __init__(self, inputValues=None, config=None):
+  def __init__(self, config=None):
     super(BaseRenameItemGenerator, self).__init__()
-    self.inputValues = inputValues
     self.config = config or {}
     
   @abc.abstractmethod
-  def getRenameItem(self, item):
+  def get_rename_item(self, item):
     pass
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -33,13 +32,13 @@ class RenameItemGenerator(BaseRenameItemGenerator):
     self._formatter = formatter
     self.config = config or {}
     
-  def getRenameItem(self, item):
-    if self.config.getOutputFolder():
-      item.outputFolder = self.config.getOutputFolder()
-    name = file_helper.FileHelper.sanitizeFilename(self._formatter.getName(self.config.format, item))
-    return FileRenamer(item.filename, name, canOverwrite=not self.config.dontOverwrite, 
-                                            keepSource=not self.config.isMove,
-                                            subtitleExtensions=self.config.getSubtitles())
+  def get_rename_item(self, item):
+    if self.config.get_output_folder():
+      item.output_folder = self.config.get_output_folder()
+    name = file_helper.FileHelper.sanitize_filename(self._formatter.get_name(self.config.format, item))
+    return FileRenamer(item.filename, name, can_overwrite=not self.config.dont_overwrite, 
+                                            keep_source=not self.config.is_move,
+                                            subtitle_extensions=self.config.get_subtitles())
     
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenamer(object):
@@ -49,7 +48,7 @@ class BaseRenamer(object):
     super(BaseRenamer, self).__init__()
     
   @abc.abstractmethod
-  def performAction(self, progressCb=None):
+  def perform_action(self, progress_cb=None):
     pass
     
 # --------------------------------------------------------------------------------------------------------------------
@@ -62,7 +61,7 @@ class FileRenamer(BaseRenamer):
   SUCCESS               = 1
   
   @staticmethod
-  def resultStr(res):
+  def result_str(res):
     if res == FileRenamer.SOURCE_DOES_NOT_EXIST: 
       return "Source does not exist"
     elif res == FileRenamer.COULD_NOT_OVERWRITE: 
@@ -75,66 +74,66 @@ class FileRenamer(BaseRenamer):
       utils.verify(res == FileRenamer.SUCCESS, "Invalid res")
       return "Success"
 
-  def __init__(self, source, dest, canOverwrite, keepSource, subtitleExtensions=None):
+  def __init__(self, source, dest, can_overwrite, keep_source, subtitle_extensions=None):
     super(FileRenamer, self).__init__()
     self.source = source
     self.dest = dest
-    self.canOverwrite = canOverwrite
-    self.keepSource = keepSource
-    self.subtitleExtensions = subtitleExtensions or []
+    self.can_overwrite = can_overwrite
+    self.keep_source = keep_source
+    self.subtitle_extensions = subtitle_extensions or []
     
-  def resultToLogItem(self, res):
-    longText = "{} -> {}".format(self.source, self.dest) 
-    shortText = "{} -> {}".format(file_helper.FileHelper.basename(self.source), 
+  def result_to_log_item(self, res):
+    long_text = "{} -> {}".format(self.source, self.dest) 
+    short_text = "{} -> {}".format(file_helper.FileHelper.basename(self.source), 
                                   file_helper.FileHelper.basename(self.dest))
-    numExtFiles = len(self._extensionFiles())
-    if res == FileRenamer.SUCCESS and numExtFiles:
-      longText += " #subtitle files:{}".format(numExtFiles)
-      shortText += " #subtitle files:{}".format(numExtFiles)
+    num_subtitle_files = len(self._subtitle_files())
+    if res == FileRenamer.SUCCESS and num_subtitle_files:
+      long_text += " #subtitle files:{}".format(num_subtitle_files)
+      short_text += " #subtitle files:{}".format(num_subtitle_files)
     level = utils.LogLevel.INFO
     if res != FileRenamer.SUCCESS:
       level = utils.LogLevel.ERROR
-    return utils.LogItem(level, FileRenamer.resultStr(res), shortText, longText)
+    return utils.LogItem(level, FileRenamer.result_str(res), short_text, long_text)
   
-  def performAction(self, progressCb=None):
+  def perform_action(self, progress_cb=None):
     """ Move/Copy a file from source to destination. """
     #sanity checks
-    if not file_helper.FileHelper.fileExists(self.source):
+    if not file_helper.FileHelper.file_exists(self.source):
       return FileRenamer.SOURCE_DOES_NOT_EXIST
-    if not file_helper.FileHelper.isValidFilename(self.dest):
+    if not file_helper.FileHelper.is_valid_filename(self.dest):
       return FileRenamer.INVALID_FILENAME
     elif self.source == self.dest:
       return FileRenamer.SUCCESS
-    elif file_helper.FileHelper.fileExists(self.dest) and not self.canOverwrite:
+    elif file_helper.FileHelper.file_exists(self.dest) and not self.can_overwrite:
       return FileRenamer.COULD_NOT_OVERWRITE    
 
-    if self.keepSource:
-      return self._copyFile(progressCb)
+    if self.keep_source:
+      return self._copy_file(progress_cb)
     else:
-      return self._moveFile(progressCb)    
+      return self._move_file(progress_cb)    
     
-  def _extensionFiles(self):
+  def _subtitle_files(self):
     ret = []
-    for ext in self.subtitleExtensions:
-      sub = file_helper.FileHelper.changeExtension(self.source, ext)
-      if sub != self.source and file_helper.FileHelper.fileExists(sub):
+    for ext in self.subtitle_extensions:
+      sub = file_helper.FileHelper.change_extension(self.source, ext)
+      if sub != self.source and file_helper.FileHelper.file_exists(sub):
         ret.append(sub)
     return ret
   
-  def _moveFile(self, progressCb):
-    if file_helper.FileHelper.moveFile(self.source, self.dest, progressCb):
-      for sub in self._extensionFiles():
-        ext = file_helper.FileHelper.changeExtension(self.dest, file_helper.FileHelper.extension(sub))
-        file_helper.FileHelper.moveFile(sub, ext)
+  def _move_file(self, progress_cb):
+    if file_helper.FileHelper.move_file(self.source, self.dest, progress_cb):
+      for sub in self._subtitle_files():
+        ext = file_helper.FileHelper.change_extension(self.dest, file_helper.FileHelper.extension(sub))
+        file_helper.FileHelper.move_file(sub, ext)
       return FileRenamer.SUCCESS
     else:
       return FileRenamer.FAILED
     
-  def _copyFile(self, progressCb):
-    if file_helper.FileHelper.copyFile(self.source, self.dest, progressCb):
-      for sub in self._extensionFiles():
-        ext = file_helper.FileHelper.changeExtension(self.dest, file_helper.FileHelper.extension(sub))
-        file_helper.FileHelper.copyFile(sub, ext)
+  def _copy_file(self, progress_cb):
+    if file_helper.FileHelper.copy_file(self.source, self.dest, progress_cb):
+      for sub in self._subtitle_files():
+        ext = file_helper.FileHelper.change_extension(self.dest, file_helper.FileHelper.extension(sub))
+        file_helper.FileHelper.copy_file(sub, ext)
       return FileRenamer.SUCCESS
     else:
       return FileRenamer.FAILED

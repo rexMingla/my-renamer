@@ -23,7 +23,7 @@
       <number>4</number>
      </property>
      <item>
-      <widget class="QPushButton" name="upButton">
+      <widget class="QPushButton" name="up_button">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -48,7 +48,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="downButton">
+      <widget class="QPushButton" name="down_button">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -122,7 +122,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QTableView" name="sourceView">
+    <widget class="QTableView" name="source_view">
      <property name="selectionMode">
       <enum>QAbstractItemView::SingleSelection</enum>
      </property>
@@ -138,7 +138,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="detailsGroupBox">
+    <widget class="QGroupBox" name="details_group_box">
      <property name="minimumSize">
       <size>
        <width>250</width>
@@ -156,7 +156,7 @@
        <number>4</number>
       </property>
       <item>
-       <widget class="QCheckBox" name="loadCheckBox">
+       <widget class="QCheckBox" name="could_load_check_box">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -169,7 +169,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="keyGroupBox">
+       <widget class="QGroupBox" name="key_group_box">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -190,14 +190,14 @@
           <number>4</number>
          </property>
          <item>
-          <widget class="QLineEdit" name="keyEdit">
+          <widget class="QLineEdit" name="key_edit">
            <property name="text">
             <string/>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="keyLabel">
+          <widget class="QLabel" name="key_label">
            <property name="text">
             <string>find your free key at </string>
            </property>
@@ -210,7 +210,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="activeCheckBox">
+       <widget class="QCheckBox" name="is_enabled_check_box">
         <property name="toolTip">
          <string>Do you want to use this source</string>
         </property>

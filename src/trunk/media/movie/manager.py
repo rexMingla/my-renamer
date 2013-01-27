@@ -23,38 +23,38 @@ _MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
   @staticmethod
-  def getFiles(folder, extensionFilter, isRecursive, minFileSizeBytes):
+  def get_files(folder, ext_filter, is_recursive, min_file_size_bytes):
     files = []
-    for dirName, _, filenames in os.walk(folder):
-      for baseName in extensionFilter.filterFiles(sorted(filenames)):
-        name = file_helper.FileHelper.joinPath(dirName, baseName)
-        if file_helper.FileHelper.getFileSize(name) > minFileSizeBytes:
+    for dir_name, _, filenames in os.walk(folder):
+      for basename in ext_filter.filter_files(sorted(filenames)):
+        name = file_helper.FileHelper.join_path(dir_name, basename)
+        if file_helper.FileHelper.get_file_size(name) > min_file_size_bytes:
           files.append(name)
-      if not isRecursive:
+      if not is_recursive:
         break
     return files
   
   @staticmethod
-  def extractMovieFromFile(filename):
+  def extract_movie_from_file(filename):
     basename = file_helper.FileHelper.basename(filename)
     name, ext = os.path.splitext(basename)
     ext = ext.lower()
     title, part, year = "", "", ""
     if os.path.exists(filename):
-      m = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)
-      assert(m)
-      title = m.groupdict().get("title")
-      year = m.groupdict().get("year", "")
+      match = _MOVIE_YEAR_MATCH.match(name) or _MOVIE_NO_YEAR_MATCH.match(name)
+      assert(match)
+      title = match.groupdict().get("title")
+      year = match.groupdict().get("year", "")
       part = ""
-      partStr = basename
-      moviesInFolder = len(glob.glob("{}/*{}".format(file_helper.FileHelper.dirname(filename), ext)))
-      if moviesInFolder < 3: #use the folder name if there aren't many files in the folder
-        partStr = filename
-      pm = _PART_MATCH.match(partStr)
-      if pm:
-        part = pm.group(1)
+      part_str = basename
+      num_movies_in_folder = len(glob.glob("{}/*{}".format(file_helper.FileHelper.dirname(filename), ext)))
+      if num_movies_in_folder < 3: #use the folder name if there aren't many files in the folder
+        part_str = filename
+      part_match = _PART_MATCH.match(part_str)
+      if part_match:
+        part = part_match.group(1)
         if part.isalpha():
-          part = utils.toString(" abcdef".index(part))
+          part = utils.to_string(" abcdef".index(part))
         else:
           part = int(part)  
       if title.find(" ") == -1:
@@ -69,17 +69,17 @@ class MovieManager(base_manager.BaseManager):
   helper = MovieHelper
   
   def __init__(self):
-    super(MovieManager, self).__init__(movie_client.getStoreHolder())
+    super(MovieManager, self).__init__(movie_client.get_store_helper())
   
-  def processFile(self, filename):
-    movie = MovieHelper.extractMovieFromFile(filename)
-    if movie.fileExists():
-      movie.info = self.getItem(movie.getInfo().toSearchParams())
+  def process_file(self, filename):
+    movie = MovieHelper.extract_movie_from_file(filename)
+    if movie.file_exists():
+      movie.info = self.get_item(movie.get_info().to_search_params())
     return movie
 
 _MANAGER = None  
 
-def getManager():
+def get_manager():
   global _MANAGER
   if not _MANAGER:
     _MANAGER = MovieManager()

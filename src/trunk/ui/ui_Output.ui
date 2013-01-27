@@ -59,7 +59,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="formatEdit">
+        <widget class="QLineEdit" name="format_edit">
          <property name="toolTip">
           <string>Format of your filename after conversion</string>
          </property>
@@ -71,7 +71,7 @@
           <number>4</number>
          </property>
          <item>
-          <widget class="QLabel" name="showHelpLabel">
+          <widget class="QLabel" name="show_help_label">
            <property name="toolTip">
             <string>Show list of format options</string>
            </property>
@@ -84,7 +84,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="hideHelpLabel">
+          <widget class="QLabel" name="hide_help_label">
            <property name="toolTip">
             <string>Hide list of format options</string>
            </property>
@@ -103,7 +103,7 @@ p, li { white-space: pre-wrap; }
         </layout>
        </item>
        <item row="1" column="1">
-        <widget class="QLabel" name="formatExampleLabel">
+        <widget class="QLabel" name="format_example_label">
          <property name="minimumSize">
           <size>
            <width>0</width>
@@ -151,7 +151,7 @@ p, li { white-space: pre-wrap; }
            <number>4</number>
           </property>
           <item>
-           <widget class="QRadioButton" name="useSourceDirectoryRadio">
+           <widget class="QRadioButton" name="use_source_radio">
             <property name="toolTip">
              <string>Use the source folder for output</string>
             </property>
@@ -169,7 +169,7 @@ p, li { white-space: pre-wrap; }
              <number>4</number>
             </property>
             <item>
-             <widget class="QRadioButton" name="useSpecificDirectoryRadio">
+             <widget class="QRadioButton" name="use_specific_radio">
               <property name="toolTip">
                <string>Specify a specific output folder</string>
               </property>
@@ -179,14 +179,14 @@ p, li { white-space: pre-wrap; }
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="specificDirectoryEdit">
+             <widget class="QLineEdit" name="directory_edit">
               <property name="enabled">
                <bool>false</bool>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="specificDirectoryButton">
+             <widget class="QPushButton" name="directory_button">
               <property name="enabled">
                <bool>false</bool>
               </property>
@@ -242,7 +242,7 @@ p, li { white-space: pre-wrap; }
           <item row="0" column="0" colspan="2">
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QRadioButton" name="moveRadio">
+             <widget class="QRadioButton" name="is_move_radio">
               <property name="text">
                <string>Move</string>
               </property>
@@ -252,14 +252,14 @@ p, li { white-space: pre-wrap; }
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="copyRadio">
+             <widget class="QRadioButton" name="is_copy_radio">
               <property name="text">
                <string>Copy</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="doNotOverwriteCheckBox">
+             <widget class="QCheckBox" name="is_no_overwrite_check_box">
               <property name="toolTip">
                <string>Prevent overwriting if a file exists in the output location</string>
               </property>
@@ -284,7 +284,7 @@ p, li { white-space: pre-wrap; }
            </spacer>
           </item>
           <item row="1" column="0">
-           <widget class="QCheckBox" name="subtitleCheckBox">
+           <widget class="QCheckBox" name="subtitle_check_box">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -300,7 +300,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item row="1" column="1" colspan="2">
-           <widget class="QLineEdit" name="subtitleExtensionsEdit">
+           <widget class="QLineEdit" name="subtitle_edit">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -318,7 +318,7 @@ p, li { white-space: pre-wrap; }
           <number>4</number>
          </property>
          <item>
-          <widget class="QPushButton" name="renameButton">
+          <widget class="QPushButton" name="rename_button">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -334,7 +334,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="stopButton">
+          <widget class="QPushButton" name="stop_button">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -350,7 +350,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QProgressBar" name="progressBar">
+          <widget class="QProgressBar" name="progress_bar">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>1</horstretch>
@@ -400,7 +400,7 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
-     <widget class="QGroupBox" name="helpGroupBox">
+     <widget class="QGroupBox" name="help_group_box">
       <property name="maximumSize">
        <size>
         <width>175</width>
@@ -427,7 +427,7 @@ p, li { white-space: pre-wrap; }
         <number>4</number>
        </property>
        <item>
-        <widget class="QTextEdit" name="helpEdit">
+        <widget class="QTextEdit" name="help_edit">
          <property name="minimumSize">
           <size>
            <width>80</width>
