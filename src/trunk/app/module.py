@@ -129,7 +129,7 @@ class RenamerModule(QtCore.QObject):
       widget.start_exploring()
       
     self._worker_thread = get_search_thread(self.mode, self._manager, self.input_widget.get_config()) 
-    self._worker_thread.progress_signal.connect(self.input_widget.progress_bar.setValue)
+    self._worker_thread.progress_signal.connect(self.input_widget.progress_widget.set_progress)
     self._worker_thread.new_data_signal.connect(self.work_bench.add_item)
     self._worker_thread.log_signal.connect(self.log_signal)
     self._worker_thread.finished.connect(self._on_thread_finished)
@@ -173,5 +173,5 @@ class RenamerModule(QtCore.QObject):
     self._stop_thread()
    
   def _stop_search(self):
-    self.input_widget.stop_button.setEnabled(False)
+    self.input_widget.progress_widget.stop()
     self._stop_thread()     
