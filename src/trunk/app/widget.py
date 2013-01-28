@@ -8,12 +8,13 @@
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from PyQt4 import uic
+import functools
 
 from common import config
 from common import interfaces
 from common import file_helper
 from common import utils
-from common import dont_show
+from common import widget as base_widget
 
 import app
 from app import config_manager
@@ -56,9 +57,9 @@ class MainWindow(QtGui.QMainWindow):
     self._auto_start = False
     
     #menu actions
-    self.action_movie_mode.triggered.connect(self._set_movie_mode)
+    self.action_movie_mode.triggered.connect(functools.partial(self._set_mode, mode=interfaces.MOVIE_MODE))
     self.action_movie_mode.setIcon(QtGui.QIcon("img/movie.png"))
-    self.action_tv_mode.triggered.connect(self._set_tv_mode)
+    self.action_tv_mode.triggered.connect(functools.partial(self._set_mode, mode=interfaces.TV_MODE))
     self.action_tv_mode.setIcon(QtGui.QIcon("img/tv.png"))                                     
     self.action_exit.triggered.connect(self.close)
     self.action_about.triggered.connect(self._show_about)
@@ -144,12 +145,6 @@ class MainWindow(QtGui.QMainWindow):
     self.addDockWidget(default_area, dock)
     return dock
   
-  def _set_movie_mode(self):
-    self._set_mode(interfaces.MOVIE_MODE)
-  
-  def _set_tv_mode(self):
-    self._set_mode(interfaces.TV_MODE)
-
   def _set_mode(self, mode):
     assert(mode in interfaces.VALID_MODES)
     for _mode, action in self._mode_to_action.items():
@@ -181,7 +176,7 @@ class MainWindow(QtGui.QMainWindow):
     data.state = utils.to_string(self.saveState().toBase64())
     data.mode = self._mode
     data.auto_start = self._auto_start
-    data.dont_shows = dont_show.DontShowManager.get_config()
+    data.dont_shows = base_widget.DontShowManager.get_config()
     self._config_manager.set_data("mw", data)
 
     for module in self._mode_to_module.values():
@@ -213,7 +208,7 @@ class MainWindow(QtGui.QMainWindow):
       
       self.restoreGeometry(QtCore.QByteArray.fromBase64(data.geo))
       self.restoreState(QtCore.QByteArray.fromBase64(data.state))
-      dont_show.DontShowManager.set_config(data.dont_shows)
+      base_widget.DontShowManager.set_config(data.dont_shows)
       if not data.mode in interfaces.VALID_MODES:
         data.mode = interfaces.TV_MODE
       self._set_mode(data.mode)
