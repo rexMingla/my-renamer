@@ -5,7 +5,6 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Generates an output filename based on TvInputValues attributes
 # --------------------------------------------------------------------------------------------------------------------
-import abc
 import re
 
 from common import utils
@@ -24,8 +23,6 @@ def _wrap_replace_str(val):
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseNameFormatter(object):
-  __metaclass__ = abc.ABCMeta
-  
   DEFAULT_FORMAT_STR = ""
   
   def __init__(self):
@@ -49,9 +46,8 @@ class BaseNameFormatter(object):
       ret = ret.replace(key, str(value))
     return "".join([ret, ext])
   
-  @abc.abstractmethod
   def get_values(self, info):
-    pass
+    raise NotImplementedError("BaseNameFormatter.get_values not implemented")
     
 # --------------------------------------------------------------------------------------------------------------------
 class TvNameFormatter(BaseNameFormatter):

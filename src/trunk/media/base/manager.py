@@ -18,6 +18,9 @@ class BaseManager(object):
     self._cache = {}
     self._holder = holder
     
+  def get_holder(self):
+    return self._holder
+    
   @staticmethod
   def get_folders(root_folder, is_recursive):
     folders = []
@@ -35,6 +38,7 @@ class BaseManager(object):
     return self._cache
   
   def get_item(self, search_params, use_cache=True):
+    #TODO: make get_info
     """ retrieves season from cache or holder's InfoClients if not present """
     item = None
     

@@ -5,11 +5,11 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
+import copy
+
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
-
-import copy
 
 from common import config
 from common import file_helper
@@ -32,12 +32,14 @@ class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
     super(TvWorkBenchWidget, self).__init__(interfaces.TV_MODE, manager, parent)
     self._set_model(tv_model.TvModel(self.tv_view))
 
-    self._changeEpisodeWidget = EditEpisodeWidget(self)
-    self._changeEpisodeWidget.accepted.connect(self._onChangeEpisodeFinished)
+    self._change_episode_widget = EditEpisodeWidget(self)
+    self._change_episode_widget.accepted.connect(self._onChangeEpisodeFinished)
+    self._change_episode_widget.setVisible(False)
     
-    self._changeSeasonWidget = EditSeasonWidget(self)
-    self._changeSeasonWidget.accepted.connect(self._onChangeSeasonFinished)
-    self._changeSeasonWidget.show_edit_sources_signal.connect(self.show_edit_sources_signal.emit)
+    self._change_season_widget = EditSeasonItemWidget(manager.get_holder(), self)
+    self._change_season_widget.accepted.connect(self._onChangeSeasonFinished)
+    self._change_season_widget.show_edit_sources_signal.connect(self.show_edit_sources_signal.emit)
+    self._change_season_widget.setVisible(False)
         
     self.tv_view.setModel(self._model)
     self.tv_view.header().setResizeMode(tv_model.Columns.COL_NEW_NAME, QtGui.QHeaderView.Interactive)
@@ -91,162 +93,63 @@ class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
       self._current_index  = self._current_index.parent()
       seasonData, isMoveItemCandidate = self._model.data(self._current_index, tv_model.RAW_DATA_ROLE)
     utils.verify(not isMoveItemCandidate, "Must be a movie to have gotten here!")
-    self._changeSeasonWidget.set_data(seasonData)
-    self._changeSeasonWidget.show()
+    self._change_season_widget.set_item(seasonData)
+    self._change_season_widget.show()
   
   def _edit_episode(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._current_index, tv_model.RAW_DATA_ROLE)
     if isMoveItemCandidate and moveItemCandidateData.can_edit:
       seasonData, isMoveItemCandidate = self._model.data(self._current_index.parent(), tv_model.RAW_DATA_ROLE)
       utils.verify(not isMoveItemCandidate, "Must be move item")
-      self._changeEpisodeWidget.set_data(seasonData, moveItemCandidateData)
-      self._changeEpisodeWidget.show()
+      self._change_episode_widget.set_item(seasonData, moveItemCandidateData)
+      self._change_episode_widget.show()
       
   def _onChangeEpisodeFinished(self):
-    self._model.set_data(self._current_index, self._changeEpisodeWidget.episodeNumber(), tv_model.RAW_DATA_ROLE)
+    self._model.set_item(self._current_index, self._change_episode_widget.episodeNumber(), tv_model.RAW_DATA_ROLE)
     self.tv_view.expand(self._current_index.parent())
     self._on_selection_changed()
     
   def _onChangeSeasonFinished(self):
-    data = self._changeSeasonWidget.data()
+    item = self._change_season_widget.get_item()
     #utils.verify_type(data, tv_types.Season)
-    self._manager.set_item(data.get_info())
-    self._model.setData(self._current_index, data, tv_model.RAW_DATA_ROLE)
+    self._manager.set_item(item.get_info())
+    self._model.setData(self._current_index, item, tv_model.RAW_DATA_ROLE)
     self.tv_view.expand(self._current_index)
 
 # --------------------------------------------------------------------------------------------------------------------
-class GetSeasonThread(thread.WorkerThread):
-  def __init__(self, search_params, store, is_lucky):
-    super(GetSeasonThread, self).__init__("tv search")
-    self._search_params = search_params
-    self._store = store
-    self._is_lucky = is_lucky
-
-  def run(self):
-    for info in self._store.get_all_info(self._search_params):
-      self._on_data(info)
-      if self._user_stopped or (info and self._is_lucky):
-        break
+class SearchSeasonParamsWidget(base_widget.BaseSearchParamsWidget):
+  def __init__(self, parent=None):
+    super(SearchSeasonParamsWidget, self).__init__(parent)
+    uic.loadUi("ui/ui_SearchSeason.ui", self)    
+    self._set_edit_widgets([self.season_spin_box, self.season_edit])
+    
+  def set_item(self, item):
+    item = item or tv_types.Season("", tv_types.SeasonInfo(), tv_types.SourceFiles())
+    self.folder_edit.setText(file_helper.FileHelper.basename(item.input_folder))    
+    self.folder_edit.setToolTip(item.input_folder)
+    self.season_spin_box.setValue(item.get_info().season_num)  
+    self.season_edit.setText(item.get_info().show_name)
+    self.season_edit.selectAll()    
+  
+  def get_search_params(self):
+    return tv_types.TvSearchParams(utils.to_string(self.season_edit.text()), self.season_spin_box.value())
     
 # --------------------------------------------------------------------------------------------------------------------
-class EditSeasonWidget(QtGui.QDialog):
-  show_edit_sources_signal = QtCore.pyqtSignal()
+class EditSeasonInfoWidget(base_widget.BaseEditInfoWidget):
   """ The widget allows the user to search and modify tv info. """
-  def __init__(self, parent=None):
-    super(EditSeasonWidget, self).__init__(parent)
-    uic.loadUi("ui/ui_ChangeSeason.ui", self)
+  def __init__(self, search_widget, parent=None):
+    super(EditSeasonInfoWidget, self).__init__(parent)
+    uic.loadUi("ui/ui_EditSeason.ui", self)
     self.setWindowModality(True)
-    self._worker_thread = None
-    self._data = tv_types.Season("", tv_types.SeasonInfo(), tv_types.SourceFiles())
     
-    self.search_button.clicked.connect(self._search)
-    self.search_button.setIcon(QtGui.QIcon("img/search.png"))
-    self.stop_button.clicked.connect(self._stop_thread)
-    self.stop_button.setIcon(QtGui.QIcon("img/stop.png"))
     self.add_button.clicked.connect(self._add)
     self.remove_button.clicked.connect(self._remove)
     self.up_button.clicked.connect(self._move_up)
     self.down_button.clicked.connect(self._move_down)
     self.episode_table.cellClicked.connect(self._on_selection_changed)
-    self.index_spin_box.valueChanged.connect(self._updateColumnHeaders)
-    self.hide_label.linkActivated.connect(self._hide_results)    
-    self.show_label.linkActivated.connect(self._show_results)    
-    self.show_source_button.clicked.connect(self.show_edit_sources_signal.emit)    
-
-    self.season_edit.installEventFilter(self)
-    self.season_spin_box.installEventFilter(self)
-
-    self._search_results = base_widget.SearchResultsWidget(self)
-    self._search_results.itemSelectedSignal.connect(self._setSeasonInfo)
-    layout = QtGui.QVBoxLayout()
-    layout.setContentsMargins(0, 0, 0, 0)
-    self.placeholder_widget.setLayout(layout)
-    layout.addWidget(self._search_results)
-    
-    self._is_lucky = False
-    self._found_data = True    
-    self._on_thread_finished()
-    self._hide_results()    
-    self.show_label.setVisible(False)
-    
-  def __del__(self):
-    self._stop_thread()
-    
-  def showEvent(self, e):
-    self._found_data = True    
-    self._on_thread_finished()
-    self._hide_results()    
-    self.show_label.setVisible(False)    
-    super(EditSeasonWidget, self).showEvent(e)
-    
-  def eventFilter(self, o, e):
-    if o in (self.season_spin_box, self.season_edit) and \
-      e.type() == QtCore.QEvent.KeyPress and e.key() == QtCore.Qt.Key_Return:
-      e.ignore()
-      self._search()
-      return False
-    return super(EditSeasonWidget, self).eventFilter(o, e)  
-    
-  def _search(self):
-    if self._worker_thread and self._worker_thread.isRunning():
-      return
-    self._is_lucky = self.is_lucky_check_box.isChecked()
-    self._found_data = False
-
-    self.search_button.setVisible(False)
-    self.stop_button.setEnabled(True)
-    self.stop_button.setVisible(True)
-    self.episode_group_box.setEnabled(False)
-    self.buttonBox.setEnabled(False)
-    self.placeholder_widget.setEnabled(False)    
-    self.progress_bar.setVisible(True)
-    
-    self._worker_thread = GetSeasonThread(tv_types.TvSearchParams(utils.to_string(self.season_edit.text()), 
-                                                                     self.season_spin_box.value()),
-                                         tv_client.get_store_helper(),
-                                         self._is_lucky)
-    self._worker_thread.new_data_signal.connect(self._onDataFound)
-    self._worker_thread.finished.connect(self._on_thread_finished)
-    self._worker_thread.terminated.connect(self._on_thread_finished)    
-    self._worker_thread.start()  
-    
-  def _stop_thread(self):
-    self.stop_button.setEnabled(False)
-    if self._worker_thread:
-      self._worker_thread.join()
-    
-  def _on_thread_finished(self):    
-    self.stop_button.setVisible(False)
-    self.search_button.setVisible(True)
-    self.search_button.setEnabled(True)
-    self.episode_group_box.setEnabled(True)
-    self.buttonBox.setEnabled(True)
-    self.placeholder_widget.setEnabled(True)
-    self.progress_bar.setVisible(False)
-
-    self._on_selection_changed()
-    if not self._found_data:
-      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")    
-    
-  def _onDataFound(self, data):
-    if not data:
-      return
-    
-    if self._is_lucky:
-      self._setSeasonInfo(data.info)
-    else:
-      if not self._found_data:
-        self._search_results.clear()
-        self._search_results.add_item(base_client.ResultHolder(self.data().info, "current"))
-      self._search_results.add_item(data)
-      self._show_results()
-    self._found_data = True
-    
-  def _on_selection_changed(self):
-    currentIndex = self.episode_table.currentItem().row() if self.episode_table.currentItem() else -1
-    self.remove_button.setEnabled(currentIndex != -1)
-    self.up_button.setEnabled(currentIndex >= 1)
-    self.down_button.setEnabled((currentIndex + 1) < self.episode_table.rowCount())
+    self.index_spin_box.valueChanged.connect(self._update_column_headers)
+    self._search_widget = search_widget
+    self._item = None
     
   def _move_down(self):
     currentItem = self.episode_table.currentItem()
@@ -277,33 +180,28 @@ class EditSeasonWidget(QtGui.QDialog):
     self.episode_table.insertRow(row)
     self.episode_table.setItem(row, _TITLE_COLUMN, item)
     self._on_selection_changed()
-    self._updateColumnHeaders()
+    self._update_column_headers()
   
   def _remove(self):
     currentItem = self.episode_table.currentItem()
     utils.verify(currentItem, "Must have current item to get here")
     self.episode_table.removeRow(currentItem.row())
     self._on_selection_changed()
-    self._updateColumnHeaders()
+    self._update_column_headers()
       
-  def _updateColumnHeaders(self):
+  def _update_column_headers(self):
     startIndex = self.index_spin_box.value()
     rowCount = self.episode_table.rowCount()
     self.episode_table.setVerticalHeaderLabels([str(i) for i in range(startIndex, rowCount + startIndex)])
   
-  def set_data(self, s):
+  def _set_item(self, item):
     """ Fill the dialog with the data prior to being shown """
     #utils.verify_type(s, tv_types.Season)
-    self._data = s
-    self.folder_edit.setText(file_helper.FileHelper.basename(s.input_folder))    
-    self.folder_edit.setToolTip(s.input_folder)    
-    self._setSeasonInfo(s.info)
-    self.season_edit.selectAll()    
+    self._item = item or tv_types.Season("", tv_types.SeasonInfo(), tv_types.SourceFiles())
+    self.set_info(self._item.get_info())
     
-  def _setSeasonInfo(self, info):
+  def set_info(self, info):
     #utils.verify_type(info, tv_types.SeasonInfo)
-    self.season_edit.setText(info.show_name)
-    self.season_spin_box.setValue(info.season_num)    
     self.episode_table.clearContents()
     
     minValue = min([ep.ep_num for ep in info.episodes] or [0])
@@ -319,25 +217,29 @@ class EditSeasonWidget(QtGui.QDialog):
       self.episode_table.setItem(i, _TITLE_COLUMN, item)
     self._on_selection_changed()
     
-  def data(self):   
-    info = tv_types.SeasonInfo(utils.to_string(self.season_edit.text()), self.season_spin_box.value()) 
+  def get_item(self):
+    search_params = self._search_widget.get_search_params()
+    info = tv_types.SeasonInfo(search_params.show_name, search_params.season_num) 
     startIndex = self.index_spin_box.value()
     for i in range(self.episode_table.rowCount()):
       ep_name = self.episode_table.item(i, _TITLE_COLUMN)
       info.episodes.append(tv_types.EpisodeInfo(i + startIndex, utils.to_string(ep_name.text())))
-    self._data.update_season_info(info)
-    return copy.copy(self._data)
-  
-  def _show_results(self):
-    self.placeholder_widget.setVisible(True)
-    self.hide_label.setVisible(True)
-    self.show_label.setVisible(False)
-  
-  def _hide_results(self):
-    self.placeholder_widget.setVisible(False)
-    self.hide_label.setVisible(False)
-    self.show_label.setVisible(True)
+    self._item.info = info
+    return copy.copy(self._item)
 
+  def _on_selection_changed(self):
+    currentIndex = self.episode_table.currentItem().row() if self.episode_table.currentItem() else -1
+    self.remove_button.setEnabled(currentIndex != -1)
+    self.up_button.setEnabled(currentIndex >= 1)
+    self.down_button.setEnabled((currentIndex + 1) < self.episode_table.rowCount())
+
+# --------------------------------------------------------------------------------------------------------------------
+class EditSeasonItemWidget(base_widget.EditItemWidget):
+  def __init__(self, holder, parent=None):
+    search_params = SearchSeasonParamsWidget(parent)
+    super(EditSeasonItemWidget, self).__init__(
+        interfaces.TV_MODE, holder, search_params, EditSeasonInfoWidget(search_params, parent), parent)
+  
 # --------------------------------------------------------------------------------------------------------------------
 class EditEpisodeWidget(QtGui.QDialog):
   """ Allows the user to assign an episode to a given file """
@@ -353,7 +255,7 @@ class EditEpisodeWidget(QtGui.QDialog):
     self.setMaximumHeight(self.sizeHint().height())
     self.setMinimumHeight(self.sizeHint().height())
   
-  def set_data(self, ssn, ep):
+  def set_item(self, ssn, ep):
     """ Fill the dialog with the data prior to being shown """
     #utils.verify_type(ssn, tv_types.Season)
     #utils.verify_type(ep, tv_types.EpisodeRenameItem)

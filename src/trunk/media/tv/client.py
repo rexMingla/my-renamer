@@ -32,7 +32,7 @@ class TvInfoStoreHolder(base_client.BaseInfoStoreHolder):
 _STORE = None
 
 # --------------------------------------------------------------------------------------------------------------------
-def get_store_helper():
+def get_store_holder():
   global _STORE
   if not _STORE:
     _STORE = TvInfoStoreHolder()
@@ -93,4 +93,5 @@ class TvRageClient(BaseTvInfoClient):
                                                                             search_params.season_num, type(ex), ex), 
                        title="{} lookup".format(self.display_name))
     return ret
-  
+
+

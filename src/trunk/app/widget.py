@@ -83,7 +83,7 @@ class MainWindow(QtGui.QMainWindow):
     
     def get_text(mode):
       info = []
-      holder = factory.Factory.get_store_helper(mode)
+      holder = factory.Factory.get_store_holder(mode)
       for store in holder.stores:
         info.append("<li>{} (interface to {})</li>".format(href(store.url, store.display_name), href(store.source_name)))
       info.append("</ul>")

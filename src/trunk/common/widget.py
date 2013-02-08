@@ -21,6 +21,8 @@ def add_widget_to_container(parent, widget, spacing=4):
 class ProgressWidget(QtGui.QWidget):
   start_signal = QtCore.pyqtSignal()
   stop_signal = QtCore.pyqtSignal()
+  start_signal = QtCore.pyqtSignal()
+  stop_signal = QtCore.pyqtSignal()
   
   def __init__(self, start_label="Start", stop_label="Stop", widget=None, parent=None):
     super(ProgressWidget, self).__init__(parent)
@@ -39,12 +41,10 @@ class ProgressWidget(QtGui.QWidget):
     self.progress_bar = QtGui.QProgressBar(self)
     self.progress_bar.setMinimumHeight(10)
     self.progress_bar.setMaximumHeight(10)
-    sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+    sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
     sizePolicy.setHorizontalStretch(1)
     sizePolicy.setVerticalStretch(0)
     self.progress_bar.setSizePolicy(sizePolicy)
-    
-    spacer = QtGui.QSpacerItem(2, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
     
     layout = QtGui.QHBoxLayout(self)
     layout.setSpacing(4)
@@ -54,25 +54,33 @@ class ProgressWidget(QtGui.QWidget):
     if widget:
       layout.addWidget(widget)
     layout.addWidget(self.progress_bar)
-    layout.addSpacerItem(spacer)
-        
+    layout.addSpacerItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed))
+    
+    self.is_running = False    
     self.set_progress_range(0, 100)
     self.set_progress(0)
-    self.stop()
+    self.stop(force_update=True)
     
   def set_progress_range(self, min_, max_):
     self.progress_bar.setRange(min_, max_)
+    self.progress_bar.setTextVisible(min_ != max_)
 
   def set_progress(self, value):
     self.progress_bar.setValue(value)
     
-  def start(self):
+  def start(self, force_update=False):
+    if not force_update and self.is_running:
+      return
+    self.is_running = True
     self.progress_bar.setVisible(True)
     self.start_button.setVisible(False)
     self.stop_button.setVisible(bool(self.stop_button.text()))
     self.start_signal.emit()
   
-  def stop(self):
+  def stop(self, force_update=False):
+    if not force_update and not self.is_running:
+      return
+    self.is_running = False
     self.progress_bar.setVisible(False)    
     self.start_button.setVisible(bool(self.stop_button.text()))
     self.stop_button.setVisible(False)

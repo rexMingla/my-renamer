@@ -27,12 +27,12 @@ class Factory:
     
   @staticmethod
   def get_edit_source_widget(mode, parent=None):
-    store = Factory.get_store_helper(mode)
+    store = Factory.get_store_holder(mode)
     return base_widget.EditSourcesWidget(mode, store, parent)
   
   @staticmethod
   def get_input_widget(mode, parent=None):
-    store = Factory.get_store_helper(mode)
+    store = Factory.get_store_holder(mode)
     return base_widget.InputWidget(mode, store, parent)
     
   @staticmethod
@@ -69,11 +69,11 @@ class Factory:
       return renamer.RenameItemGenerator(formatting.TvNameFormatter())
     
   @staticmethod
-  def get_store_helper(mode):
+  def get_store_holder(mode):
     if mode == interfaces.MOVIE_MODE:
-      return movie_client.get_store_helper()
+      return movie_client.get_store_holder()
     else:
-      return tv_client.get_store_helper()
+      return tv_client.get_store_holder()
     
   @staticmethod
   def get_manager(mode):
@@ -82,3 +82,23 @@ class Factory:
     else:
       return tv_manager.get_manager()
     
+  @staticmethod
+  def get_edit_widget(mode):
+    if mode == interfaces.MOVIE_MODE:
+      return movie_widget.EditMovieWidget()
+    else:
+      return tv_widget.EditSeasonWidget()
+    
+  @staticmethod
+  def get_search_params_widget(mode):
+    if mode == interfaces.MOVIE_MODE:
+      return movie_widget.SearchMovieWidget()
+    else:
+      return tv_widget.SearchMovieParamsWidget()
+    
+  @staticmethod
+  def get_search_widget(mode, parent=None):
+    if mode == interfaces.MOVIE_MODE:
+      return movie_widget.EditMovieItemWidget(Factory.get_store_holder(mode), parent)
+    else:
+      return tv_widget.EditSeasonItemWidget(Factory.get_store_holder(mode), parent)

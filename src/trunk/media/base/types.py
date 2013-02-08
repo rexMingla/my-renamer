@@ -5,15 +5,11 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module that connects to movie info sources
 # --------------------------------------------------------------------------------------------------------------------
-import abc
-
 from common import file_helper
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItem(object):
   """ stores filename and new metadata used to rename file """
-  __metaclass__ = abc.ABCMeta
-  
   def __init__(self, filename):
     super(BaseRenameItem, self).__init__()
     self.filename = filename
@@ -21,18 +17,15 @@ class BaseRenameItem(object):
     self.ext = file_helper.FileHelper.extension(filename)
     self.output_folder = file_helper.FileHelper.dirname(self.filename)
   
-  @abc.abstractmethod  
   def get_info(self):
-    pass
-
+    raise NotImplementedError("BaseRenameItem.get_info not implemented")
+  
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfo(object):
   """ objects retrieved from InfoClients """
-  __metaclass__ = abc.ABCMeta
   
-  @abc.abstractmethod
   def to_search_params(self):
-    pass
+    raise NotImplementedError("BaseInfo.to_search_params not implemented")
   
   def has_data(self):
     return True
@@ -40,14 +33,9 @@ class BaseInfo(object):
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClientSearchParams(object):
   """ objects sent to the InfoClients so to retrieve BaseInfo objects """
-  
-  __metaclass__ = abc.ABCMeta
-    
-  @abc.abstractmethod
   def get_key(self):
-    pass
+    raise NotImplementedError("BaseInfoClientSearchParams.get_key not implemented")
   
-  @abc.abstractmethod
   def to_info(self):
-    pass
+    raise NotImplementedError("BaseInfoClientSearchParams.to_info not implemented")
     
