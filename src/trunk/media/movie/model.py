@@ -63,7 +63,7 @@ class MovieItem(object):
     return self.movie.file_exists() and self.movie.info == other.movie.info
       
 # --------------------------------------------------------------------------------------------------------------------
-class MovieModel(QtCore.QAbstractTableModel):
+class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
   """ 
   Represents 0 or more movies
   """
@@ -77,7 +77,8 @@ class MovieModel(QtCore.QAbstractTableModel):
                  base_model.BaseWorkBenchModel.ACTION_MOVIE)  
   
   def __init__(self, parent=None):
-    super(MovieModel, self).__init__(parent)
+    super(QtCore.QAbstractTableModel, self).__init__(parent)
+    super(base_model.BaseWorkBenchModel, self).__init__()
     self._movies = []
     self._bulk_updating = False
     self._require_year = True
@@ -352,5 +353,3 @@ class MovieModel(QtCore.QAbstractTableModel):
       if item.duplicates:
         self._update_item_status(item)
     self.endRemoveRows()
-
-base_model.BaseWorkBenchModel.register(MovieModel)

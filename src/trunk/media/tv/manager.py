@@ -68,7 +68,7 @@ class TvManager(base_manager.BaseManager):
   helper = TvHelper  
   
   def __init__(self):
-    super(TvManager, self).__init__(tv_client.get_store_helper())
+    super(TvManager, self).__init__(tv_client.get_store_holder())
 
   def get_season_for_folder(self, folder, extension_filter, min_file_size_bytes):
     #utils.verify_type(min_file_size_bytes, int)    

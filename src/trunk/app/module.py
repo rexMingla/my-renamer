@@ -104,7 +104,7 @@ class RenamerModule(QtCore.QObject):
     self._widgets = (self.input_widget, self.output_widget, self.work_bench)
     
     self.work_bench.workbench_changed_signal.connect(self.output_widget.rename_button.setEnabled)
-    self.output_widget.renameSignal.connect(self._rename)
+    self.output_widget.rename_signal.connect(self._rename)
     self.output_widget.stop_signal.connect(self._stop_rename)
     self.work_bench.renameItemChangedSignal.connect(self.output_widget.on_rename_item_changed)    
     self.work_bench.show_edit_sources_signal.connect(self.edit_sources_widget.show)

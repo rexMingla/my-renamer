@@ -5,8 +5,6 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: App level interfaces
 # --------------------------------------------------------------------------------------------------------------------
-import abc
-
 from PyQt4 import QtGui
 
 MOVIE_MODE = "movie"
@@ -27,39 +25,29 @@ class WorkBenchActions:
 # --------------------------------------------------------------------------------------------------------------------
 class ActionInterface(object):
   """ all the input, output and work bench widgets must implement these interfaces """
-  __metaclass__ = abc.ABCMeta
-  
   def __init__(self):
     super(ActionInterface, self).__init__()
   
-  @abc.abstractmethod
   def start_exploring(self):
-    pass
+    raise NotImplementedError("ActionInterface.start_exploring not implemented")
   
-  @abc.abstractmethod
   def stop_exploring(self):
-    pass
+    raise NotImplementedError("ActionInterface.stop_exploring not implemented")
   
-  @abc.abstractmethod
   def start_actioning(self):
-    pass
+    raise NotImplementedError("ActionInterface.start_actioning not implemented")
   
-  @abc.abstractmethod
   def stop_actioning(self):
-    pass
+    raise NotImplementedError("ActionInterface.stop_actioning not implemented")
   
-  @abc.abstractmethod
   def get_config(self):
-    pass
+    raise NotImplementedError("ActionInterface.get_config not implemented")
   
-  @abc.abstractmethod
   def set_config(self, data):
-    pass
+    raise NotImplementedError("ActionInterface.set_config not implemented")
   
 # --------------------------------------------------------------------------------------------------------------------
 class ActionWidgetInterface(QtGui.QWidget):
   def __init__(self, config_name, parent=None):
     super(ActionWidgetInterface, self).__init__(parent)
     self.config_name = config_name
-
-ActionInterface.register(ActionWidgetInterface)

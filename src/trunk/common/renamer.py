@@ -5,23 +5,18 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Class responsible for the moving/copying of files
 # --------------------------------------------------------------------------------------------------------------------
-import abc
-
 from common import file_helper
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItemGenerator(object):
   """ converts an item a BaseRenamer object """
-  __metaclass__ = abc.ABCMeta
-  
   def __init__(self, config=None):
     super(BaseRenameItemGenerator, self).__init__()
     self.config = config or {}
     
-  @abc.abstractmethod
   def get_rename_item(self, item):
-    pass
+    raise NotImplementedError("BaseRenameItemGenerator.get_rename_item not implemented")
 
 # --------------------------------------------------------------------------------------------------------------------
 class RenameItemGenerator(BaseRenameItemGenerator):
@@ -43,13 +38,11 @@ class RenameItemGenerator(BaseRenameItemGenerator):
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenamer(object):
   """ performs rename on file """
-  __metaclass__ = abc.ABCMeta
   def __init__(self):
     super(BaseRenamer, self).__init__()
     
-  @abc.abstractmethod
   def perform_action(self, progress_cb=None):
-    pass
+    raise NotImplementedError("BaseRenamer.perform_action not implemented")
     
 # --------------------------------------------------------------------------------------------------------------------
 class FileRenamer(BaseRenamer):

@@ -5,7 +5,7 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module that connects to movie info sources
 # --------------------------------------------------------------------------------------------------------------------
-import abc
+from common import utils
 
 class BaseInfoStoreHolder(object):
   """ container for all of the InfoClients """
@@ -24,7 +24,7 @@ class BaseInfoStoreHolder(object):
   def get_store_index(self, name):
     return next( (i for i, store in enumerate(self.stores) if name == store.pretty_name() ), -1)
   
-  def get_store_helper(self, name):
+  def get_store_holder(self, name):
     return next( (store for store in self.stores if name == store.pretty_name() ), None)
   
   def get_all_active_names(self):
@@ -66,8 +66,6 @@ class ResultHolder(object):
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClient(object):
   """ class to retrieve information from an online (or other) resource """
-  __metaclass__ = abc.ABCMeta
-  
   def __init__(self, display_name, source_name, url, has_lib, requires_key):
     super(BaseInfoClient, self).__init__()
     self.display_name = display_name #lib used
@@ -92,12 +90,18 @@ class BaseInfoClient(object):
     return self._get_info(search_params) if self.has_lib else None
 
   def get_all_info(self, search_params):
-    return self._get_all_info(search_params) if self.has_lib else None    
+    ret = []
+    try:
+      ret = self._get_all_info(search_params) if self.has_lib else None
+    except Exception as ex:
+      utils.log_warning("uncaught exception in lib. lib={} params={} ex={}".format(self.display_name, 
+          search_params.get_key(), ex))
+    return ret
 
   def _get_info(self, search_params):
     infos = self._get_all_info(search_params)
     return infos[0] if infos else None
   
-  @abc.abstractmethod
   def _get_all_info(self, search_params):
-    pass
+    raise NotImplementedError("BaseInfoClient._get_all_info not implemented")
+  
