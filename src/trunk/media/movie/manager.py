@@ -19,23 +19,23 @@ from media.movie import client as movie_client
 _PART_MATCH = re.compile(r".*(?:disc|cd)[\s0]*([1-9a-e]).*$", re.IGNORECASE)
 _MOVIE_YEAR_MATCH = re.compile(r"(?P<title>.+?)(?P<year>\d{4}).*$")
 _MOVIE_NO_YEAR_MATCH = re.compile(r"(?P<title>.+?)$")
-    
+
 # --------------------------------------------------------------------------------------------------------------------
 class MovieHelper:
   @staticmethod
-  def get_files(folder, ext_filter, is_recursive, min_file_size_bytes):
+  def getFiles(folder, ext_filter, is_recursive, min_file_size_bytes):
     files = []
     for dir_name, _, filenames in os.walk(folder):
-      for basename in ext_filter.filter_files(sorted(filenames)):
-        name = file_helper.FileHelper.join_path(dir_name, basename)
-        if file_helper.FileHelper.get_file_size(name) > min_file_size_bytes:
+      for basename in ext_filter.filterFiles(sorted(filenames)):
+        name = file_helper.FileHelper.joinPath(dir_name, basename)
+        if file_helper.FileHelper.getFileSize(name) > min_file_size_bytes:
           files.append(name)
       if not is_recursive:
         break
     return files
-  
+
   @staticmethod
-  def extract_movie_from_file(filename):
+  def extractMovieFromFile(filename):
     basename = file_helper.FileHelper.basename(filename)
     name, ext = os.path.splitext(basename)
     ext = ext.lower()
@@ -54,32 +54,32 @@ class MovieHelper:
       if part_match:
         part = part_match.group(1)
         if part.isalpha():
-          part = utils.to_string(" abcdef".index(part))
+          part = utils.toString(" abcdef".index(part))
         else:
-          part = int(part)  
+          part = int(part)
       if title.find(" ") == -1:
         title = title.replace(".", " ")
       title = re.sub(r"[\(\[\{\s]+$", "", title) #clean end
       title = re.sub(r"^\w+\-", "", title) #strip anywords at the start before a - character
     movie = movie_types.MovieRenameItem(filename, movie_types.MovieInfo(title, year, genres=[], series="", part=part))
-    return movie  
-    
+    return movie
+
 # --------------------------------------------------------------------------------------------------------------------
 class MovieManager(base_manager.BaseManager):
   helper = MovieHelper
-  
+
   def __init__(self):
-    super(MovieManager, self).__init__(movie_client.get_store_holder())
-  
-  def process_file(self, filename):
-    movie = MovieHelper.extract_movie_from_file(filename)
-    if movie.file_exists():
-      movie.info = self.get_item(movie.get_info().to_search_params())
+    super(MovieManager, self).__init__(movie_client.getStoreHolder())
+
+  def processFile(self, filename):
+    movie = MovieHelper.extractMovieFromFile(filename)
+    if movie.fileExists():
+      movie.info = self.getItem(movie.getInfo().toSearchParams())
     return movie
 
-_MANAGER = None  
+_MANAGER = None
 
-def get_manager():
+def getManager():
   global _MANAGER
   if not _MANAGER:
     _MANAGER = MovieManager()

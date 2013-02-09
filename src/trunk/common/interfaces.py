@@ -9,7 +9,7 @@ from PyQt4 import QtGui
 
 MOVIE_MODE = "movie"
 TV_MODE = "tv"
-  
+
 VALID_MODES = (MOVIE_MODE, TV_MODE)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -27,25 +27,25 @@ class ActionInterface(object):
   """ all the input, output and work bench widgets must implement these interfaces """
   def __init__(self):
     super(ActionInterface, self).__init__()
-  
-  def start_exploring(self):
-    raise NotImplementedError("ActionInterface.start_exploring not implemented")
-  
-  def stop_exploring(self):
-    raise NotImplementedError("ActionInterface.stop_exploring not implemented")
-  
-  def start_actioning(self):
-    raise NotImplementedError("ActionInterface.start_actioning not implemented")
-  
-  def stop_actioning(self):
-    raise NotImplementedError("ActionInterface.stop_actioning not implemented")
-  
-  def get_config(self):
-    raise NotImplementedError("ActionInterface.get_config not implemented")
-  
-  def set_config(self, data):
-    raise NotImplementedError("ActionInterface.set_config not implemented")
-  
+
+  def startExploring(self):
+    raise NotImplementedError("ActionInterface.startExploring not implemented")
+
+  def stopExploring(self):
+    raise NotImplementedError("ActionInterface.stopExploring not implemented")
+
+  def startActioning(self):
+    raise NotImplementedError("ActionInterface.startActioning not implemented")
+
+  def stopActioning(self):
+    raise NotImplementedError("ActionInterface.stopActioning not implemented")
+
+  def getConfig(self):
+    raise NotImplementedError("ActionInterface.getConfig not implemented")
+
+  def setConfig(self, data):
+    raise NotImplementedError("ActionInterface.setConfig not implemented")
+
 # --------------------------------------------------------------------------------------------------------------------
 class ActionWidgetInterface(QtGui.QWidget):
   def __init__(self, config_name, parent=None):

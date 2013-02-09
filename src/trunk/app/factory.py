@@ -23,82 +23,82 @@ from media.movie import widget as movie_widget
 
 # --------------------------------------------------------------------------------------------------------------------
 class Factory:
-  """ creates components for the application based on mode value """  
-    
+  """ creates components for the application based on mode value """
+
   @staticmethod
-  def get_edit_source_widget(mode, parent=None):
-    store = Factory.get_store_holder(mode)
+  def getEditSourceWidget(mode, parent=None):
+    store = Factory.getStoreHolder(mode)
     return base_widget.EditSourcesWidget(mode, store, parent)
-  
+
   @staticmethod
-  def get_input_widget(mode, parent=None):
-    store = Factory.get_store_holder(mode)
+  def getInputWidget(mode, parent=None):
+    store = Factory.getStoreHolder(mode)
     return base_widget.InputWidget(mode, store, parent)
-    
+
   @staticmethod
-  def get_output_widget(mode, parent=None):
-    helper = Factory.get_name_format_helper(mode)    
+  def getOutputWidget(mode, parent=None):
+    helper = Factory.getNameFormatHelper(mode)
     return base_widget.OutputWidget(mode, helper, parent)
-    
+
   @staticmethod
-  def get_name_format_helper(mode):
+  def getNameFormatHelper(mode):
     if mode == interfaces.MOVIE_MODE:
       return base_widget.NameFormatHelper(formatting.MovieNameFormatter(),
-                                           movie_types.MovieInfo("Title", "Year", 
+                                           movie_types.MovieInfo("Title", "Year",
                                                                      "Genre", "Part", "Series"),
                                            movie_types.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
-    else:  
+    else:
       return base_widget.NameFormatHelper(formatting.TvNameFormatter(),
-                                           tv_types.AdvancedEpisodeInfo("Show Name", "Series Number", 
+                                           tv_types.AdvancedEpisodeInfo("Show Name", "Series Number",
                                                                       "Episode Number", "Episode Name"),
                                            tv_types.AdvancedEpisodeInfo("Seinfeld", 9, 3, "The Serenity Now"))
-    
+
   @staticmethod
-  def get_work_bench_widget(mode, parent=None):
-    manager = Factory.get_manager(mode)
+  def getWorkBenchWidget(mode, parent=None):
+    manager = Factory.getManager(mode)
     if mode == interfaces.MOVIE_MODE:
-      return movie_widget.MovieWorkBenchWidget(manager, parent) 
+      return movie_widget.MovieWorkBenchWidget(manager, parent)
     else:
       return tv_widget.TvWorkBenchWidget(manager, parent)
-    
+
   @staticmethod
-  def get_rename_item_generator(mode):
+  def getRenameItemGenerator(mode):
     if mode == interfaces.MOVIE_MODE:
       return renamer.RenameItemGenerator(formatting.MovieNameFormatter())
-    else:  
+    else:
       return renamer.RenameItemGenerator(formatting.TvNameFormatter())
-    
+
   @staticmethod
-  def get_store_holder(mode):
+  def getStoreHolder(mode):
     if mode == interfaces.MOVIE_MODE:
-      return movie_client.get_store_holder()
+      return movie_client.getStoreHolder()
     else:
-      return tv_client.get_store_holder()
-    
+      return tv_client.getStoreHolder()
+
   @staticmethod
-  def get_manager(mode):
+  def getManager(mode):
     if mode == interfaces.MOVIE_MODE:
-      return movie_manager.get_manager()
+      return movie_manager.getManager()
     else:
-      return tv_manager.get_manager()
-    
+      return tv_manager.getManager()
+
   @staticmethod
-  def get_edit_widget(mode):
+  def getEditWidget(mode):
     if mode == interfaces.MOVIE_MODE:
       return movie_widget.EditMovieWidget()
     else:
       return tv_widget.EditSeasonWidget()
-    
+
   @staticmethod
-  def get_search_params_widget(mode):
+  def getSearchParamsWidget(mode):
     if mode == interfaces.MOVIE_MODE:
       return movie_widget.SearchMovieWidget()
     else:
       return tv_widget.SearchMovieParamsWidget()
-    
+
   @staticmethod
-  def get_search_widget(mode, parent=None):
+  def getSearchWidget(mode, parent=None):
     if mode == interfaces.MOVIE_MODE:
-      return movie_widget.EditMovieItemWidget(Factory.get_store_holder(mode), parent)
+      return movie_widget.EditMovieItemWidget(Factory.getStoreHolder(mode), parent)
     else:
-      return tv_widget.EditSeasonItemWidget(Factory.get_store_holder(mode), parent)
+      return tv_widget.EditSeasonItemWidget(Factory.getStoreHolder(mode), parent)

@@ -23,25 +23,25 @@ class ConfigManager(object):
 
   def __init__(self):
     self._data = {}
-    
-  def get_data(self, key, default=""):
+
+  def getData(self, key, default=""):
     return self._data.get(key, default)
-  
-  def set_data(self, key, value):
+
+  def setData(self, key, value):
     self._data[key] = value
-    
-  def load_config(self, filename):
+
+  def loadConfig(self, filename):
     self._data = {}
-    if file_helper.FileHelper.file_exists(filename):
+    if file_helper.FileHelper.fileExists(filename):
       file_obj = open(filename, "r")
       try:
         self._data = jsonpickle.decode(file_obj.read())
       except (ValueError, TypeError, IndexError, KeyError) as ex:
-        utils.log_warning("load_config error: {}".format(ex))
+        utils.logWarning("loadConfig error: {}".format(ex))
     if not isinstance(self._data, dict):
       self._data = {}
-  
-  def save_config(self, filename):
+
+  def saveConfig(self, filename):
     tmp_file = "{}.bak".format(filename)
     try:
       #write a temp file and swap on success
@@ -52,7 +52,7 @@ class ConfigManager(object):
         os.remove(filename)
       os.rename(tmp_file, filename)
     except Exception as ex: #json pickle catches Exception so I guess we have to too
-      message_box = QtGui.QMessageBox(QtGui.QMessageBox.Information, 
+      message_box = QtGui.QMessageBox(QtGui.QMessageBox.Information,
                              "An error occured", "Unable to save to settings file:\n{}".format(filename))
       error = ["Error:\n{}\n\n".format(str(ex)), "Exception:\n", "".join(traceback.format_exception(*sys.exc_info()))]
       message_box.setDetailedText("".join(error))

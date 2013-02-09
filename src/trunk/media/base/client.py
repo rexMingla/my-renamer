@@ -9,60 +9,60 @@ from common import utils
 
 class BaseInfoStoreHolder(object):
   """ container for all of the InfoClients """
-  
+
   def __init__(self):
     super(BaseInfoStoreHolder, self).__init__()
     self.stores = []
-  
-  def add_store(self, store):
-    index = self.get_store_index(store)
+
+  def addStore(self, store):
+    index = self.getStoreIndex(store)
     if index == -1:
       self.stores.append(store)
     else:
       self.stores[index] = store
-    
-  def get_store_index(self, name):
-    return next( (i for i, store in enumerate(self.stores) if name == store.pretty_name() ), -1)
-  
-  def get_store_holder(self, name):
-    return next( (store for store in self.stores if name == store.pretty_name() ), None)
-  
-  def get_all_active_names(self):
-    return [store.pretty_name() for store in self.stores if store.is_active()]  
-  
-  def get_config(self):
+
+  def getStoreIndex(self, name):
+    return next( (i for i, store in enumerate(self.stores) if name == store.prettyName() ), -1)
+
+  def getStoreHolder(self, name):
+    return next( (store for store in self.stores if name == store.prettyName() ), None)
+
+  def getAllActiveNames(self):
+    return [store.prettyName() for store in self.stores if store.isActive()]
+
+  def getConfig(self):
     ret = []
     for i, store in enumerate(self.stores):
-      ret.append({"name": store.pretty_name(), "requires_key": store.requires_key, "key": store.key, "index": i})
+      ret.append({"name": store.prettyName(), "requires_key": store.requires_key, "key": store.key, "index": i})
     return ret
-  
-  def set_config(self, data):
+
+  def setConfig(self, data):
     for i, values in enumerate(data):
-      index = self.get_store_index(values["name"])
+      index = self.getStoreIndex(values["name"])
       if index != -1 and index != i:
         store = self.stores.pop(index)
         self.stores.insert(values["index"], store)
         store.requires_key = values["requires_key"]
         store.key = values["key"]
-        
-  def get_info(self, search_params, default=None):
+
+  def getInfo(self, search_params, default=None):
     """ get info api  """
-    return next(self.get_all_info(search_params), ResultHolder(default, "")).info
-  
-  def get_all_info(self, search_params):
+    return next(self.getAllInfo(search_params), ResultHolder(default, "")).info
+
+  def getAllInfo(self, search_params):
     """ returns an iterator to ResultHolder objects """
     for store in self.stores:
-      if store.is_active():
-        for info in store.get_all_info(search_params):
-          yield ResultHolder(info, store.source_name)  
-  
+      if store.isActive():
+        for info in store.getAllInfo(search_params):
+          yield ResultHolder(info, store.source_name)
+
 # --------------------------------------------------------------------------------------------------------------------
 class ResultHolder(object):
   def __init__(self, info, source_name):
     super(ResultHolder, self).__init__()
     self.info = info
     self.source_name = source_name
-    
+
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfoClient(object):
   """ class to retrieve information from an online (or other) resource """
@@ -75,33 +75,33 @@ class BaseInfoClient(object):
     self.requires_key = requires_key
     self.key = ""
     self.is_enabled = True #enabled by user
-    
-  def pretty_name(self):
-    return "{} ({})".format(self.source_name, self.display_name)
-  
-  def is_available(self):
-    return self.has_lib and (not self.requires_key or bool(self.key))
-    
-  def is_active(self):
-    return self.is_available() and self.is_enabled
-  
-  #api stuff
-  def get_info(self, search_params):
-    return self._get_info(search_params) if self.has_lib else None
 
-  def get_all_info(self, search_params):
+  def prettyName(self):
+    return "{} ({})".format(self.source_name, self.display_name)
+
+  def isAvailable(self):
+    return self.has_lib and (not self.requires_key or bool(self.key))
+
+  def isActive(self):
+    return self.isAvailable() and self.is_enabled
+
+  #api stuff
+  def getInfo(self, search_params):
+    return self._getInfo(search_params) if self.has_lib else None
+
+  def getAllInfo(self, search_params):
     ret = []
     try:
-      ret = self._get_all_info(search_params) if self.has_lib else None
+      ret = self._getAllInfo(search_params) if self.has_lib else None
     except Exception as ex:
-      utils.log_warning("uncaught exception in lib. lib={} params={} ex={}".format(self.display_name, 
-          search_params.get_key(), ex))
+      utils.logWarning("uncaught exception in lib. lib={} params={} ex={}".format(self.display_name,
+          search_params.getKey(), ex))
     return ret
 
-  def _get_info(self, search_params):
-    infos = self._get_all_info(search_params)
+  def _getInfo(self, search_params):
+    infos = self._getAllInfo(search_params)
     return infos[0] if infos else None
-  
-  def _get_all_info(self, search_params):
-    raise NotImplementedError("BaseInfoClient._get_all_info not implemented")
-  
+
+  def _getAllInfo(self, search_params):
+    raise NotImplementedError("BaseInfoClient._getAllInfo not implemented")
+

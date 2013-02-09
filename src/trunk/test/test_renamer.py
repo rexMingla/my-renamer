@@ -6,10 +6,10 @@
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
-  import sys 
+  import sys
   import os
   sys.path.insert(0, os.path.abspath(__file__+"/../../"))
-  
+
 import copy
 import unittest
 
@@ -24,31 +24,31 @@ from media.movie import types as movie_types
 # --------------------------------------------------------------------------------------------------------------------
 class SeriesTest(unittest.TestCase):
   def test_seasonFromFolderName(self):
-    search_params = tv_manager.TvHelper.season_from_folder_name("c:/folder/Show - Season 1")
+    search_params = tv_manager.TvHelper.seasonFromFolderName("c:/folder/Show - Season 1")
     self.assertEqual(search_params.show_name, "Show")
     self.assertEqual(search_params.season_num, 1)
 
   def test_seasonFromFolderName2(self):
-    search_params = tv_manager.TvHelper.season_from_folder_name("c:/folder/Show Name - Series 12")
+    search_params = tv_manager.TvHelper.seasonFromFolderName("c:/folder/Show Name - Series 12")
     self.assertEqual(search_params.show_name, "Show Name")
     self.assertEqual(search_params.season_num, 12)
-    
+
   def test_seasonFromFolderName3(self):
-    search_params = tv_manager.TvHelper.season_from_folder_name("c:/folder/Show/Season 1")
+    search_params = tv_manager.TvHelper.seasonFromFolderName("c:/folder/Show/Season 1")
     self.assertEqual(search_params.show_name, "Show")
     self.assertEqual(search_params.season_num, 1)
 
   def test_seasonFromFolderNameMoMatch(self):
-    search_params = tv_manager.TvHelper.season_from_folder_name("c:/folder/Show Seaso 1")
+    search_params = tv_manager.TvHelper.seasonFromFolderName("c:/folder/Show Seaso 1")
     self.assertEqual(search_params.show_name, tv_types.UNRESOLVED_NAME)
     self.assertEqual(search_params.season_num, tv_types.UNRESOLVED_KEY)
 
   def test_episodeMapFromFilenamesGood(self):
     exp = tv_types.SourceFiles()
-    exp.extend([tv_types.SourceFile(1,"a01.avi"), 
-                tv_types.SourceFile(2,"b02.avi"), 
+    exp.extend([tv_types.SourceFile(1,"a01.avi"),
+                tv_types.SourceFile(2,"b02.avi"),
                 tv_types.SourceFile(3,"c03.avi")])
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c03.avi"])
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
     self.assertEqual(act, exp)
 
   def test_episodeMapFromFilenamesDuplicate(self):
@@ -56,34 +56,34 @@ class SeriesTest(unittest.TestCase):
     exp.extend([tv_types.SourceFile(1,"a01.avi"),
                 tv_types.SourceFile(2,"b02.avi"),
                 tv_types.SourceFile(tv_types.UNRESOLVED_KEY,"c01.avi")])
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c01.avi"])
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
     self.assertEqual(act, exp)
-  
-  def _test_getDestinationEpisodeMapFromTVDB(self):
+
+  def _testGetdestinationepisodemapfromtvdb(self):
     exp = tv_types.SeasonInfo("Entourage", 1)
-    exp.episodes.extend([tv_types.EpisodeInfo(1,"Entourage (Pilot)"), 
-                          tv_types.EpisodeInfo(2,"The Review"), 
-                          tv_types.EpisodeInfo(3,"Talk Show"), 
-                          tv_types.EpisodeInfo(4,"Date Night"), 
-                          tv_types.EpisodeInfo(5,"The Script and the Sherpa"), 
-                          tv_types.EpisodeInfo(6,"Busey and the Beach"), 
+    exp.episodes.extend([tv_types.EpisodeInfo(1,"Entourage (Pilot)"),
+                          tv_types.EpisodeInfo(2,"The Review"),
+                          tv_types.EpisodeInfo(3,"Talk Show"),
+                          tv_types.EpisodeInfo(4,"Date Night"),
+                          tv_types.EpisodeInfo(5,"The Script and the Sherpa"),
+                          tv_types.EpisodeInfo(6,"Busey and the Beach"),
                           tv_types.EpisodeInfo(7,"The Scene"),
                           tv_types.EpisodeInfo(8,"New York")])
-    act = tv_client.TvdbClient().get_info(tv_types.TvSearchParams("Entourage", 1))
+    act = tv_client.TvdbClient().getInfo(tv_types.TvSearchParams("Entourage", 1))
     self.assertEqual(act, exp)
-    
+
   def test_getDestinationEpisodeMapFromTVDBInvalid(self):
     exp = None
-    act = tv_client.TvdbClient().get_info(tv_types.TvSearchParams("Not real, Really", 1))
-    self.assertEqual(act, exp)  
-    
+    act = tv_client.TvdbClient().getInfo(tv_types.TvSearchParams("Not real, Really", 1))
+    self.assertEqual(act, exp)
+
   def test_getSourceEpisodeMapFromFilenames(self):
     exp = tv_types.SourceFiles()
-    exp.extend([tv_types.SourceFile(1,"a01.avi"), 
-               tv_types.SourceFile(2,"a02.avi"), 
-               tv_types.SourceFile(3,"a03.avi"), 
+    exp.extend([tv_types.SourceFile(1,"a01.avi"),
+               tv_types.SourceFile(2,"a02.avi"),
+               tv_types.SourceFile(3,"a03.avi"),
                tv_types.SourceFile(4,"a04x01.avi")])
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "a02.avi", "a03.avi", "a04x01.avi"])
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "a02.avi", "a03.avi", "a04x01.avi"])
     self.assertEqual(act, exp)
 
   def test_getSourceEpisodeMapFromFilenames2(self):
@@ -92,11 +92,11 @@ class SeriesTest(unittest.TestCase):
                 tv_types.SourceFile(2,"xxx-a02.avi"), \
                 tv_types.SourceFile(3,"xxx-a03.avi"), \
                 tv_types.SourceFile(4,"xxx-a04.avi")])
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "xxx-a02.avi", "xxx-a03.avi", "xxx-a04.avi"])
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "xxx-a02.avi", "xxx-a03.avi", "xxx-a04.avi"])
     self.assertEqual(act, exp)
-    
+
 # --------------------------------------------------------------------------------------------------------------------
-class RealDataTest(unittest.TestCase):  
+class RealDataTest(unittest.TestCase):
   def test_1(self):
     exp = tv_types.SourceFiles()
     folder = ""
@@ -106,9 +106,9 @@ class RealDataTest(unittest.TestCase):
                tv_types.SourceFile(4, folder + '04 - Three Sundays.avi')])
     source = [folder + '01 - For Those Who Think Young.avi',
               folder + '02 - Flight 1.avi',
-              folder + '03 - The Benefactor.avi', 
+              folder + '03 - The Benefactor.avi',
               folder + '04 - Three Sundays.avi']
-    act = tv_manager.TvHelper.get_sources_from_filenames(source)
+    act = tv_manager.TvHelper.getSourcesFromFilenames(source)
     self.assertEqual(act, exp)
 
   def test_2(self):
@@ -118,11 +118,11 @@ class RealDataTest(unittest.TestCase):
                tv_types.SourceFile(2, folder + '02 - Flight 1.avi'),
                tv_types.SourceFile(3, folder + '03 - The Benefactor.avi'),
                tv_types.SourceFile(4, folder + '04 - Three Sundays.avi')])
-    source = [folder + '01 - For Those Who Think Young.avi', 
-              folder + '02 - Flight 1.avi', 
-              folder + '03 - The Benefactor.avi', 
+    source = [folder + '01 - For Those Who Think Young.avi',
+              folder + '02 - Flight 1.avi',
+              folder + '03 - The Benefactor.avi',
               folder + '04 - Three Sundays.avi']
-    act = tv_manager.TvHelper.get_sources_from_filenames(source)
+    act = tv_manager.TvHelper.getSourcesFromFilenames(source)
     self.assertEqual(act, exp)
 
   def test_3(self):
@@ -141,22 +141,22 @@ class RealDataTest(unittest.TestCase):
                tv_types.SourceFile(12, 'Mad.Men.S04E12.480p.HDTV.H264.mp4'),
                tv_types.SourceFile(13, 'Mad.Men.S04E13.480p.HDTV.H264.mp4')])
     source = ['Mad.Men.S04E02.avi',
-              'Mad.Men.S04E03.360p.HDTV.XviD.avi', 
-              'Mad.Men.S04E04.360p.HDTV.XviD.avi', 
-              'Mad.Men.S04E05.320p.HDTV.H264.mp4', 
-              'Mad.Men.S04E06.320p.HDTV.H264.mp4', 
-              'Mad.Men.S04E07.320p.HDTV.H264.mp4', 
-              'Mad.Men.S04E08.320p.HDTV.H264.mp4', 
-              'Mad.Men.S04E09.320p.HDTV.H264.mp4', 
-              'Mad.Men.S04E10.320p.HDTV.H264.mp4', 
-              'Mad.Men.S04E11.320p.HDTV.H264.mp4', 
-              'Mad.Men.S04E12.480p.HDTV.H264.mp4', 
+              'Mad.Men.S04E03.360p.HDTV.XviD.avi',
+              'Mad.Men.S04E04.360p.HDTV.XviD.avi',
+              'Mad.Men.S04E05.320p.HDTV.H264.mp4',
+              'Mad.Men.S04E06.320p.HDTV.H264.mp4',
+              'Mad.Men.S04E07.320p.HDTV.H264.mp4',
+              'Mad.Men.S04E08.320p.HDTV.H264.mp4',
+              'Mad.Men.S04E09.320p.HDTV.H264.mp4',
+              'Mad.Men.S04E10.320p.HDTV.H264.mp4',
+              'Mad.Men.S04E11.320p.HDTV.H264.mp4',
+              'Mad.Men.S04E12.480p.HDTV.H264.mp4',
               'Mad.Men.S04E13.480p.HDTV.H264.mp4']
-    act = tv_manager.TvHelper.get_sources_from_filenames(source)
+    act = tv_manager.TvHelper.getSourcesFromFilenames(source)
     self.assertEqual(act, exp)
 
   def test_4(self):
-    #test were filename match is found but is not the best match. ie. starting from 1. 
+    #test were filename match is found but is not the best match. ie. starting from 1.
     exp = tv_types.SourceFiles()
     exp.extend([tv_types.SourceFile(1, '01 - Chapter 7.avi'),
                tv_types.SourceFile(2, '02 - Chapter 8.avi'),
@@ -166,9 +166,9 @@ class RealDataTest(unittest.TestCase):
               '02 - Chapter 8.avi',
               '03 - Chapter 9.avi',
               '04 - Chapter 10.avi']
-    act = tv_manager.TvHelper.get_sources_from_filenames(source)
-    self.assertEqual(act, exp)      
-    
+    act = tv_manager.TvHelper.getSourcesFromFilenames(source)
+    self.assertEqual(act, exp)
+
 # --------------------------------------------------------------------------------------------------------------------
 class MoveTest(unittest.TestCase):
   def setUp(self):
@@ -177,7 +177,7 @@ class MoveTest(unittest.TestCase):
 
     self.readyDest = tv_types.EpisodeInfo(1,"Ready")
     self.missingOldDest = tv_types.EpisodeInfo(2,"Missing Old.avi")
-    
+
     source = tv_types.SourceFiles()
     source.extend([tv_types.SourceFile(1, self.readySrc.filename),
                    tv_types.SourceFile(3, self.missingNewSrc.filename)])
@@ -185,83 +185,83 @@ class MoveTest(unittest.TestCase):
     destination = tv_types.SeasonInfo()
     destination.episodes.extend([self.readyDest, self.missingOldDest])
     self.season = tv_types.Season("Test", destination, source)
-   
+
   def test_ready(self):
     item = tv_types.EpisodeRenameItem(self.readySrc.filename, self.readyDest)
     self.assertTrue(item in self.season.episode_move_items)
-  
+
   def test_missingNew(self):
-    item = tv_types.EpisodeRenameItem(self.missingNewSrc.filename, tv_types.EpisodeInfo.create_unresolved_episode())
+    item = tv_types.EpisodeRenameItem(self.missingNewSrc.filename, tv_types.EpisodeInfo.createUnresolvedEpisode())
     self.assertTrue(item in self.season.episode_move_items)
-  
+
   def test_missingOld(self):
     item = tv_types.EpisodeRenameItem(tv_types.UNRESOLVED_NAME, self.missingOldDest)
     self.assertTrue(item in self.season.episode_move_items)
-      
+
 # --------------------------------------------------------------------------------------------------------------------
-class SwitchFilesTest(unittest.TestCase):  
+class SwitchFilesTest(unittest.TestCase):
   def test_switchFileNotExists(self):
-    before = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c03.avi"])
+    before = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
     after = copy.copy(before)
-    after.set_episode_for_filename(1, "d04.avi")
+    after.setEpisodeForFilename(1, "d04.avi")
     self.assertEqual(before, after)
-  
+
   def test_switchResolvedKeyForNewResolvedKey(self):
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c03.avi"])
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
     exp = tv_types.SourceFiles()
-    exp.extend([tv_types.SourceFile(1,"a01.avi"), 
+    exp.extend([tv_types.SourceFile(1,"a01.avi"),
                 tv_types.SourceFile(2,"b02.avi"),
                 tv_types.SourceFile(4,"c03.avi")])
-    act.set_episode_for_filename(4, "c03.avi")
+    act.setEpisodeForFilename(4, "c03.avi")
     self.assertEqual(act, exp)
 
   def test_switchResolvedKeyForExistingResolvedKey(self):
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c03.avi"])
-    act.set_episode_for_filename(2, "c03.avi")
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
+    act.setEpisodeForFilename(2, "c03.avi")
     self.assertTrue(tv_types.SourceFile(1,"a01.avi") in act)
     self.assertTrue(tv_types.SourceFile(2,"c03.avi") in act)
     self.assertTrue(tv_types.SourceFile(tv_types.UNRESOLVED_KEY,"b02.avi") in act)
-    
+
   def test_switchResolvedKeyForSameResolvedKey(self):
-    before = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c03.avi"])
+    before = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
     after = copy.copy(before)
-    after.set_episode_for_filename(1, "a01.avi")
+    after.setEpisodeForFilename(1, "a01.avi")
     self.assertEqual(before, after)
 
   def test_switchResolvedKeyForUnresolvedKey(self):
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c03.avi"])
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c03.avi"])
     exp = tv_types.SourceFiles()
     exp.extend([tv_types.SourceFile(1,"a01.avi"),
                 tv_types.SourceFile(2,"b02.avi"),
                 tv_types.SourceFile(tv_types.UNRESOLVED_KEY,"c03.avi")])
-    act.set_episode_for_filename(tv_types.UNRESOLVED_KEY, "c03.avi")
+    act.setEpisodeForFilename(tv_types.UNRESOLVED_KEY, "c03.avi")
     self.assertEqual(act, exp)
-    
+
   def test_switchResolvedKeyForUnresolvedKey2(self):
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "a01b.avi", "b02.avi"])
-    act.set_episode_for_filename(tv_types.UNRESOLVED_KEY, "a01.avi")
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "a01b.avi", "b02.avi"])
+    act.setEpisodeForFilename(tv_types.UNRESOLVED_KEY, "a01.avi")
     self.assertTrue(tv_types.SourceFile(2,"b02.avi") in act)
     self.assertTrue(tv_types.SourceFile(tv_types.UNRESOLVED_KEY,"a01.avi") in act)
-    self.assertTrue(tv_types.SourceFile(tv_types.UNRESOLVED_KEY,"a01b.avi") in act) 
-  
+    self.assertTrue(tv_types.SourceFile(tv_types.UNRESOLVED_KEY,"a01b.avi") in act)
+
   def test_switchUnresolvedKeyForNewResolvedKey(self):
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c01.avi"])
-    act.set_episode_for_filename(3, "c01.avi")
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
+    act.setEpisodeForFilename(3, "c01.avi")
     self.assertTrue(tv_types.SourceFile(1,"a01.avi") in act)
     self.assertTrue(tv_types.SourceFile(2,"b02.avi") in act)
     self.assertTrue(tv_types.SourceFile(3,"c01.avi") in act)
-    
+
   def test_switchUnresolvedKeyForExistingResolvedKey(self):
-    act = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c01.avi"])
-    act.set_episode_for_filename(1, "c01.avi")
+    act = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c01.avi"])
+    act.setEpisodeForFilename(1, "c01.avi")
     self.assertTrue(tv_types.SourceFile(1,"c01.avi") in act)
     self.assertTrue(tv_types.SourceFile(2,"b02.avi") in act)
     self.assertTrue(tv_types.SourceFile(tv_types.UNRESOLVED_KEY,"a01.avi") in act)
 
   def test_switchUnresolvedKeyForUnresolvedKey(self):
-    before = tv_manager.TvHelper.get_sources_from_filenames(["a01.avi", "b02.avi", "c03.avi", "xxx.avi"])
+    before = tv_manager.TvHelper.getSourcesFromFilenames(["a01.avi", "b02.avi", "c03.avi", "xxx.avi"])
     after = copy.copy(before)
-    after.set_episode_for_filename(tv_types.UNRESOLVED_KEY, "xxx.avi")
+    after.setEpisodeForFilename(tv_types.UNRESOLVED_KEY, "xxx.avi")
     self.assertEqual(before, after)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -269,28 +269,28 @@ class OutputFormatTest(unittest.TestCase):
   def setUp(self):
     self.formatter = formatting.TvNameFormatter()
     self.info = tv_types.AdvancedEpisodeInfo("Entourage", 1, 3, "Talk Show")
-    
+
   def test_normal(self):
-    out = self.formatter.get_name_from_info("<show> - S<s_num>E<ep_num> - <ep_name>", self.info)
+    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name>", self.info)
     self.assertEqual(out, "Entourage - S01E03 - Talk Show")
- 
+
   def test_missing(self):
-    out = self.formatter.get_name_from_info("<show> - S<s_num>E<ep_num> - <ep_name >", self.info)
+    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name >", self.info)
     self.assertEqual(out, "Entourage - S01E03 - <ep_name >")
 
 # --------------------------------------------------------------------------------------------------------------------
 class AdvancedOutputFormat(unittest.TestCase):
-    
+
   def test_omit(self):
     formatter = formatting.MovieNameFormatter()
     info = movie_types.MovieInfo("Anchorman", 2004, ["Comedy"], "", "")
-    out = formatter.get_name_from_info("<g> - <t> (<y>)%( - Disc <p>)%", info)
+    out = formatter.getNameFromInfo("<g> - <t> (<y>)%( - Disc <p>)%", info)
     self.assertEqual(out, "Comedy - Anchorman (2004)")
 
   def test_include(self):
     formatter = formatting.MovieNameFormatter()
     info = movie_types.MovieInfo("Anchorman", 2004, ["Comedy"], "", "2")
-    out = formatter.get_name_from_info("<g> - <t> (<y>)%( - Disc <p>)%", info)
+    out = formatter.getNameFromInfo("<g> - <t> (<y>)%( - Disc <p>)%", info)
     self.assertEqual(out, "Comedy - Anchorman (2004) - Disc 2")
 
 # --------------------------------------------------------------------------------------------------------------------

@@ -15,21 +15,21 @@ from app import widget
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
-def _runGUI():    
+def _runGUI():
   try:
     if __name__ != "__main__":
       # HACK: for py2exe so it won't show "See log for details" message on shutdown
       # http://www.py2exe.org/index.cgi/StderrLog
       sys.stdout = open("my_stdout.log", "w")
-      sys.stderr = open("my_stderr.log", "w")    
-    
+      sys.stderr = open("my_stderr.log", "w")
+
     cwd = os.path.dirname(os.path.abspath(__file__))
     os.chdir(cwd)
   except NameError:
     pass
-  
+
   app = QtGui.QApplication(sys.argv)
-  
+
   mw = widget.MainWindow()
   mw.show()
   app.exec_()
@@ -45,17 +45,17 @@ def _runTests():
     unittest.TestLoader().loadTestsFromModule(test_renamer),
     unittest.TestLoader().loadTestsFromModule(test_move)
   ])
-  
+
   runner = unittest.TextTestRunner(verbosity=2)
   return runner.run(suite)
-  
+
 # --------------------------------------------------------------------------------------------------------------------
 def main():
-  utils.init_logging("log.txt") # TODO: make this configurable
-  utils.log_info("Starting app")
-    
+  utils.initLogging("log.txt") # TODO: make this configurable
+  utils.logInfo("Starting app")
+
   parser = argparse.ArgumentParser(description="run renamer app or unit tests")
-  parser.add_argument("-u", "--unit-test", help="run unit tests", dest="is_test_only", 
+  parser.add_argument("-u", "--unit-test", help="run unit tests", dest="is_test_only",
                       action="store_true", default=False)
   args = parser.parse_args()
 
@@ -66,5 +66,5 @@ def main():
 
 # --------------------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
-  main()  
-  
+  main()
+
