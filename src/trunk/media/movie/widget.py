@@ -19,22 +19,22 @@ from media.base import widget as base_widget
 from common import config
 from common import interfaces
 from common import file_helper
-from common import thread 
+from common import thread
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
   def __init__(self, manager, parent=None):
     super(MovieWorkBenchWidget, self).__init__(interfaces.MOVIE_MODE, manager, parent)
-    self._set_model(movie_model.MovieModel(self.movie_view))
-    
-    self._change_movie_widget = EditMovieItemWidget(manager.get_holder(), self)
-    self._change_movie_widget.accepted.connect(self._on_change_movie_finished)
-    self._change_movie_widget.show_edit_sources_signal.connect(self.show_edit_sources_signal.emit)    
+    self._setModel(movie_model.MovieModel(self.movie_view))
+
+    self._change_movie_widget = EditMovieItemWidget(manager.getHolder(), self)
+    self._change_movie_widget.accepted.connect(self._onChangeMovieFinished)
+    self._change_movie_widget.show_edit_sources_signal.connect(self.show_edit_sources_signal.emit)
     self._change_movie_widget.setVisible(False)
-    
+
     self._sort_model = movie_model.SortFilterModel(self)
-    self._sort_model.setSourceModel(self._model)  
+    self._sort_model.setSourceModel(self._model)
     self.movie_view.setModel(self._sort_model)
     self.movie_view.horizontalHeader().setResizeMode(movie_model.Columns.COL_CHECK, QtGui.QHeaderView.Fixed)
     self.movie_view.horizontalHeader().resizeSection(movie_model.Columns.COL_CHECK, 25)
@@ -47,75 +47,75 @@ class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
     self.movie_view.horizontalHeader().setStretchLastSection(True)
     self.movie_view.verticalHeader().setDefaultSectionSize(20)
     self.movie_view.setSortingEnabled(True)
-        
-    self.require_year_check_box.toggled.connect(self._require_year_changed)
-    self.require_genre_check_box.toggled.connect(self._require_genre_changed)
-    self.require_non_duplicate_box.toggled.connect(self._flag_duplicate_changed)
-    self.movie_view.selectionModel().selectionChanged.connect(self._on_selection_changed)    
-    self.movie_view.doubleClicked.connect(self._edit_movie)
-    self.edit_movie_button.clicked.connect(self._edit_movie)
 
-    self._require_year_changed(self.require_year_check_box.isChecked())
-    self._require_genre_changed(self.require_genre_check_box.isChecked())
-    self._flag_duplicate_changed(self.require_non_duplicate_box.isChecked())
-    
+    self.require_year_check_box.toggled.connect(self._requireYearChanged)
+    self.require_genre_check_box.toggled.connect(self._requireGenreChanged)
+    self.require_non_duplicate_box.toggled.connect(self._flagDuplicateChanged)
+    self.movie_view.selectionModel().selectionChanged.connect(self._onSelectionChanged)
+    self.movie_view.doubleClicked.connect(self._editMovie)
+    self.edit_movie_button.clicked.connect(self._editMovie)
+
+    self._requireYearChanged(self.require_year_check_box.isChecked())
+    self._requireGenreChanged(self.require_genre_check_box.isChecked())
+    self._flagDuplicateChanged(self.require_non_duplicate_box.isChecked())
+
     self.tv_view.setVisible(False)
-    self._on_selection_changed()
-     
-  def get_config(self):
+    self._onSelectionChanged()
+
+  def getConfig(self):
     ret = config.MovieWorkBenchConfig()
     ret.no_year_as_error = self.require_year_check_box.isChecked()
     ret.no_genre_as_error = self.require_genre_check_box.isChecked()
     ret.duplicate_as_error = self.require_non_duplicate_box.isChecked()
-    ret.state = utils.to_string(self.movie_view.horizontalHeader().saveState().toBase64())
-    #TODO: ret.series_list = self._change_movie_widget.get_series_list()
+    ret.state = utils.toString(self.movie_view.horizontalHeader().saveState().toBase64())
+    #TODO: ret.series_list = self._change_movie_widget.getSeriesList()
     return ret
-  
-  def set_config(self, data):
+
+  def setConfig(self, data):
     data = data or config.MovieWorkBenchConfig()
 
     self.require_year_check_box.setChecked(data.no_year_as_error)
     self.require_genre_check_box.setChecked(data.no_genre_as_error)
     self.require_non_duplicate_box.setChecked(data.duplicate_as_error)
     self.movie_view.horizontalHeader().restoreState(QtCore.QByteArray.fromBase64(data.state))
-    #TODO: self._change_movie_widget.set_series_list(data.series_list)
-    
-  def _show_item(self):    
-    self._edit_movie()
+    #TODO: self._change_movie_widget.setSeriesList(data.series_list)
 
-  def _on_selection_changed(self, selection=None):
+  def _showItem(self):
+    self._editMovie()
+
+  def _onSelectionChanged(self, selection=None):
     selection = selection or self.movie_view.selectionModel().selection()
     indexes = selection.indexes()
     self._current_index = self._sort_model.mapToSource(indexes[0]) if indexes else QtCore.QModelIndex()
-    self._update_actions()
-    self.renameItemChangedSignal.emit(self._model.get_rename_item(self._current_index))
-    
-  def _edit_movie(self):
+    self._updateActions()
+    self.renameItemChangedSignal.emit(self._model.getRenameItem(self._current_index))
+
+  def _editMovie(self):
     movie = self._model.data(self._current_index, movie_model.RAW_DATA_ROLE)
-    #utils.verify_type(movie, movie_manager.MovieRenameItem)
-    self._change_movie_widget.set_item(movie)
-    self._change_movie_widget.show()    
-      
-  def _on_change_movie_finished(self):
-    data = self._change_movie_widget.get_item()    
-    #utils.verify_type(data, movie_manager.MovieRenameItem)
-    self._manager.set_item(data.get_info())
+    #utils.verifyType(movie, movie_manager.MovieRenameItem)
+    self._change_movie_widget.setItem(movie)
+    self._change_movie_widget.show()
+
+  def _onChangeMovieFinished(self):
+    data = self._change_movie_widget.getItem()
+    #utils.verifyType(data, movie_manager.MovieRenameItem)
+    self._manager.setItem(data.getInfo())
     self._model.setData(self._current_index, data, movie_model.RAW_DATA_ROLE)
-    self._on_selection_changed()
-    
-  def _require_year_changed(self, require_year):
+    self._onSelectionChanged()
+
+  def _requireYearChanged(self, require_year):
     self._disable()
-    self._model.require_year_changed(require_year)
+    self._model.requireYearChanged(require_year)
     self._enable()
 
-  def _require_genre_changed(self, require_genre):
+  def _requireGenreChanged(self, require_genre):
     self._disable()
-    self._model.require_genre_changed(require_genre)
+    self._model.requireGenreChanged(require_genre)
     self._enable()
 
-  def _flag_duplicate_changed(self, flag_duplicate):
+  def _flagDuplicateChanged(self, flag_duplicate):
     self._disable()
-    self._model.flag_duplicate_changed(flag_duplicate)
+    self._model.flagDuplicateChanged(flag_duplicate)
     self._enable()
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -123,19 +123,19 @@ class SearchMovieParamsWidget(base_widget.BaseSearchParamsWidget):
   def __init__(self, parent=None):
     super(SearchMovieParamsWidget, self).__init__(parent)
     uic.loadUi("ui/ui_SearchMovie.ui", self)
-    self._set_edit_widgets([self.search_edit])
+    self._setEditWidgets([self.search_edit])
     self.search_edit.setPlaceholderText("Enter movie and year to search")
-    
-  def set_item(self, item):
+
+  def setItem(self, item):
     item = item or movie_types.MovieRenameItem("", movie_types.MovieInfo())
     self.filename_edit.setText(file_helper.FileHelper.basename(item.filename))
     self.filename_edit.setToolTip(item.filename)
-    self.search_edit.setText(item.get_info().to_search_params().get_key())
-    self.search_edit.selectAll()    
-  
-  def get_search_params(self):
+    self.search_edit.setText(item.getInfo().toSearchParams().getKey())
+    self.search_edit.selectAll()
+
+  def getSearchParams(self):
     return movie_types.MovieSearchParams(str(self.search_edit.text()))
-    
+
 # --------------------------------------------------------------------------------------------------------------------
 class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
   """ The widget allows the user to search and modify movie info. """
@@ -145,51 +145,51 @@ class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
     uic.loadUi("ui/ui_EditMovie.ui", self)
     self.setWindowModality(True)
     self.part_check_box.toggled.connect(self.part_spin_box.setEnabled)
-    
+
     self._item = None
     self._series_list = []
-    
+
   def accept(self):
-    series = utils.to_string(self.series_edit.text())
+    series = utils.toString(self.series_edit.text())
     if series and not series in self._series_list:
       self._series_list.append(series)
-      #TODO: self.set_series_list(self._series_list)    
+      #TODO: self.setSeriesList(self._series_list)
     return super(EditMovieItemWidget, self).accept()
-    
-  def set_info(self, info):
-    #utils.verify_type(info, movie_types.MovieInfo)
+
+  def setInfo(self, info):
+    #utils.verifyType(info, movie_types.MovieInfo)
     self.title_edit.setText(info.title)
     self.year_edit.setText(info.year or "")
-    self.genre_edit.setText(info.get_genre())  
-    
-  def set_series_list(self, obj):
-    #utils.verify_type(l, list)
+    self.genre_edit.setText(info.getGenre())
+
+  def setSeriesList(self, obj):
+    #utils.verifyType(l, list)
     self._series_list = obj
     completer = QtGui.QCompleter(self._series_list, self)
     completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-    completer.setCompletionMode(QtGui.QCompleter.InlineCompletion)    
-    self.series_edit.setCompleter(completer)        
-    
-  def get_series_list(self):
+    completer.setCompletionMode(QtGui.QCompleter.InlineCompletion)
+    self.series_edit.setCompleter(completer)
+
+  def getSeriesList(self):
     return self._series_list
-  
-  def _set_item(self, item):
+
+  def _setItem(self, item):
     """ Fill the dialog with the data prior to being shown """
-    #utils.verify_type(item, movie_manager.MovieRenameItem)
+    #utils.verifyType(item, movie_manager.MovieRenameItem)
     self._item = item or movie_types.MovieRenameItem("", movie_types.MovieInfo())
-    info = self._item.get_info()
+    info = self._item.getInfo()
     self.title_edit.setText(info.title)
     self.year_edit.setText(info.year)
-    self.genre_edit.setText(info.get_genre(""))
+    self.genre_edit.setText(info.getGenre(""))
     self.series_edit.setText(info.series)
     if info.part:
       self.part_spin_box.setValue(int(info.part))
     self.part_check_box.setChecked(bool(info.part))
-    
-  def get_item(self):
-    self._item.info.title = utils.to_string(self.title_edit.text())
-    self._item.info.year = utils.to_string(self.year_edit.text())
-    genre = utils.to_string(self.genre_edit.text()).strip()
+
+  def getItem(self):
+    self._item.info.title = utils.toString(self.title_edit.text())
+    self._item.info.year = utils.toString(self.year_edit.text())
+    genre = utils.toString(self.genre_edit.text()).strip()
     if genre:
       genre = [genre]
     else:
@@ -198,7 +198,7 @@ class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
     self._item.info.part = None
     if self.part_check_box.isChecked():
       self._item.info.part = self.part_spin_box.value()
-    self._item.info.series = utils.to_string(self.series_edit.text()).strip()
+    self._item.info.series = utils.toString(self.series_edit.text()).strip()
     return self._item
 
 # --------------------------------------------------------------------------------------------------------------------
