@@ -12,6 +12,8 @@ from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieRenameItem(base_types.BaseRenameItem):
+  FILE_NOT_FOUND = "File not found"
+  
   def __init__(self, filename, info):
     super(MovieRenameItem, self).__init__(filename)
     self.info = info
@@ -20,8 +22,11 @@ class MovieRenameItem(base_types.BaseRenameItem):
     ret = MovieRenameItem(self.filename, copy.copy(self.info))
     return ret
 
-  def fileExists(self):
-    return self.file_size > 0
+  def isReady(self):
+    return self.status() == self.READY
+
+  def status(self):
+    return self.READY if self.file_size > 0 else self.FILE_NOT_FOUND
 
   def __str__(self):
     return str(self.info)
@@ -33,7 +38,7 @@ class MovieRenameItem(base_types.BaseRenameItem):
 class MovieInfo(base_types.BaseInfo):
   """ info retrieved from media.movie clients """
   def __init__(self, title="", year=None, genres=None, series="", part=None):
-    super(MovieInfo, self).__init__()
+    super(MovieInfo, self).__init__(base_types.MOVIE_MODE)
     self.title = title
     self.year = year
     self.genres = genres or []

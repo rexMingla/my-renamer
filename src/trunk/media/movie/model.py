@@ -55,12 +55,12 @@ class MovieItem(object):
     self.movie = movie
     self.index = index
     self.want_to_move = True
-    self.cached_status_text = "Unknown"
+    self.cached_status_text = movie.status()
     self.duplicates = []
 
   def isMatch(self, other):
     #utils.verifyType(other, MovieItem)
-    return self.movie.fileExists() and self.movie.info == other.movie.info
+    return self.movie.status() == self.movie.READY and self.movie.info == other.movie.info
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
@@ -157,7 +157,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     elif col == Columns.COL_GENRE:
       return info.getGenre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesToString(movie.file_size) if movie.fileExists() else ""
+      return utils.bytesToString(movie.file_size) if movie.isReady() else ""
     elif col == Columns.COL_SERIES:
       return info.series
 
@@ -274,7 +274,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
 
   def _updateDuplicatesForItem(self, item):
     item.duplicates = []
-    if item.movie.fileExists():
+    if item.movie.isReady():
       item.duplicates = [m.index for m in self._movies if m.index != item.index and m.isMatch(item)]
 
   def overallCheckedState(self):

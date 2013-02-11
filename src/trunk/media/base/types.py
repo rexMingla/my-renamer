@@ -7,8 +7,16 @@
 # --------------------------------------------------------------------------------------------------------------------
 from common import file_helper
 
+MOVIE_MODE = "movie"
+TV_MODE = "tv"
+
+VALID_MODES = (MOVIE_MODE, TV_MODE)
+
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenameItem(object):
+  READY          = "Ready"
+  UNKNOWN        = "Unknown"
+  
   """ stores filename and new metadata used to rename file """
   def __init__(self, filename):
     super(BaseRenameItem, self).__init__()
@@ -20,10 +28,16 @@ class BaseRenameItem(object):
   def getInfo(self):
     raise NotImplementedError("BaseRenameItem.getInfo not implemented")
 
+  def status(self):
+    raise NotImplementedError("BaseRenameItem.status not implemented")    
+
 # --------------------------------------------------------------------------------------------------------------------
 class BaseInfo(object):
   """ objects retrieved from InfoClients """
-
+  def __init__(self, mode):
+    assert(mode in VALID_MODES)
+    self.mode = mode
+    
   def toSearchParams(self):
     raise NotImplementedError("BaseInfo.toSearchParams not implemented")
 

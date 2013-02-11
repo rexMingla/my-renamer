@@ -58,13 +58,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="format_edit">
-         <property name="toolTip">
-          <string>Format of your filename after conversion</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <property name="rightMargin">
@@ -102,30 +95,6 @@ p, li { white-space: pre-wrap; }
          </item>
         </layout>
        </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="format_example_label">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <italic>false</italic>
-          </font>
-         </property>
-         <property name="text">
-          <string>&lt;&gt;</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="0" colspan="2">
         <widget class="QGroupBox" name="groupBox_2">
          <property name="minimumSize">
@@ -150,6 +119,30 @@ p, li { white-space: pre-wrap; }
           <property name="margin">
            <number>4</number>
           </property>
+          <item>
+           <widget class="QLabel" name="format_example_label">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <italic>false</italic>
+             </font>
+            </property>
+            <property name="text">
+             <string>&lt;&gt;</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QRadioButton" name="use_source_radio">
             <property name="toolTip">
@@ -334,53 +327,6 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="stop_button">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>Stop renaming action(s)</string>
-           </property>
-           <property name="text">
-            <string>Stop</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QProgressBar" name="progress_bar">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>10</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>10</height>
-            </size>
-           </property>
-           <property name="value">
-            <number>0</number>
-           </property>
-           <property name="textVisible">
-            <bool>true</bool>
-           </property>
-           <property name="invertedAppearance">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -397,6 +343,13 @@ p, li { white-space: pre-wrap; }
           </spacer>
          </item>
         </layout>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="format_edit">
+         <property name="toolTip">
+          <string>Format of your filename after conversion</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

@@ -90,6 +90,7 @@ class ContainerItem(BaseItem):
 
     if role == RAW_DATA_ROLE:
       model.beginRemoveRows(index, 0, self.childCount() - 1)
+      value.updateSeasonInfo(value.info)
       self.raw = value
       self.child_items = []
       for move_item in self.raw.episode_move_items:
@@ -117,27 +118,27 @@ class ContainerItem(BaseItem):
     if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, QtCore.Qt.ForegroundRole):
       return None
 
-    is_unresolved = self.raw.info.season_num == tv_types.UNRESOLVED_KEY
+    is_unresolved = self.raw.status == tv_types.Season.SEASON_NOT_FOUND
     if role == QtCore.Qt.ForegroundRole and is_unresolved:
       return QtGui.QBrush(QtCore.Qt.red)
     elif index.column() == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.ToolTipRole:
         return "Folder: {}".format(self.raw.input_folder)
       else:
-        return str(self.raw) if not is_unresolved else "Unknown"
+        return str(self.raw)
 
   def canCheck(self):
-    return any(c.canCheck() for c in self.child_items)
+    return self.raw.status != tv_types.Season.SEASON_NOT_FOUND and any(c.canCheck() for c in self.child_items)
 
   def checkState(self):
-    checked_state = None
+    if not self.canCheck():
+      return None
+    checked_state = QtCore.Qt.PartiallyChecked
     checked_items = [i.checkState() == QtCore.Qt.Checked for i in self.child_items if i.canCheck()]
     if not checked_items or all(not isChecked for isChecked in checked_items):
       checked_state = QtCore.Qt.Unchecked
     elif all(checked_items):
       checked_state = QtCore.Qt.Checked
-    else:
-      checked_state = QtCore.Qt.PartiallyChecked
     return checked_state
 
   def setCheckState(self, checked_state):
@@ -155,9 +156,9 @@ class LeafItem(BaseItem):
 
     column = index.column()
     if role == QtCore.Qt.ForegroundRole:
-      if self.raw.matchType() == tv_types.EpisodeRenameItem.MISSING_NEW:
+      if self.raw.status() == tv_types.EpisodeRenameItem.MISSING_NEW:
         return QtGui.QBrush(QtCore.Qt.red)
-      elif self.raw.matchType() == tv_types.EpisodeRenameItem.MISSING_OLD:
+      elif self.raw.status() == tv_types.EpisodeRenameItem.MISSING_OLD:
         return QtGui.QBrush(QtCore.Qt.gray)
     if column == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.ToolTipRole:
@@ -172,9 +173,9 @@ class LeafItem(BaseItem):
     elif column == Columns.COL_NEW_NAME:
       return self.raw.info.ep_name
     elif column == Columns.COL_STATUS:
-      return tv_types.EpisodeRenameItem.typeStr(self.raw.matchType())
+      return self.raw.status()
     elif column == Columns.COL_FILE_SIZE:
-      if self.raw.matchType() != tv_types.EpisodeRenameItem.MISSING_OLD:
+      if self.raw.status() != tv_types.EpisodeRenameItem.MISSING_OLD:
         return utils.bytesToString(self.raw.file_size)
     return None
 
@@ -243,65 +244,6 @@ class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
 
   def columnCount(self, parent):
     return Columns.NUM_COLS
-
-  def getFile(self, index):
-    if not index.isValid():
-      return None
-
-    item = self._getItem(index)
-    ret = ""
-    if item.isEpisode():
-      ret = item.raw.filename
-    return ret
-
-  def getFolder(self, index):
-    if not index.isValid():
-      return None
-
-    item = self._getItem(index)
-    ret = ""
-    if item.isEpisode():
-      ret = file_helper.FileHelper.dirname(item.raw.filename)
-    else:
-      ret = item.raw.input_folder
-    return ret
-
-  def getDeleteItem(self, index):
-    if not index.isValid():
-      return None
-
-    item = self._getItem(index)
-    ret = ""
-    if item.isEpisode():
-      ret = item.raw.filename
-    else:
-      ret = item.raw.input_folder
-    return ret
-
-  def canEdit(self, index):
-    if not index.isValid():
-      return False
-    return self._getItem(index).canEdit()
-
-  def getRenameItem(self, index):
-    if not index.isValid():
-      return None
-    item = self._getItem(index)
-    return item.raw if item.isEpisode() and item.canCheck() else None
-
-  def getAvailableActions(self, index):
-    canEditEp = self.canEdit(index)
-    canLaunch = bool(self.getFile(index))
-    canOpen = bool(self.getFolder(index))
-    canDelete = bool(self.getDeleteItem(index))
-
-    ret = {}
-    ret[base_model.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
-    ret[base_model.BaseWorkBenchModel.ACTION_SEASON] = canOpen
-    ret[base_model.BaseWorkBenchModel.ACTION_OPEN] = canOpen
-    ret[base_model.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
-    ret[base_model.BaseWorkBenchModel.ACTION_DELETE] = canDelete
-    return ret
 
   def data(self, index, role):
     if not index.isValid():
@@ -389,6 +331,65 @@ class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
       parent = parent.internalPointer()
 
     return parent.childCount()
+
+  def getFile(self, index):
+    if not index.isValid():
+      return None
+
+    item = self._getItem(index)
+    ret = ""
+    if item.isEpisode():
+      ret = item.raw.filename
+    return ret
+
+  def getFolder(self, index):
+    if not index.isValid():
+      return None
+
+    item = self._getItem(index)
+    ret = ""
+    if item.isEpisode():
+      ret = file_helper.FileHelper.dirname(item.raw.filename)
+    else:
+      ret = item.raw.input_folder
+    return ret
+
+  def getDeleteItem(self, index):
+    if not index.isValid():
+      return None
+
+    item = self._getItem(index)
+    ret = ""
+    if item.isEpisode():
+      ret = item.raw.filename
+    else:
+      ret = item.raw.input_folder
+    return ret
+
+  def canEdit(self, index):
+    if not index.isValid():
+      return False
+    return self._getItem(index).canEdit()
+
+  def getRenameItem(self, index):
+    if not index.isValid():
+      return None
+    item = self._getItem(index)
+    return item.raw if item.isEpisode() and item.canCheck() else None
+
+  def getAvailableActions(self, index):
+    canEditEp = self.canEdit(index)
+    canLaunch = bool(self.getFile(index))
+    canOpen = bool(self.getFolder(index))
+    canDelete = bool(self.getDeleteItem(index))
+
+    ret = {}
+    ret[base_model.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
+    ret[base_model.BaseWorkBenchModel.ACTION_SEASON] = canOpen
+    ret[base_model.BaseWorkBenchModel.ACTION_OPEN] = canOpen
+    ret[base_model.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
+    ret[base_model.BaseWorkBenchModel.ACTION_DELETE] = canDelete
+    return ret
 
   def addItem(self, season):
     #utils.verifyType(s, tv_types.Season)

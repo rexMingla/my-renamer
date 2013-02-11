@@ -7,8 +7,8 @@
 # Purpose of document: Config data
 # --------------------------------------------------------------------------------------------------------------------
 from common import extension
-from common import interfaces
 from common import utils
+from media.base import types as base_types
 
 CONFIG_VERSION = "1.0"
 CACHE_VERSION = "1.0"
@@ -65,7 +65,7 @@ class MainWindowConfig(BaseConfig):
     self.geo = "AdnQywABAAAAAABbAAAACQAABEsAAALmAAAAYwAAACcAAARDAAAC3gAAAAAAAA=="
     self.state = "AAAA/wAAAAD9AAAAAgAAAAIAAAPhAAAAsvwBAAAAAfsAAAAcAEkAbgBwAHUAdAAgAFMAZQB0AHQAaQBuAGcAcwEAAAAAAAAD4QAAAKMA////AAAAAwAAA+EAAADU/AEAAAAC+wAAAB4ATwB1AHQAcAB1AHQAIABTAGUAdAB0AGkAbgBnAHMBAAAAAAAAAnIAAAGIAP////sAAAAWAE0AZQBzAHMAYQBnAGUAIABMAG8AZwEAAAJ2AAABawAAAHsA////AAAD4QAAAPMAAAAEAAAABAAAAAgAAAAI/AAAAAEAAAACAAAAAQAAABoAYQBjAHQAaQBvAG4AVABvAG8AbABCAGEAcgEAAAAA/////wAAAAAAAAAA"
     self.dont_shows = {}
-    self.mode = interfaces.MOVIE_MODE
+    self.mode = base_types.MOVIE_MODE
     self.auto_start = False
     self.config_version = CONFIG_VERSION
 

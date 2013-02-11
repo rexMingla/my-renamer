@@ -37,8 +37,16 @@ class WorkerThread(QtCore.QThread):
     #utils.verifyType(name, str)
     self._name = name
     self._user_stopped = False
-    self.start_time = time.clock()
+    self.start_time = None
 
+  def run(self):
+    self._user_stopped = False
+    self.start_time = time.clock()
+    self._run()
+    
+  def _run(self):
+    raise NotImplementedError("WorkerThread._run not implemented")
+    
   def __del__(self):
     self.join()
 
@@ -57,11 +65,10 @@ class WorkerThread(QtCore.QThread):
 # --------------------------------------------------------------------------------------------------------------------
 class WorkItem(object):
   """ result and object. assumed result is human readible """
-  def __init__(self, obj, result, log=None):
+  def __init__(self, obj, result):
     super(WorkItem, self).__init__()
     self.obj = obj
     self.result = result
-    self.log = log
 
 # --------------------------------------------------------------------------------------------------------------------
 class AdvancedWorkerThread(WorkerThread):
@@ -77,7 +84,7 @@ class AdvancedWorkerThread(WorkerThread):
   def _applyToItem(self, item):
     raise NotImplementedError("AdvancedWorkerThread._applyToItem not implemented")
 
-  def run(self):
+  def _run(self):
     """ obfuscation for the win!! wow. this is madness. sorry """
     items = self._getAllItems()
     item_count = 0
@@ -89,21 +96,19 @@ class AdvancedWorkerThread(WorkerThread):
         if item.obj != None:
           self._onData(item.obj)
           item_count += 1
-        if item.log:
-          self._onLog(item.log)
         results[item.result] += 1
       if self._user_stopped:
-        self._onLog(utils.LogItem(utils.LogLevel.INFO,
+        """self._onLog(utils.LogItem(utils.LogLevel.INFO,
                                      self._name,
-                                     "User cancelled. {} of {} processed.".format(self._i + 1, self._num_items)))
+                                     "User cancelled. {} of {} processed.".format(self._i + 1, self._num_items)))"""
         break
       self._onProgress(int(100.0 * (self._i + 1) / self._num_items))
 
     results["Total"] = sum(v for _, v in results.items())
     summary_text = " ".join([("{}:{}".format(key, results[key]))
                             for key in sorted(results, key=lambda k: results[k] + 1 if k == "Total" else 0)])
-    self._onLog(utils.LogItem(utils.LogLevel.INFO,
+    """self._onLog(utils.LogItem(utils.LogLevel.INFO,
                                  self._name,
                                  "Action complete. {} processed in {}. Summary: {}".format(item_count,
                                                                                            prettyTime(self.start_time),
-                                                                                           summary_text)))
+                                                                                           summary_text)))"""
