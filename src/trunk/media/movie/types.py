@@ -15,18 +15,17 @@ class MovieRenameItem(base_types.BaseRenameItem):
   FILE_NOT_FOUND = "File not found"
   
   def __init__(self, filename, info):
-    super(MovieRenameItem, self).__init__(filename)
-    self.info = info
+    super(MovieRenameItem, self).__init__(filename, info)
 
   def __copy__(self):
     ret = MovieRenameItem(self.filename, copy.copy(self.info))
     return ret
 
   def isReady(self):
-    return self.status() == self.READY
+    return self.getStatus() == self.READY
 
-  def status(self):
-    return self.READY if self.file_size > 0 else self.FILE_NOT_FOUND
+  def getStatus(self):
+    return self.READY if self.getFileSize() > 0 else self.FILE_NOT_FOUND
 
   def __str__(self):
     return str(self.info)
@@ -58,11 +57,11 @@ class MovieInfo(base_types.BaseInfo):
   def getGenre(self, default=""):
     return self.genres[0] if self.genres else default
 
-  def toSearchParams(self):
+  def getSearchParams(self):
     return MovieSearchParams(self.title, self.year)
 
 # --------------------------------------------------------------------------------------------------------------------
-class MovieSearchParams(base_types.BaseInfoClientSearchParams):
+class MovieSearchParams(base_types.BaseSearchParams):
   """ class used to query info clients """
   def __init__(self, title, year=""):
     self.title = title
@@ -71,7 +70,7 @@ class MovieSearchParams(base_types.BaseInfoClientSearchParams):
   def getKey(self):
     return self.title if not self.year else utils.sanitizeString("{} ({})".format(self.title, self.year))
 
-  def toInfo(self):
+  def getInfo(self):
     return MovieInfo(self.title, self.year)
 
 

@@ -15,7 +15,7 @@ UNRESOLVED_KEY = -1
 UNRESOLVED_NAME = ""
 
 # --------------------------------------------------------------------------------------------------------------------
-class TvSearchParams(base_types.BaseInfoClientSearchParams):
+class TvSearchParams(base_types.BaseSearchParams):
   def __init__(self, show_name, season_num):
     super(TvSearchParams, self).__init__()
     self.show_name = show_name
@@ -24,7 +24,7 @@ class TvSearchParams(base_types.BaseInfoClientSearchParams):
   def getKey(self):
     return utils.sanitizeString("{} ({})".format(self.show_name, self.season_num))
 
-  def toInfo(self):
+  def getInfo(self):
     return SeasonInfo(self.show_name, self.season_num)
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -74,22 +74,24 @@ class EpisodeRenameItem(base_types.BaseRenameItem):
   MISSING_OLD    = "No Matching File"
 
   def __init__(self, filename, info):
-    super(EpisodeRenameItem, self).__init__(filename)
+    super(EpisodeRenameItem, self).__init__(filename, info)
     #utils.verifyType(filename, basestring)
     #utils.verifyType(info, EpisodeInfo)
-    self.info = info
-    match_text = self.status()
+    match_text = self.getStatus()
     self.can_move = match_text == EpisodeRenameItem.READY #can execute
     self.canEdit = match_text in (EpisodeRenameItem.READY, EpisodeRenameItem.MISSING_NEW) #can edit
     self.perform_move = self.can_move                             #will move
 
-  def status(self):
+  def getStatus(self):
     ret = EpisodeRenameItem.MISSING_OLD
     if self.info.ep_num == UNRESOLVED_KEY:
       ret = EpisodeRenameItem.MISSING_NEW
     elif self.filename:
       ret = EpisodeRenameItem.READY
     return ret
+
+  def getInfo(self):
+    return self.info
 
   def __copy__(self):
     return EpisodeRenameItem(self.filename, copy.copy(self.info))
@@ -98,10 +100,7 @@ class EpisodeRenameItem(base_types.BaseRenameItem):
     return self.filename == other.filename and self.info == other.info
 
   def __str__(self):
-    return "[{}] {}: {} -> {}".format(self.filename, self.info.ep_num, self.info.ep_name, self.status())
-
-  def getInfo(self):
-    return self.info
+    return "[{}] {}: {} -> {}".format(self.filename, self.info.ep_num, self.info.ep_name, self.getStatus())
 
 # -----------------------------------------------------------------------------------
 class SourceFile(object):
@@ -175,7 +174,7 @@ class SeasonInfo(base_types.BaseInfo):
   def __str__(self):
     return "{} season {} - # episodes: {}".format(self.show_name, self.season_num, len(self.episodes))
 
-  def toSearchParams(self):
+  def getSearchParams(self):
     return TvSearchParams(self.show_name, self.season_num)
 
   def hasData(self):
@@ -188,12 +187,6 @@ class Season:
   UNBALANCED_FILES  = "Partially resolved"
   SEASON_NOT_FOUND  = "Season not found"
 
-  def __str__(self):
-    if self.status == Season.SEASON_NOT_FOUND:
-      return "Season: {} #: ???".format(self.info.show_name or "???")
-    else:
-      return "Season: {} #: {}".format(self.info.show_name, self.info.season_num)
-
   def __init__(self, input_folder, info, sources):
     #utils.verifyType(input_folder, str)
     #utils.verifyType(sources, SourceFiles)
@@ -205,11 +198,9 @@ class Season:
     self.input_folder = input_folder
     if len(self.input_folder) > 1:
       self.input_folder.rstrip(os.path.sep)
-    self.status = Season.SEASON_NOT_FOUND
     self.episode_move_items = []
     self._resolveEpisodeMoveItems()
-    self._resolveStatus()
-
+    
   def removeSourceFile(self, filename):
     #utils.verifyType(f, basestring)
     self.sources.removeFile(filename)
@@ -219,13 +210,11 @@ class Season:
     #utils.verifyType(info, SeasonInfo)
     self.info = info
     self._resolveEpisodeMoveItems()
-    self._resolveStatus()
 
   def updateSource(self, sources):
     #utils.verifyType(sources, SourceFiles)
     self.sources = sources
     self._resolveEpisodeMoveItems()
-    self._resolveStatus()
 
   def _resolveEpisodeMoveItems(self):
     self.episode_move_items = []
@@ -247,13 +236,13 @@ class Season:
 
     self.episode_move_items = sorted(self.episode_move_items, key=lambda item: item.info.ep_num)
 
-  def _resolveStatus(self):
-    if not self.info.hasData() or self.info.season_num == UNRESOLVED_KEY or not self.info.show_name:
-      self.status = Season.SEASON_NOT_FOUND
+  def getStatus(self):
+    status = Season.UNBALANCED_FILES
+    if not self.info.hasData():
+      status = Season.SEASON_NOT_FOUND
     elif all([item.info.ep_num != UNRESOLVED_KEY and item.filename for item in self.episode_move_items]):
-      self.status = Season.OK
-    else:
-      self.status = Season.UNBALANCED_FILES
+      status = Season.OK
+    return status
 
   def setEpisodeForFilename(self, key, filename):
     self.sources.setEpisodeForFilename(key, filename)
@@ -262,6 +251,9 @@ class Season:
   def getInfo(self):
     return self.info
 
-  #def isValid(self):
-  #  return self.info.hasData()
+  def __str__(self):
+    if self.getStatus() == Season.SEASON_NOT_FOUND:
+      return "Season: {} #: ???".format(self.info.show_name or "???")
+    else:
+      return "Season: {} #: {}".format(self.info.show_name, self.info.season_num)
 

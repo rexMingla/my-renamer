@@ -30,7 +30,7 @@ class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
 
     self._change_movie_widget = EditMovieItemWidget(manager.getHolder(), self)
     self._change_movie_widget.accepted.connect(self._onChangeMovieFinished)
-    self._change_movie_widget.show_edit_sources_signal.connect(self.show_edit_sources_signal.emit)
+    self._change_movie_widget.show_edit_info_clients_signal.connect(self.show_edit_info_clients_signal.emit)
     self._change_movie_widget.setVisible(False)
 
     self._sort_model = movie_model.SortFilterModel(self)
@@ -97,10 +97,10 @@ class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
     self._change_movie_widget.show()
 
   def _onChangeMovieFinished(self):
-    data = self._change_movie_widget.getItem()
-    #utils.verifyType(data, movie_manager.MovieRenameItem)
-    self._manager.setItem(data.getInfo())
-    self._model.setData(self._current_index, data, movie_model.RAW_DATA_ROLE)
+    item = self._change_movie_widget.getItem()
+    #utils.verifyType(item, movie_manager.MovieRenameItem)
+    self._manager.setInfo(item.getInfo())
+    self._model.setData(self._current_index, item, movie_model.RAW_DATA_ROLE)
     self._onSelectionChanged()
 
   def _requireYearChanged(self, require_year):
@@ -130,7 +130,7 @@ class SearchMovieParamsWidget(base_widget.BaseSearchParamsWidget):
     item = item or movie_types.MovieRenameItem("", movie_types.MovieInfo())
     self.filename_edit.setText(file_helper.FileHelper.basename(item.filename))
     self.filename_edit.setToolTip(item.filename)
-    self.search_edit.setText(item.getInfo().toSearchParams().getKey())
+    self.search_edit.setText(item.getInfo().getSearchParams().getKey())
     self.search_edit.selectAll()
 
   def getSearchParams(self):
@@ -139,7 +139,7 @@ class SearchMovieParamsWidget(base_widget.BaseSearchParamsWidget):
 # --------------------------------------------------------------------------------------------------------------------
 class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
   """ The widget allows the user to search and modify movie info. """
-  show_edit_sources_signal = QtCore.pyqtSignal()
+  show_edit_info_clients_signal = QtCore.pyqtSignal()
   def __init__(self, parent=None):
     super(EditMovieInfoWidget, self).__init__(parent)
     uic.loadUi("ui/ui_EditMovie.ui", self)

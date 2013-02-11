@@ -3,7 +3,7 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: The input widget and settings
+# Purpose of document: Widgets that are dependent on media type
 # --------------------------------------------------------------------------------------------------------------------
 import copy
 import os
@@ -25,31 +25,31 @@ from media.base import client as base_client
 from media.base import types as base_types
 
 # --------------------------------------------------------------------------------------------------------------------
-class ActionInterface(object):
-  """ all the input, output and work bench widgets must implement these interfaces """
-  def __init__(self):
-    super(ActionInterface, self).__init__()
-
-  def startExploring(self):
-    raise NotImplementedError("ActionInterface.startExploring not implemented")
-
-  def stopExploring(self):
-    raise NotImplementedError("ActionInterface.stopExploring not implemented")
-
-  def getConfig(self):
-    raise NotImplementedError("ActionInterface.getConfig not implemented")
-
-  def setConfig(self, data):
-    raise NotImplementedError("ActionInterface.setConfig not implemented")
-
-# --------------------------------------------------------------------------------------------------------------------
 class ActionWidgetInterface(QtGui.QWidget):
+  """ interface required by all the main widgets """
   def __init__(self, config_name, parent=None):
     super(ActionWidgetInterface, self).__init__(parent)
     self.config_name = config_name
 
+  def startExploring(self):
+    """ triggered when the explore action on the InputWidget is triggered """
+    raise NotImplementedError("ActionInterface.startExploring not implemented")
+
+  def stopExploring(self):
+    """ triggered when the explore action on the InputWidget has completed """
+    raise NotImplementedError("ActionInterface.stopExploring not implemented")
+
+  def getConfig(self):
+    """ return application data to be serialized """
+    raise NotImplementedError("ActionInterface.getConfig not implemented")
+
+  def setConfig(self, data):
+    """ load deserialized application data """
+    raise NotImplementedError("ActionInterface.setConfig not implemented")
+
 # --------------------------------------------------------------------------------------------------------------------
-class _SourceModel(QtCore.QAbstractTableModel):
+class _InfoClientModel(QtCore.QAbstractTableModel):
+  """ model used to store base.client.InfoClientHolder for use in the EditInfoClientsWidget """
   #statuses
   MISSING_LIBRARY = ("Missing Library", "Source could not be loaded") #(status, tooltip)
   MISSING_KEY = ("Missing Key", "Key needs to be set")
@@ -62,43 +62,43 @@ class _SourceModel(QtCore.QAbstractTableModel):
   RAW_DATA_ROLE = QtCore.Qt.UserRole + 1
 
   def __init__(self, holder, parent):
-    super(_SourceModel, self).__init__(parent)
+    super(_InfoClientModel, self).__init__(parent)
     self._holder = holder
-    self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._holder.stores) - 1)
+    self.beginInsertRows(QtCore.QModelIndex(), 0, len(self._holder.clients) - 1)
     self.endInsertRows()
 
   def rowCount(self, _parent=None):
-    return len(self._holder.stores)
+    return len(self._holder.clients)
 
   def columnCount(self, _parent):
-    return _SourceModel.NUM_COLS
+    return _InfoClientModel.NUM_COLS
 
   def data(self, index, role):
     if not index.isValid():
       return None
 
-    if role not in (_SourceModel.RAW_DATA_ROLE, QtCore.Qt.ForegroundRole,
+    if role not in (_InfoClientModel.RAW_DATA_ROLE, QtCore.Qt.ForegroundRole,
                     QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole):
       return None
 
-    item = self._holder.stores[index.row()]
-    if role == _SourceModel.RAW_DATA_ROLE:
+    item = self._holder.clients[index.row()]
+    if role == _InfoClientModel.RAW_DATA_ROLE:
       return item
-    if role == QtCore.Qt.ForegroundRole and index.column() == _SourceModel.COL_STATUS:
+    if role == QtCore.Qt.ForegroundRole and index.column() == _InfoClientModel.COL_STATUS:
       return QtGui.QBrush(QtCore.Qt.green if item.isActive() else QtCore.Qt.red)
     if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.ToolTipRole:
-      if index.column() == _SourceModel.COL_NAME:
+      if index.column() == _InfoClientModel.COL_NAME:
         return item.prettyName()
       else:
-        status = _SourceModel.MISSING_LIBRARY
+        status = _InfoClientModel.MISSING_LIBRARY
         if item.has_lib:
           if item.isAvailable():
             if item.isActive():
-              status = _SourceModel.ENABLED
+              status = _InfoClientModel.ENABLED
             else:
-              status = _SourceModel.DISABLED
+              status = _InfoClientModel.DISABLED
           else:
-            status = _SourceModel.MISSING_KEY
+            status = _InfoClientModel.MISSING_KEY
         return status[0] if role == QtCore.Qt.DisplayRole else status[1]
 
   def headerData(self, section, orientation, role):
@@ -114,242 +114,41 @@ class _SourceModel(QtCore.QAbstractTableModel):
     if not index.isValid():
       return
     row = index.row()
-    self._holder.stores[row], self._holder.stores[row - 1] = self._holder.stores[row - 1], self._holder.stores[row]
-    self.dataChanged.emit(self.index(row - 1, 0), self.index(row, _SourceModel.NUM_COLS))
+    self._holder.clients[row], self._holder.clients[row - 1] = self._holder.clients[row - 1], self._holder.clients[row]
+    self.dataChanged.emit(self.index(row - 1, 0), self.index(row, _InfoClientModel.NUM_COLS))
 
   def moveDown(self, index):
     if not index.isValid():
       return
     row = index.row()
-    self._holder.stores[row], self._holder.stores[row + 1] = self._holder.stores[row + 1], self._holder.stores[row]
-    self.dataChanged.emit(self.index(row, 0), self.index(row + 1, _SourceModel.NUM_COLS))
+    self._holder.clients[row], self._holder.clients[row + 1] = self._holder.clients[row + 1], self._holder.clients[row]
+    self.dataChanged.emit(self.index(row, 0), self.index(row + 1, _InfoClientModel.NUM_COLS))
 
   def updateItem(self, index, item):
     #dodge city...
     if not index.isValid():
       return
     row = index.row()
-    self._holder.stores[row] = item
-    self.dataChanged.emit(self.index(row, 0), self.index(row, _SourceModel.NUM_COLS))
+    self._holder.clients[row] = item
+    self.dataChanged.emit(self.index(row, 0), self.index(row, _InfoClientModel.NUM_COLS))
 
 # --------------------------------------------------------------------------------------------------------------------
-class BaseSearchParamsWidget(QtGui.QWidget):
-  search_signal = QtCore.pyqtSignal()
-
-  def __init__(self, parent=None):
-    super(BaseSearchParamsWidget, self).__init__(parent)
-
-  def reset(self):
-    self.setItem(None)
-
-  def setItem(self, item):
-    raise NotImplementedError("BaseSearchParamsWidget.setItem not implemented")
-
-  def getSearchParams(self):
-    raise NotImplementedError("BaseSearchParamsWidget.getSearchParams not implemented")
-
-  def _setEditWidgets(self, widgets):
-    for widget in widgets:
-      widget.installEventFilter(self)
-    self._edit_widgets = widgets
-
-  def eventFilter(self, obj, event):
-    if obj in self._edit_widgets and \
-        event.type() == QtCore.QEvent.KeyPress and event.key() == QtCore.Qt.Key_Return:
-      #event.ignore()
-      self.search_signal.emit()
-      return True
-    return super(BaseSearchParamsWidget, self).eventFilter(obj, event)
-
-# --------------------------------------------------------------------------------------------------------------------
-class BaseEditInfoWidget(QtGui.QWidget):
-  def __init__(self, parent=None):
-    super(BaseEditInfoWidget, self).__init__(parent)
-
-  def setInfo(self, info):
-    raise NotImplementedError("BaseEditInfoWidget.setInfo not implemented")
-
-  def getInfo(self):
-    raise NotImplementedError("BaseEditInfoWidget.getInfo not implemented")
-
-# --------------------------------------------------------------------------------------------------------------------
-class SearchThread(thread.WorkerThread):
-  def __init__(self, search_params, store, is_lucky):
-    super(SearchThread, self).__init__("search")
-    self._search_params = search_params
-    self._store = store
-    self._is_lucky = is_lucky
-
-  def _run(self):
-    for info in self._store.getAllInfo(self._search_params):
-      self._onData(info)
-      if self._user_stopped or (info and self._is_lucky):
-        break
-
-# --------------------------------------------------------------------------------------------------------------------
-class EditItemWidget(QtGui.QDialog):
-  show_edit_sources_signal = QtCore.pyqtSignal()
-  """ The widget allows the user to search and modify tv info. """
-  def __init__(self, mode, holder, search_widget, edit_info_widget, parent=None):
-    super(EditItemWidget, self).__init__(parent)
-    self.setWindowTitle("Edit {}".format(mode.capitalize()))
-    self.setWindowModality(True)
-    self.holder = holder
-    self._worker_thread = None
-
-    self._search_widget = search_widget
-    self._search_widget.setParent(self)
-    self._edit_info_widget = edit_info_widget
-    self._edit_info_widget.setParent(self)
-
-    self._is_lucky_check_box = QtGui.QCheckBox("I'm feeling lucky")
-    self._is_lucky_check_box.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed))
-    self._is_lucky_check_box.setToolTip("Return after first match found or search sources for all matches")
-    self._search_buttons = common_widget.ProgressWidget(
-        start_label="Search", widget=self._is_lucky_check_box, parent=self)
-    self._search_buttons.setProgressRange(0, 0) #spin indefinitely
-    self._search_widget.search_signal.connect(self._search_buttons.start)
-
-    edit_sources_button = QtGui.QPushButton("Edit Sources...")
-    edit_sources_button.clicked.connect(self.show_edit_sources_signal)
-
-    search_buttons = QtGui.QHBoxLayout()
-    search_buttons.setContentsMargins(0, 0, 0, 0)
-    search_buttons.setSpacing(4)
-    search_buttons.addWidget(self._search_buttons)
-    search_buttons.addWidget(edit_sources_button)
-
-    self._search_results = SearchResultsWidget(self)
-    self._search_buttons.start_signal.connect(self._search)
-    self._search_results.result_selected_signal.connect(self._edit_info_widget.setInfo)
-
-    self._button_box = QtGui.QDialogButtonBox(self)
-    self._button_box.setOrientation(QtCore.Qt.Horizontal)
-    self._button_box.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
-    #self._button_box.setCenterButtons(False)
-    self._button_box.accepted.connect(self.accept)
-    self._button_box.rejected.connect(self.reject)
-
-    self._hide_label = QtGui.QLabel("hide results")
-    self._hide_label.setOpenExternalLinks(False)
-    self._hide_label.setText("<html><a href=\"xxx\">hide results</a>")
-    self._hide_label.linkActivated.connect(self._hideResults)
-
-    self._show_label = QtGui.QLabel("show results")
-    self._show_label.setOpenExternalLinks(False)
-    self._show_label.setText("<html><a href=\"xxx\">show results</a>")
-    self._show_label.linkActivated.connect(self._showResults)
-
-    bottom_widgets = QtGui.QVBoxLayout()
-    bottom_widgets.setContentsMargins(0, 0, 0, 0)
-    bottom_widgets.setSpacing(4)
-    bottom_widgets.addWidget(self._button_box)
-    bottom_widgets.addWidget(self._hide_label)
-    bottom_widgets.addWidget(self._show_label)
-
-    vbox = QtGui.QVBoxLayout()
-    vbox.addWidget(self._search_widget)
-    vbox.addLayout(search_buttons)
-    vbox.addWidget(self._edit_info_widget)
-    vbox.addLayout(bottom_widgets)
-
-    layout = QtGui.QHBoxLayout(self)
-    layout.setContentsMargins(4, 4, 4, 4)
-    layout.setSpacing(4)
-    layout.addLayout(vbox)
-    layout.addWidget(self._search_results)
-
-    self._item = None
-    self._is_lucky = False
-    self._found_data = True
-    self._onThreadFinished()
-    self._hideResults()
-    self._show_label.setVisible(False)
-
-  def __del__(self):
-    self._stopThread()
-
-  def showEvent(self, e):
-    self._found_data = True
-    self._onThreadFinished()
-    self._hideResults()
-    self._show_label.setVisible(False)
-    super(EditItemWidget, self).showEvent(e)
-
-  def _search(self):
-    if self._worker_thread and self._worker_thread.isRunning():
-      return
-    self._is_lucky = self._is_lucky_check_box.isChecked()
-    self._found_data = False
-
-    self._search_buttons.start()
-    self._button_box.setEnabled(False)
-    self._edit_info_widget.setEnabled(False)
-    self._search_widget.setEnabled(False)
-
-    self._worker_thread = SearchThread(self._search_widget.getSearchParams(),
-        self.holder, self._is_lucky)
-    self._worker_thread.new_data_signal.connect(self._onDataFound)
-    self._worker_thread.finished.connect(self._onThreadFinished)
-    self._worker_thread.terminated.connect(self._onThreadFinished)
-    self._worker_thread.start()
-
-  def _stopThread(self):
-    if self._worker_thread:
-      self._worker_thread.join()
-
-  def _onThreadFinished(self):
-    self._search_buttons.stop()
-    self._button_box.setEnabled(True)
-    self._search_widget.setEnabled(True)
-    self._edit_info_widget.setEnabled(True)
-
-    if not self._found_data:
-      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
-
-  def _onDataFound(self, data):
-    if not data:
-      return
-
-    if self._is_lucky:
-      self._edit_info_widget.setInfo(data.info)
-    else:
-      if not self._found_data:
-        self._search_results.clear()
-        self._search_results.addResult(base_client.ResultHolder(self.getItem().getInfo(), "current"))
-      self._search_results.addResult(data)
-      self._showResults()
-    self._found_data = True
-
-  def setItem(self, item):
-    """ Fill the dialog with the data prior to being shown """
-    #utils.verifyType(s, tv_types.Season)
-    self._item = item
-    self._search_widget.setItem(item)
-    self._edit_info_widget.setInfo(item.getInfo() if item else None)
-
-  def getItem(self):
-    self._item.info = self._edit_info_widget.getInfo()
-    return copy.copy(self._item)
-
-  def _showResults(self):
-    self._search_results.setVisible(True)
-    self._hide_label.setVisible(True)
-    self._show_label.setVisible(False)
-
-  def _hideResults(self):
-    self._search_results.setVisible(False)
-    self._hide_label.setVisible(False)
-    self._show_label.setVisible(True)
-
-# --------------------------------------------------------------------------------------------------------------------
-class EditSourcesWidget(QtGui.QDialog):
-  """ Allows the user to prioritise the search order for information sources and set keys """
+class EditInfoClientsWidget(QtGui.QDialog):
+  """ Allows the user to:
+    * View and modify media.base.client.BaseInfoClient priority order
+    * View all media.base.client.BaseInfoClient
+    * Edit media.base.client.BaseInfoClient key (where required) and enable / disable clients 
+     
+  Attributes:
+    mode: string type of media the widget is dealing with
+    holder: media.base.manager.InfoClientHolder to be viewed / modified
+    parent: QWidget parent
+  """
   def __init__(self, mode, holder, parent=None):
-    super(EditSourcesWidget, self).__init__(parent)
+    super(EditInfoClientsWidget, self).__init__(parent)
     uic.loadUi("ui/ui_EditSources.ui", self)
     self.setWindowModality(True)
-    self.setWindowTitle("Edit {} Sources".format(mode.capitalize()))
+    self.setWindowTitle("Edit {} Sources".format(mode.capitalize())) #TODO: set this better. Should match button name.
 
     self.key_edit.textEdited.connect(self._onKeyEdited)
     self.is_enabled_check_box.clicked.connect(self._onActiveChecked)
@@ -358,11 +157,11 @@ class EditSourcesWidget(QtGui.QDialog):
     self.key_edit.setPlaceholderText("Enter key here")
 
     self._current_index = None
-    self._model = _SourceModel(holder, self)
+    self._model = _InfoClientModel(holder, self)
     self.source_view.setModel(self._model)
-    self.source_view.horizontalHeader().setResizeMode(_SourceModel.COL_NAME, QtGui.QHeaderView.Interactive)
-    self.source_view.horizontalHeader().setResizeMode(_SourceModel.COL_STATUS, QtGui.QHeaderView.Fixed)
-    self.source_view.horizontalHeader().resizeSection(_SourceModel.COL_STATUS, 30)
+    self.source_view.horizontalHeader().setResizeMode(_InfoClientModel.COL_NAME, QtGui.QHeaderView.Interactive)
+    self.source_view.horizontalHeader().setResizeMode(_InfoClientModel.COL_STATUS, QtGui.QHeaderView.Fixed)
+    self.source_view.horizontalHeader().resizeSection(_InfoClientModel.COL_STATUS, 30)
     self.source_view.horizontalHeader().setStretchLastSection(True)
     self.source_view.selectionModel().selectionChanged.connect(self._onSelectionChanged)
     self._onSelectionChanged()
@@ -375,7 +174,7 @@ class EditSourcesWidget(QtGui.QDialog):
       self.up_button.setEnabled(False)
       self.down_button.setEnabled(False)
     else:
-      item = self._model.data(self._current_index, _SourceModel.RAW_DATA_ROLE)
+      item = self._model.data(self._current_index, _InfoClientModel.RAW_DATA_ROLE)
       row = self._current_index.row()
       self.up_button.setEnabled(row >= 1)
       self.down_button.setEnabled((row + 1) < self._model.rowCount())
@@ -404,22 +203,27 @@ class EditSourcesWidget(QtGui.QDialog):
     self.is_enabled_check_box.setChecked(bool(item) and item.is_enabled)
 
   def _onKeyEdited(self, text):
-    item = self._model.data(self._current_index, _SourceModel.RAW_DATA_ROLE)
+    item = self._model.data(self._current_index, _InfoClientModel.RAW_DATA_ROLE)
     item.key = str(text)
     self.is_enabled_check_box.setEnabled(item.isAvailable())
     self._model.updateItem(self._current_index, item)
 
   def _onActiveChecked(self):
-    item = self._model.data(self._current_index, _SourceModel.RAW_DATA_ROLE)
+    item = self._model.data(self._current_index, _InfoClientModel.RAW_DATA_ROLE)
     item.is_enabled = self.is_enabled_check_box.isChecked()
     self._model.updateItem(self._current_index, item)
 
 # --------------------------------------------------------------------------------------------------------------------
 class InputWidget(ActionWidgetInterface):
-  """ Widget allowing for the configuration of source folders """
-  explore_signal = QtCore.pyqtSignal()
-  stop_signal = QtCore.pyqtSignal()
-  show_edit_sources_signal = QtCore.pyqtSignal()
+  """ Widget to define search parameters 
+  Attributes:
+    mode: string type of media the widget is dealing with
+    holder: media.base.manager.InfoClientHolder to be viewed / modified
+    parent: QWidget parent
+  """
+  explore_signal = QtCore.pyqtSignal() # searching has commenced and the Workbench widget will begin to fill with data
+  stop_signal = QtCore.pyqtSignal() # searching has completed (either via user hitting stop) or successful completion
+  show_edit_info_clients_signal = QtCore.pyqtSignal() # launch the EditInfoClientsWidget widget
 
   def __init__(self, mode, holder, parent=None):
     super(InputWidget, self).__init__("input/{}".format(mode), parent)
@@ -436,7 +240,7 @@ class InputWidget(ActionWidgetInterface):
     self.restricted_extension_radio_button.toggled.connect(self.file_extension_edit.setEnabled)
     self.restricted_size_radio_button.toggled.connect(self.filesize_spin_box.setEnabled)
     self.restricted_size_radio_button.toggled.connect(self.filesize_combo_box.setEnabled)
-    self.show_source_button.clicked.connect(self.show_edit_sources_signal.emit)
+    self.show_source_button.clicked.connect(self.show_edit_info_clients_signal.emit)
     search_action = QtGui.QAction(self.progress_widget.start_button.text(), self)
     search_action.setIcon(self.progress_widget.start_button.icon())
     search_action.setShortcut(QtCore.Qt.ControlModifier + QtCore.Qt.Key_F)
@@ -497,11 +301,16 @@ class InputWidget(ActionWidgetInterface):
   def onSourcesWidgetFinished(self):
     sources = self._holder.getAllActiveNames()
     self.sources_edit.setText(", ".join(sources))
-    #todo: act if == None
+    #TODO: if none are selected warn user as no search results will get found
 
 # --------------------------------------------------------------------------------------------------------------------
 class NameFormatHelper:
-  """ used by the output widget """
+  """ used by the output widget to display preview outputs for given info objects.
+  Attributes:
+    formatter: common.renamer.BaseNameFormatter that drives the filename generation
+    help_info: media.base.types.BaseInfo for help message
+    example_info: media.base.types.BaseInfo for sample output (used when no currently selected item)
+    preview_info: media.base.types.BaseInfo to display what a currently selected item will output """
   def __init__(self, formatter, help_info, example_info, preview_info=None):
     self.formatter = formatter
     self.help_info = help_info
@@ -510,8 +319,14 @@ class NameFormatHelper:
 
 # --------------------------------------------------------------------------------------------------------------------
 class OutputWidget(ActionWidgetInterface):
-  """ Widget allowing for the configuration of output settings """
-  rename_signal = QtCore.pyqtSignal()
+  """ Widget allowing for the configuration of output settings 
+  Attributes:
+    mode: string type of media the widget is dealing with
+    name_format_helper: NameFormatHelper for formatting user help and preview text
+    parent: QWidget parent
+  """
+  rename_signal = QtCore.pyqtSignal() 
+  """ notifies the module to begin (or continue) renaming based on the workbench widgets contents """
   
   def __init__(self, mode, name_format_helper, parent=None):
     super(OutputWidget, self).__init__("output/{}".format(mode), parent)
@@ -631,6 +446,10 @@ class OutputWidget(ActionWidgetInterface):
     self.show_help_label.setVisible(True)
 
   def onRenameItemChanged(self, item):
+    """ update the preview text based on the currently selected item in the workbench 
+    Args:
+      item: media.base.types.BaseRenameItem currently selected in the workbench (None if no valid selection)
+    """
     info = item.getInfo() if item else None
     if info != self._helper.preview_info:
       self._helper.preview_info = info
@@ -638,8 +457,24 @@ class OutputWidget(ActionWidgetInterface):
 
 # --------------------------------------------------------------------------------------------------------------------
 class _ActionHolder:
-  """ used by BaseWorkBenchWidget """
-  def __init__(self, button, parent, callback, shortcut, index):
+  """ Class to ensure that corresponding buttons actions and shortcuts trigger. Unfortunately, it was not possible
+  (at least how I had it set up) to add the shortcuts to the buttons, perhaps because the two modes (tv and movie) 
+  widgets both have the same shortcuts - even though only one of the widgets is displayed at one time.
+  
+  Only used in the BaseWorkBenchWidget at the moment.
+  """
+  
+  def __init__(self, button, callback, shortcut, index, parent):
+    """
+     Constructor 
+     Args:
+       button: QPushButton to drive action. name and icon information are taken from the button and used for the action
+       callback: what to call when the action is triggered
+       shortcut: keyboard shortcut to be associated with the action
+       index: as we are storing in a map this index lets us pretend it is an ordered list
+         (TODO: use collections.OrderedDict)
+       parent: owner of the action (BaseWorkBenchWidget)  
+     """
     self.name = str(button.text()) #assumes the names match
     self.button = button
     self.action = QtGui.QAction(self.name, parent)
@@ -652,9 +487,18 @@ class _ActionHolder:
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseWorkBenchWidget(ActionWidgetInterface):
-  """ hacky and horrible base workbench widget """
+  """ hacky and horrible base workbench widget. There is a lot of common functionality, need to decided how to rework
+  it.
+  
+  Attributes:
+    mode: string type of media the widget is dealing with
+    manager: media.base.manager.BaseManager which is updated when a user manually edits Info
+    parent: QWidget parent
+  
+  TODO: fix me!!
+  """  
   workbench_changed_signal = QtCore.pyqtSignal(bool)
-  show_edit_sources_signal = QtCore.pyqtSignal()
+  show_edit_info_clients_signal = QtCore.pyqtSignal()
   renameItemChangedSignal = QtCore.pyqtSignal(object)
 
   def __init__(self, mode, manager, parent=None):
@@ -673,7 +517,7 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
     self.edit_movie_button.setIcon(QtGui.QIcon("img/edit.png"))
 
     def createAction(actions, button, callback, shortcut=None):
-      holder = _ActionHolder(button, self, callback, shortcut, len(actions))
+      holder = _ActionHolder(button, callback, shortcut, len(actions), self)
       actions[holder.name] = holder
 
     self._actions = {}
@@ -821,8 +665,239 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
     return self._model.items()
 
 # --------------------------------------------------------------------------------------------------------------------
+class BaseSearchParamsWidget(QtGui.QWidget):
+  """ widget to display search params which are then used by the BaseItemWidget to perform a search """
+  search_signal = QtCore.pyqtSignal()
+
+  def __init__(self, parent=None):
+    super(BaseSearchParamsWidget, self).__init__(parent)
+
+  def setItem(self, item):
+    """ prepares the widget as required with the media.base.types.BaseRenameItem object"""
+    raise NotImplementedError("BaseSearchParamsWidget.setItem not implemented")
+
+  def getSearchParams(self):
+    """ returns media.base.types.BaseSearchParams object to be used for searching """
+    raise NotImplementedError("BaseSearchParamsWidget.getSearchParams not implemented")
+
+  def _setEditWidgets(self, widgets):
+    """ These widgets start search when Enter is pressed while it has focus. As the widget is within the parent 
+    EditItemWidget dialog parent, an uncaught Enter press will trigger the accept() action, hence closing the dialog.
+    In my experience this wasn't the desired behaviour.
+    """
+    for widget in widgets:
+      widget.installEventFilter(self)
+    self._edit_widgets = widgets
+
+  def eventFilter(self, obj, event):
+    if obj in self._edit_widgets and \
+        event.type() == QtCore.QEvent.KeyPress and event.key() == QtCore.Qt.Key_Return:
+      self.search_signal.emit()
+      return True
+    return super(BaseSearchParamsWidget, self).eventFilter(obj, event)
+
+# --------------------------------------------------------------------------------------------------------------------
+class BaseEditInfoWidget(QtGui.QWidget):
+  """ Edit widget that allows the user to modify media.base.types.BaseInfo objects. Currently only used as part of the  
+  BaseEditItemWidget but it could be used inline with the BaseWorkbenchWidget. """
+  def __init__(self, parent=None):
+    super(BaseEditInfoWidget, self).__init__(parent)
+
+  def setInfo(self, info):
+    """ apply media.base.types.BaseInfo object data to the widget """
+    raise NotImplementedError("BaseEditInfoWidget.setInfo not implemented")
+
+  def getInfo(self):
+    """ retrive media.base.types.BaseInfo object from the widget """
+    raise NotImplementedError("BaseEditInfoWidget.getInfo not implemented")
+
+# --------------------------------------------------------------------------------------------------------------------
+class SearchThread(thread.WorkerThread):
+  """ performs the search for media.base.types.BaseInfo objects using search params
+    Attrs:
+      _search_params: media.base.types.BaseSearchParams data use to perform the search
+      _holder: media.base.client.BaseInfoClientHolder that performs the search
+      _is_lucky: boolean flag defining whether to stop on first result or continue to find all
+    """
+  def __init__(self, search_params, holder, is_lucky):
+    super(SearchThread, self).__init__("search")
+    self._search_params = search_params
+    self._holder = holder
+    self._is_lucky = is_lucky
+
+  def _run(self):
+    for info in self._holder.getAllInfo(self._search_params):
+      self._onData(info)
+      if self._user_stopped or (info and self._is_lucky):
+        break
+
+# --------------------------------------------------------------------------------------------------------------------
+class EditItemWidget(QtGui.QDialog):
+  """ Widget to allow the editting of BaseEditInfo metadata for a BaseEditItem object. The user can do this editting 
+  manually, or use the search function to retrive the information from the sources.
+  
+  The widget is the composition of BaseSearchParamsWidget, BaseEditInfoWidget and SearchResultsWidget.
+  """
+  
+  show_edit_info_clients_signal = QtCore.pyqtSignal()
+  def __init__(self, mode, holder, search_widget, edit_info_widget, parent=None):
+    
+    super(EditItemWidget, self).__init__(parent)
+    self.setWindowTitle("Edit {}".format(mode.capitalize()))
+    self.setWindowModality(True)
+    self.holder = holder
+    self._worker_thread = None
+
+    self._search_widget = search_widget
+    self._search_widget.setParent(self)
+    self._edit_info_widget = edit_info_widget
+    self._edit_info_widget.setParent(self)
+
+    self._is_lucky_check_box = QtGui.QCheckBox("I'm feeling lucky")
+    self._is_lucky_check_box.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed))
+    self._is_lucky_check_box.setToolTip("Return after first match found or search sources for all matches")
+    self._search_buttons = common_widget.ProgressWidget(
+        start_label="Search", widget=self._is_lucky_check_box, parent=self)
+    self._search_buttons.setProgressRange(0, 0) #spin indefinitely
+    self._search_widget.search_signal.connect(self._search_buttons.start)
+
+    edit_sources_button = QtGui.QPushButton("Edit Sources...")
+    edit_sources_button.clicked.connect(self.show_edit_info_clients_signal)
+
+    search_buttons = QtGui.QHBoxLayout()
+    search_buttons.setContentsMargins(0, 0, 0, 0)
+    search_buttons.setSpacing(4)
+    search_buttons.addWidget(self._search_buttons)
+    search_buttons.addWidget(edit_sources_button)
+
+    self._search_results = SearchResultsWidget(self)
+    self._search_buttons.start_signal.connect(self._search)
+    self._search_results.result_selected_signal.connect(self._edit_info_widget.setInfo)
+
+    self._button_box = QtGui.QDialogButtonBox(self)
+    self._button_box.setOrientation(QtCore.Qt.Horizontal)
+    self._button_box.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
+    #self._button_box.setCenterButtons(False)
+    self._button_box.accepted.connect(self.accept)
+    self._button_box.rejected.connect(self.reject)
+
+    self._hide_label = QtGui.QLabel("hide results")
+    self._hide_label.setOpenExternalLinks(False)
+    self._hide_label.setText("<html><a href=\"xxx\">hide results</a>")
+    self._hide_label.linkActivated.connect(self._hideResults)
+
+    self._show_label = QtGui.QLabel("show results")
+    self._show_label.setOpenExternalLinks(False)
+    self._show_label.setText("<html><a href=\"xxx\">show results</a>")
+    self._show_label.linkActivated.connect(self._showResults)
+
+    bottom_widgets = QtGui.QVBoxLayout()
+    bottom_widgets.setContentsMargins(0, 0, 0, 0)
+    bottom_widgets.setSpacing(4)
+    bottom_widgets.addWidget(self._button_box)
+    bottom_widgets.addWidget(self._hide_label)
+    bottom_widgets.addWidget(self._show_label)
+
+    vbox = QtGui.QVBoxLayout()
+    vbox.addWidget(self._search_widget)
+    vbox.addLayout(search_buttons)
+    vbox.addWidget(self._edit_info_widget)
+    vbox.addLayout(bottom_widgets)
+
+    layout = QtGui.QHBoxLayout(self)
+    layout.setContentsMargins(4, 4, 4, 4)
+    layout.setSpacing(4)
+    layout.addLayout(vbox)
+    layout.addWidget(self._search_results)
+
+    self._item = None
+    self._is_lucky = False
+    self._found_data = True
+    self._onThreadFinished()
+    self._hideResults()
+    self._show_label.setVisible(False)
+
+  def __del__(self):
+    self._stopThread()
+
+  def showEvent(self, e):
+    self._found_data = True
+    self._onThreadFinished()
+    self._hideResults()
+    self._show_label.setVisible(False)
+    super(EditItemWidget, self).showEvent(e)
+
+  def _search(self):
+    """ start the thread to perform searching """
+    if self._worker_thread and self._worker_thread.isRunning():
+      return
+    self._is_lucky = self._is_lucky_check_box.isChecked()
+    self._found_data = False
+
+    self._search_buttons.start()
+    self._button_box.setEnabled(False)
+    self._edit_info_widget.setEnabled(False)
+    self._search_widget.setEnabled(False)
+
+    self._worker_thread = SearchThread(self._search_widget.getSearchParams(),
+        self.holder, self._is_lucky)
+    self._worker_thread.new_data_signal.connect(self._onDataFound)
+    self._worker_thread.finished.connect(self._onThreadFinished)
+    self._worker_thread.terminated.connect(self._onThreadFinished)
+    self._worker_thread.start()
+
+  def _stopThread(self):
+    if self._worker_thread:
+      self._worker_thread.join()
+
+  def _onThreadFinished(self):
+    self._search_buttons.stop()
+    self._button_box.setEnabled(True)
+    self._search_widget.setEnabled(True)
+    self._edit_info_widget.setEnabled(True)
+
+    if not self._found_data:
+      QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
+
+  def _onDataFound(self, data):
+    if not data:
+      return
+
+    if self._is_lucky:
+      self._edit_info_widget.setInfo(data.info)
+    else:
+      if not self._found_data:
+        self._search_results.clear()
+        self._search_results.addResult(base_client.ResultHolder(self.getItem().getInfo(), "current"))
+      self._search_results.addResult(data)
+      self._showResults()
+    self._found_data = True
+
+  def setItem(self, item):
+    """ Fill the dialog with the data prior to being shown """
+    #utils.verifyType(s, tv_types.Season)
+    self._item = item
+    self._search_widget.setItem(item)
+    self._edit_info_widget.setInfo(item.getInfo() if item else None)
+
+  def getItem(self):
+    self._item.info = self._edit_info_widget.getInfo()
+    return copy.copy(self._item)
+
+  def _showResults(self):
+    self._search_results.setVisible(True)
+    self._hide_label.setVisible(True)
+    self._show_label.setVisible(False)
+
+  def _hideResults(self):
+    self._search_results.setVisible(False)
+    self._hide_label.setVisible(False)
+    self._show_label.setVisible(True)
+
+# --------------------------------------------------------------------------------------------------------------------
 class SearchResultsWidget(QtGui.QWidget):
-  """ lists search results found in an info widget """
+  """ Displays search results sent from the EditItemWidget (to addResult()). Results are tabulated. Selecting a row of 
+  the table will trigger the result_selected_signal sending the currently selected media.base.types.BaseInfo object."""
   result_selected_signal = QtCore.pyqtSignal(object)
 
   def __init__(self, parent=None):
@@ -837,6 +912,7 @@ class SearchResultsWidget(QtGui.QWidget):
     self.results_widget.setRowCount(0)
 
   def addResult(self, result_holder):
+    """ add media.base.types.ResultHolder obj to the table """
     self._items.append(result_holder)
     row_count = self.results_widget.rowCount()
     self.results_widget.insertRow(row_count)
@@ -850,6 +926,7 @@ class SearchResultsWidget(QtGui.QWidget):
     self.results_widget.setItem(row_count, 1, widget)
 
   def _onItemClicked(self):
+    """ sends the currently selected media.base.types.BaseInfo obj """
     if self.results_widget.selectedItems():
       row = self.results_widget.selectedItems()[0].row()
       holder = self._items[row]

@@ -5,8 +5,8 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: Module that connects to movie info sources
 # --------------------------------------------------------------------------------------------------------------------
-from media.base import client as base_client
 from common import utils
+from media.base import client as base_client
 from media.movie import types as movie_types
 
 _HAS_PYMDB = False
@@ -37,21 +37,17 @@ try:
 except ImportError:
   pass
 
-# --------------------------------------------------------------------------------------------------------------------
-class MovieInfoStoreHolder(base_client.BaseInfoStoreHolder):
-  pass
-
 _STORE = None
 
 # --------------------------------------------------------------------------------------------------------------------
-def getStoreHolder():
+def getInfoClientHolder():
   global _STORE
   if not _STORE:
-    _STORE = MovieInfoStoreHolder()
-    _STORE.addStore(ImdbClient())
-    #_STORE.addStore(ImdbPyClient())  # does not seem to work at the moment.
-    _STORE.addStore(TheMovieDbClient())
-    _STORE.addStore(RottenTomatoesClient())
+    _STORE = base_client.InfoClientHolder()
+    _STORE.addClient(ImdbClient())
+    #_STORE.addClient(ImdbPyClient())  # does not seem to work at the moment.
+    _STORE.addClient(TheMovieDbClient())
+    _STORE.addClient(RottenTomatoesClient())
   return _STORE
 
 # --------------------------------------------------------------------------------------------------------------------

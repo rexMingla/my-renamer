@@ -36,7 +36,7 @@ class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
 
     self._change_season_widget = EditSeasonItemWidget(manager.getHolder(), self)
     self._change_season_widget.accepted.connect(self._onChangeSeasonFinished)
-    self._change_season_widget.show_edit_sources_signal.connect(self.show_edit_sources_signal.emit)
+    self._change_season_widget.show_edit_info_clients_signal.connect(self.show_edit_info_clients_signal.emit)
     self._change_season_widget.setVisible(False)
 
     self.tv_view.setModel(self._model)
@@ -103,14 +103,14 @@ class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
       self._change_episode_widget.show()
 
   def _onChangeEpisodeFinished(self):
-    self._model.setItem(self._current_index, self._change_episode_widget.episodeNumber(), tv_model.RAW_DATA_ROLE)
+    self._model.setData(self._current_index, self._change_episode_widget.episodeNumber(), tv_model.RAW_DATA_ROLE)
     self.tv_view.expand(self._current_index.parent())
     self._onSelectionChanged()
 
   def _onChangeSeasonFinished(self):
     item = self._change_season_widget.getItem()
     #utils.verifyType(data, tv_types.Season)
-    self._manager.setItem(item.getInfo())
+    self._manager.setInfo(item.getInfo())
     self._model.setData(self._current_index, item, tv_model.RAW_DATA_ROLE)
     self.tv_view.expand(self._current_index)
 
