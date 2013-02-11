@@ -18,8 +18,8 @@ from media.base import model as base_model
 class SortFilterModel(QtGui.QSortFilterProxyModel):
   def lessThan(self, left, right):
     if left.column() == Columns.COL_FILE_SIZE:
-      left_data = self.sourceModel().data(left, RAW_DATA_ROLE).file_size
-      right_data = self.sourceModel().data(right, RAW_DATA_ROLE).file_size
+      left_data = self.sourceModel().data(left, RAW_DATA_ROLE).getFileSize()
+      right_data = self.sourceModel().data(right, RAW_DATA_ROLE).getFileSize()
       return left_data < right_data
     else:
       left_data = self.sourceModel().data(left, QtCore.Qt.ToolTipRole) #use tooltip so that filename is col is full path
@@ -55,12 +55,12 @@ class MovieItem(object):
     self.movie = movie
     self.index = index
     self.want_to_move = True
-    self.cached_status_text = movie.status()
+    self.cached_status_text = movie.getStatus()
     self.duplicates = []
 
   def isMatch(self, other):
     #utils.verifyType(other, MovieItem)
-    return self.movie.status() == self.movie.READY and self.movie.info == other.movie.info
+    return self.movie.getStatus() == self.movie.READY and self.movie.info == other.movie.info
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
@@ -157,7 +157,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     elif col == Columns.COL_GENRE:
       return info.getGenre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesToString(movie.file_size) if movie.isReady() else ""
+      return utils.bytesToString(movie.getFileSize()) if movie.isReady() else ""
     elif col == Columns.COL_SERIES:
       return info.series
 

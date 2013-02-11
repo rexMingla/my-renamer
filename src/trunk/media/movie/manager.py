@@ -69,12 +69,12 @@ class MovieManager(base_manager.BaseManager):
   helper = MovieHelper
 
   def __init__(self):
-    super(MovieManager, self).__init__(movie_client.getStoreHolder())
+    super(MovieManager, self).__init__(movie_client.getInfoClientHolder())
 
   def processFile(self, filename):
     movie = MovieHelper.extractMovieFromFile(filename)
     if movie.isReady():
-      movie.info = self.getItem(movie.getInfo().toSearchParams())
+      movie.info = self.getInfo(movie.getInfo().getSearchParams())
     return movie
 
 _MANAGER = None

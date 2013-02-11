@@ -68,7 +68,7 @@ class TvManager(base_manager.BaseManager):
   helper = TvHelper
 
   def __init__(self):
-    super(TvManager, self).__init__(tv_client.getStoreHolder())
+    super(TvManager, self).__init__(tv_client.getInfoClientHolder())
 
   def getSeasonForFolder(self, folder, extension_filter, min_file_size_bytes):
     #utils.verifyType(min_file_size_bytes, int)
@@ -82,7 +82,7 @@ class TvManager(base_manager.BaseManager):
       sources = TvHelper.getSourcesFromFilenames(files)
       info = tv_types.SeasonInfo(search_params.show_name, search_params.season_num)
       if search_params.show_name != tv_types.UNRESOLVED_NAME:
-        info = self.getItem(search_params)
+        info = self.getInfo(search_params)
       season = tv_types.Season(folder, info, sources)
     return season
 

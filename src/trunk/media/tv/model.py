@@ -118,7 +118,7 @@ class ContainerItem(BaseItem):
     if role not in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole, QtCore.Qt.ForegroundRole):
       return None
 
-    is_unresolved = self.raw.status == tv_types.Season.SEASON_NOT_FOUND
+    is_unresolved = self.raw.getStatus() == tv_types.Season.SEASON_NOT_FOUND
     if role == QtCore.Qt.ForegroundRole and is_unresolved:
       return QtGui.QBrush(QtCore.Qt.red)
     elif index.column() == Columns.COL_OLD_NAME:
@@ -128,7 +128,7 @@ class ContainerItem(BaseItem):
         return str(self.raw)
 
   def canCheck(self):
-    return self.raw.status != tv_types.Season.SEASON_NOT_FOUND and any(c.canCheck() for c in self.child_items)
+    return self.raw.getStatus() != tv_types.Season.SEASON_NOT_FOUND and any(c.canCheck() for c in self.child_items)
 
   def checkState(self):
     if not self.canCheck():
@@ -156,9 +156,9 @@ class LeafItem(BaseItem):
 
     column = index.column()
     if role == QtCore.Qt.ForegroundRole:
-      if self.raw.status() == tv_types.EpisodeRenameItem.MISSING_NEW:
+      if self.raw.getStatus() == tv_types.EpisodeRenameItem.MISSING_NEW:
         return QtGui.QBrush(QtCore.Qt.red)
-      elif self.raw.status() == tv_types.EpisodeRenameItem.MISSING_OLD:
+      elif self.raw.getStatus() == tv_types.EpisodeRenameItem.MISSING_OLD:
         return QtGui.QBrush(QtCore.Qt.gray)
     if column == Columns.COL_OLD_NAME:
       if role == QtCore.Qt.ToolTipRole:
@@ -173,10 +173,10 @@ class LeafItem(BaseItem):
     elif column == Columns.COL_NEW_NAME:
       return self.raw.info.ep_name
     elif column == Columns.COL_STATUS:
-      return self.raw.status()
+      return self.raw.getStatus()
     elif column == Columns.COL_FILE_SIZE:
-      if self.raw.status() != tv_types.EpisodeRenameItem.MISSING_OLD:
-        return utils.bytesToString(self.raw.file_size)
+      if self.raw.getStatus() != tv_types.EpisodeRenameItem.MISSING_OLD:
+        return utils.bytesToString(self.raw.getFileSize())
     return None
 
   def setData(self, model, index, value, role):

@@ -26,18 +26,18 @@ except ImportError:
   pass
 
 # --------------------------------------------------------------------------------------------------------------------
-class TvInfoStoreHolder(base_client.BaseInfoStoreHolder):
+class TvInfoStoreHolder(base_client.InfoClientHolder):
   pass
 
 _STORE = None
 
 # --------------------------------------------------------------------------------------------------------------------
-def getStoreHolder():
+def getInfoClientHolder():
   global _STORE
   if not _STORE:
     _STORE = TvInfoStoreHolder()
-    _STORE.addStore(TvdbClient())
-    _STORE.addStore(TvRageClient())
+    _STORE.addClient(TvdbClient())
+    _STORE.addClient(TvRageClient())
   return _STORE
 
 # --------------------------------------------------------------------------------------------------------------------
