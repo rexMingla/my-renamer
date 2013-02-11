@@ -5,16 +5,18 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: MainWindow for the application
 # --------------------------------------------------------------------------------------------------------------------
+import functools
+import threading
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from PyQt4 import uic
-import functools
 
 from common import config
-from common import interfaces
 from common import file_helper
 from common import utils
+from common import thread
 from common import widget as base_widget
+from media.base import types as base_types
 
 import app
 from app import config_manager
@@ -38,28 +40,28 @@ class MainWindow(QtGui.QMainWindow):
     self._log_widget = LogWidget(parent)
     self.setCentralWidget(self._work_bench_widget)
 
-    self._mode_to_action = {interfaces.MOVIE_MODE : self.action_movie_mode,
-                            interfaces.TV_MODE: self.action_tv_mode}
+    self._mode_to_action = {base_types.MOVIE_MODE : self.action_movie_mode,
+                            base_types.TV_MODE: self.action_tv_mode}
 
     #dock widgets
     dock_areas = QtCore.Qt.AllDockWidgetAreas
     self._addDockWidget(self._input_widget, dock_areas, QtCore.Qt.TopDockWidgetArea, "Input Settings")
     self._addDockWidget(self._output_widget, dock_areas, QtCore.Qt.BottomDockWidgetArea, "Output Settings")
-    self._addDockWidget(self._log_widget, dock_areas, QtCore.Qt.BottomDockWidgetArea, "Message Log")
+    self._addDockWidget(self._log_widget, dock_areas, QtCore.Qt.BottomDockWidgetArea, "Rename Items")
 
     self._config_manager = config_manager.ConfigManager()
     self._cache_manager = config_manager.ConfigManager()
 
     self._mode_to_module = {}
-    for mode in interfaces.VALID_MODES:
+    for mode in base_types.VALID_MODES:
       self._addModule(module.RenamerModule(mode, self))
     self._mode = None
     self._auto_start = False
 
     #menu actions
-    self.action_movie_mode.triggered.connect(functools.partial(self._setMode, mode=interfaces.MOVIE_MODE))
+    self.action_movie_mode.triggered.connect(functools.partial(self._setMode, mode=base_types.MOVIE_MODE))
     self.action_movie_mode.setIcon(QtGui.QIcon("img/movie.png"))
-    self.action_tv_mode.triggered.connect(functools.partial(self._setMode, mode=interfaces.TV_MODE))
+    self.action_tv_mode.triggered.connect(functools.partial(self._setMode, mode=base_types.TV_MODE))
     self.action_tv_mode.setIcon(QtGui.QIcon("img/tv.png"))
     self.action_exit.triggered.connect(self.close)
     self.action_about.triggered.connect(self._showAbout)
@@ -67,9 +69,9 @@ class MainWindow(QtGui.QMainWindow):
     self.action_save.triggered.connect(self._saveSettings)
     self.action_restore_defaults.triggered.connect(self._restoreDefaults)
     self.action_clear_cache.triggered.connect(self._clearCache)
-    self.action_edit_tv_sources.triggered.connect(self._mode_to_module[interfaces.TV_MODE].edit_sources_widget.show)
+    self.action_edit_tv_sources.triggered.connect(self._mode_to_module[base_types.TV_MODE].edit_sources_widget.show)
     self.action_edit_movie_sources.triggered.connect(
-      self._mode_to_module[interfaces.MOVIE_MODE].edit_sources_widget.show)
+      self._mode_to_module[base_types.MOVIE_MODE].edit_sources_widget.show)
 
     self.action_toolbar.addAction(self.action_movie_mode)
     self.action_toolbar.addAction(self.action_tv_mode)
@@ -90,7 +92,7 @@ class MainWindow(QtGui.QMainWindow):
       return "{} libraries:<ul>{}</ul>".format(mode.capitalize(), "\n".join(info))
 
     text = []
-    for mode in interfaces.VALID_MODES:
+    for mode in base_types.VALID_MODES:
       text.append(getText(mode))
 
     msg = ("<html><p>{} is written in python with PyQt.<p/>\n"
@@ -110,7 +112,7 @@ class MainWindow(QtGui.QMainWindow):
     self._input_widget.addWidget(mod.input_widget)
     self._work_bench_widget.addWidget(mod.work_bench)
     self._output_widget.addWidget(mod.output_widget)
-    mod.log_signal.connect(self._log_widget.appendMessage)
+    mod.new_rename_items_signal.connect(self._log_widget.addItems)
 
   def showEvent(self, event):
     super(MainWindow, self).showEvent(event)
@@ -123,9 +125,9 @@ class MainWindow(QtGui.QMainWindow):
 
   def closeEvent(self, event):
     mod = self._mode_to_module[self._mode]
-    if mod.output_widget.isExecuting():
+    if self._log_widget.isExecuting():
       response = QtGui.QMessageBox.warning(self, "You have unfinished renames",
-                                           "Do you want to keep your pending renames?",
+                                           "Do you want to keep your pending requests?",
                                            QtGui.QMessageBox.Discard, QtGui.QMessageBox.Cancel)
       if response == QtGui.QMessageBox.Cancel:
         event.ignore()
@@ -146,7 +148,7 @@ class MainWindow(QtGui.QMainWindow):
     return dock
 
   def _setMode(self, mode):
-    assert(mode in interfaces.VALID_MODES)
+    assert(mode in base_types.VALID_MODES)
     for _mode, action in self._mode_to_action.items():
       action.setChecked(_mode == mode)
 
@@ -186,7 +188,7 @@ class MainWindow(QtGui.QMainWindow):
 
   def _saveCache(self):
     self._cache_manager.setData("version", config.CACHE_VERSION)
-    for m in interfaces.VALID_MODES:
+    for m in base_types.VALID_MODES:
       manager = factory.Factory.getManager(m)
       self._cache_manager.setData("cache/{}".format(m), manager.cache())
     self._cache_manager.saveConfig(self._cache_file)
@@ -209,8 +211,8 @@ class MainWindow(QtGui.QMainWindow):
       self.restoreGeometry(QtCore.QByteArray.fromBase64(data.geo))
       self.restoreState(QtCore.QByteArray.fromBase64(data.state))
       base_widget.DontShowManager.setConfig(data.dont_shows)
-      if not data.mode in interfaces.VALID_MODES:
-        data.mode = interfaces.TV_MODE
+      if not data.mode in base_types.VALID_MODES:
+        data.mode = base_types.TV_MODE
       self._setMode(data.mode)
       self._auto_start = data.auto_start
 
@@ -232,7 +234,7 @@ class MainWindow(QtGui.QMainWindow):
           "cache version of out date, loading default. old={} new={}".format(cache_version, config.CACHE_VERSION))
       return
 
-    for mode in interfaces.VALID_MODES:
+    for mode in base_types.VALID_MODES:
       factory.Factory.getManager(mode).setCache(self._cache_manager.getData("cache/{}".format(mode), {}))
 
   def _restoreDefaults(self):
@@ -249,82 +251,39 @@ class MainWindow(QtGui.QMainWindow):
 class WelcomeWidget(QtGui.QDialog):
   """ First prompt seen by the user, to select movie / tv mode. """
   def __init__(self, mode, parent=None):
-    utils.verify(mode in interfaces.VALID_MODES, "mode must be valid")
+    utils.verify(mode in base_types.VALID_MODES, "mode must be valid")
     super(WelcomeWidget, self).__init__(parent)
     uic.loadUi("ui/ui_Welcome.ui", self)
     self.setWindowTitle("Welcome to {}".format(app.__NAME__))
     self.setWindowModality(True)
 
-    if mode == interfaces.MOVIE_MODE:
+    if mode == base_types.MOVIE_MODE:
       self.movie_radio.setChecked(True)
     else:
       self.tv_radio.setChecked(True)
 
   def mode(self):
-    return interfaces.MOVIE_MODE if self.movie_radio.isChecked() else interfaces.TV_MODE
+    return base_types.MOVIE_MODE if self.movie_radio.isChecked() else base_types.TV_MODE
 
   def isAutoStart(self):
     return self.is_auto_start_check_box.isChecked()
 
 # --------------------------------------------------------------------------------------------------------------------
-class LogWidget(QtGui.QWidget):
-  """ Widget to display log messages to the user """
-  def __init__(self, parent=None):
-    super(LogWidget, self).__init__(parent)
-    uic.loadUi("ui/ui_LogWidget.ui", self)
-    self.clear_button.clicked.connect(self._clearLog)
-    self.clear_button.setIcon(QtGui.QIcon("img/clear.png"))
-    self.clear_button.setEnabled(True)
-
-    self._model = _LogModel(self)
-    self.log_view.setModel(self._model)
-    self.log_view.horizontalHeader().setResizeMode(_LogColumns.COL_ACTION, QtGui.QHeaderView.Interactive)
-    self.log_view.horizontalHeader().resizeSection(_LogColumns.COL_ACTION, 75)
-    self.log_view.horizontalHeader().setResizeMode(_LogColumns.COL_MESSAGE, QtGui.QHeaderView.Interactive)
-    self.log_view.horizontalHeader().setStretchLastSection(True)
-
-    self._is_updating = False
-
-  def onRename(self):
-    if self.autoClearCheckBox.isChecked():
-      self._clearLog()
-
-  def appendMessage(self, item):
-    #utils.verifyType(item, LogItem)
-    self._model.addItem(item)
-
-  def _clearLog(self):
-    self._model.clearItems()
-
-  def setConfig(self, data):
-    """ Update from settings """
-    self.autoClearCheckBox.setChecked(data.get("autoClear", False))
-
-  def getConfig(self):
-    return {"autoClear" : self.autoClearCheckBox.isChecked()}
-
-# --------------------------------------------------------------------------------------------------------------------
-class _LogColumns:
-  """ Columns used in log model. """
-  #COL_LEVEL   = 0
-  COL_ACTION  = 0
-  COL_MESSAGE = 1
-  NUM_COLS    = 2
-
-# --------------------------------------------------------------------------------------------------------------------
 class _LogModel(QtCore.QAbstractTableModel):
-  """ Collection of LogItems wrapped in a QAbstractTableModel """
-  LOG_LEVEL_ROLE = QtCore.Qt.UserRole + 1
+  COL_ACTION      = 0
+  COL_DESCRIPTION = 1
+  COL_STATUS      = 2
+  NUM_COLS        = 3  
 
   def __init__(self, parent):
     super(_LogModel, self).__init__(parent)
-    self.items = []
+    self._items = []
 
   def rowCount(self, _parent):
-    return len(self.items)
+    return len(self._items)
 
   def columnCount(self, _parent):
-    return _LogColumns.NUM_COLS
+    return _LogModel.NUM_COLS
 
   def data(self, index, role):
     if not index.isValid():
@@ -333,44 +292,148 @@ class _LogModel(QtCore.QAbstractTableModel):
     if role not in (QtCore.Qt.ForegroundRole, QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole):
       return None
 
-    item = self.items[index.row()]
-    if role == QtCore.Qt.ForegroundRole and item.log_level >= utils.LogLevel.ERROR:
-      return QtGui.QBrush(QtCore.Qt.red)
-    elif role == _LogModel.LOG_LEVEL_ROLE:
-      return item.log_level
-    elif index.column() == _LogColumns.COL_ACTION:
-      return item.action
-    elif index.column() == _LogColumns.COL_MESSAGE:
-      if role == QtCore.Qt.DisplayRole:
-        return item.short_message
+    item, percentage_complete = self._items[index.row()]
+    if role == QtCore.Qt.ForegroundRole and index.column() == _LogModel.COL_STATUS:
+      if item.status == item.QUEUED:
+        return QtGui.QBrush(QtCore.Qt.black)
+      elif item.status == item.IN_PROGRESS:
+        return QtGui.QBrush(QtCore.Qt.blue)
+      elif item.status == item.SUCCESS:
+        return QtGui.QBrush(QtCore.Qt.green)
       else:
-        return item.long_message
-    else:
-      return None
-
+        return QtGui.QBrush(QtCore.Qt.red)
+    elif index.column() == _LogModel.COL_STATUS:
+      status = item.status
+      if status == item.IN_PROGRESS:
+        status = "{} {}%".format(status, percentage_complete)
+      return status
+    elif index.column() == _LogModel.COL_ACTION:
+      return item.action_text
+    elif index.column() == _LogModel.COL_DESCRIPTION:
+      if role == QtCore.Qt.DisplayRole:
+        return item.shortDescription()
+      else:
+        return item.longDescription()
+      
   def headerData(self, section, orientation, role):
     if role != QtCore.Qt.DisplayRole or orientation == QtCore.Qt.Vertical:
       return None
-
-    #if section == _LogColumns.COL_LEVEL:
-    #  return "Type"
-    if section == _LogColumns.COL_ACTION:
+    
+    if section == _LogModel.COL_ACTION:
       return "Action"
-    elif section == _LogColumns.COL_MESSAGE:
-      return "Message"
-    return None
+    elif section == _LogModel.COL_DESCRIPTION:
+      return "Description"
+    if section == _LogModel.COL_STATUS:
+      return "Status"
 
-  def addItem(self, item):
-    #utils.verifyType(item, LogItem)
-    utils.log(item.log_level, msg=item.short_message, long_msg=item.long_message, title=item.action)
-    count = self.rowCount(QtCore.QModelIndex())
-    self.beginInsertRows(QtCore.QModelIndex(), count, count)
-    self.items.append(item)
+  #def flags(self, index):
+  #  if not index.isValid():
+  #    return QtCore.Qt.NoItemFlags
+  #  return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+  
+  def addItems(self, items):
+    if not items:
+      return
+    rows = self.rowCount(QtCore.QModelIndex())
+    self.beginInsertRows(QtCore.QModelIndex(), rows, rows + len(items) - 1)
+    self._items.extend([ (i, 0) for i in items]) #item and percentage complete
     self.endInsertRows()
+    
+  def itemChanged(self, item, percentage=0):
+    row = self._findRow(item)
+    if row != -1:
+      self._items[row] = (item, percentage)
+      status_cell = self.index(row, _LogModel.COL_STATUS)
+      self.dataChanged.emit(status_cell, status_cell)
+    
+  def _findRow(self, item):
+    return next( (i for i, val in enumerate(self._items) if item.id_ == val[0].id_), -1) 
 
-  def clearItems(self):
-    count = self.rowCount(QtCore.QModelIndex())
-    if count:
-      self.beginResetModel()
-      self.items = []
-      self.endResetModel()
+# --------------------------------------------------------------------------------------------------------------------
+class _RenameThread(thread.WorkerThread):
+  mutex = threading.Lock()
+  item_changed_signal = QtCore.pyqtSignal(object, int)
+  """ 
+  thread responsible for performing the rename
+  
+  Args:
+    items: list of common.renamer.BaseRenamer objects to be renamed
+  """
+  def __init__(self, name="renamer", items=None):
+    super(_RenameThread, self).__init__(name)
+    self._items = items or []
+    self._current_item = None
+    
+  def _run(self):
+    self._onLog("starting")
+    while not self._user_stopped:
+      self._current_item = None
+      with self.mutex:
+        if not self._items:
+          break
+        self._current_item = self._items.pop(0)
+      self._onLog("item: {}".format(self._current_item.shortDescription()))
+      self._current_item.performAction(progress_cb=self._itemUpdated)
+      self._itemUpdated()
+      
+  def _itemUpdated(self, percentage=0):
+    self.item_changed_signal.emit(self._current_item, percentage)
+    return not self._user_stopped
+
+  def addItems(self, items):
+    with self.mutex:
+      self._items.extend(items)
+
+# --------------------------------------------------------------------------------------------------------------------
+class LogWidget(QtGui.QWidget):
+  """ Widget to display log messages to the user """
+  def __init__(self, parent=None):
+    super(LogWidget, self).__init__(parent)
+    uic.loadUi("ui/ui_LogWidget.ui", self)
+    #self.clear_button.clicked.connect(self._clearLog)
+    #self.clear_button.setIcon(QtGui.QIcon("img/clear.png"))
+    #self.clear_button.setEnabled(True)
+
+    self._model = _LogModel(self)
+    self.log_view.setModel(self._model)
+    self.log_view.horizontalHeader().setResizeMode(_LogModel.COL_ACTION, QtGui.QHeaderView.Interactive)
+    self.log_view.horizontalHeader().resizeSection(_LogModel.COL_ACTION, 75)
+    self.log_view.horizontalHeader().setResizeMode(_LogModel.COL_DESCRIPTION, QtGui.QHeaderView.Interactive)
+    self.log_view.horizontalHeader().setResizeMode(_LogModel.COL_STATUS, QtGui.QHeaderView.Interactive)
+    self.log_view.horizontalHeader().resizeSection(_LogModel.COL_STATUS, 80)
+    self.log_view.horizontalHeader().setStretchLastSection(True)
+    
+    self._rename_thread = None#_RenameThread()
+    #self._rename_thread.item_percentage_changed_signal.connect(self._model.percentageChanged)
+    #self._rename_thread.item_status_changed_signal.connect(self._model.itemChanged)
+    #self._rename_thread.log_signal.connect(self._onLog)
+    
+  def __del__(self):
+    if self._rename_thread:
+      self._rename_thread.join()
+    
+  def setConfig(self, data):
+    """ Update from settings """
+    pass
+    
+  def getConfig(self):
+    pass
+  
+  def addItems(self, items):
+    self._model.addItems(items)
+    if not self._rename_thread:
+      self._rename_thread = _RenameThread(items=items)
+      self._rename_thread.item_changed_signal.connect(self._model.itemChanged)
+      self._rename_thread.log_signal.connect(self._onLog)      
+    else:
+      self._rename_thread.addItems(items)      
+    if not self.isExecuting():
+      self._rename_thread.start()
+    
+  def isExecuting(self):
+    return self._rename_thread and self._rename_thread.isRunning()
+    
+  def _onLog(self, log):
+    utils.logError(log)
+
+

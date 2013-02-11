@@ -73,7 +73,7 @@ class MovieManager(base_manager.BaseManager):
 
   def processFile(self, filename):
     movie = MovieHelper.extractMovieFromFile(filename)
-    if movie.fileExists():
+    if movie.isReady():
       movie.info = self.getItem(movie.getInfo().toSearchParams())
     return movie
 

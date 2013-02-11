@@ -3,13 +3,13 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Abstract factory based on item type
+# Purpose of document: Retrieves objects based on mode type
 # --------------------------------------------------------------------------------------------------------------------
-from common import interfaces
 from common import renamer
 from common import formatting
 
 from media.base import widget as base_widget
+from media.base import types as base_types
 
 from media.tv import client as tv_client
 from media.tv import manager as tv_manager
@@ -42,7 +42,7 @@ class Factory:
 
   @staticmethod
   def getNameFormatHelper(mode):
-    if mode == interfaces.MOVIE_MODE:
+    if mode == base_types.MOVIE_MODE:
       return base_widget.NameFormatHelper(formatting.MovieNameFormatter(),
                                            movie_types.MovieInfo("Title", "Year",
                                                                      "Genre", "Part", "Series"),
@@ -56,49 +56,49 @@ class Factory:
   @staticmethod
   def getWorkBenchWidget(mode, parent=None):
     manager = Factory.getManager(mode)
-    if mode == interfaces.MOVIE_MODE:
+    if mode == base_types.MOVIE_MODE:
       return movie_widget.MovieWorkBenchWidget(manager, parent)
     else:
       return tv_widget.TvWorkBenchWidget(manager, parent)
 
   @staticmethod
   def getRenameItemGenerator(mode):
-    if mode == interfaces.MOVIE_MODE:
+    if mode == base_types.MOVIE_MODE:
       return renamer.RenameItemGenerator(formatting.MovieNameFormatter())
     else:
       return renamer.RenameItemGenerator(formatting.TvNameFormatter())
 
   @staticmethod
   def getStoreHolder(mode):
-    if mode == interfaces.MOVIE_MODE:
+    if mode == base_types.MOVIE_MODE:
       return movie_client.getStoreHolder()
     else:
       return tv_client.getStoreHolder()
 
   @staticmethod
   def getManager(mode):
-    if mode == interfaces.MOVIE_MODE:
+    if mode == base_types.MOVIE_MODE:
       return movie_manager.getManager()
     else:
       return tv_manager.getManager()
 
   @staticmethod
-  def getEditWidget(mode):
-    if mode == interfaces.MOVIE_MODE:
-      return movie_widget.EditMovieWidget()
+  def getEditInfoWidget(mode, parent=None):
+    if mode == base_types.MOVIE_MODE:
+      return movie_widget.EditMovieInfoWidget(parent)
     else:
-      return tv_widget.EditSeasonWidget()
+      return tv_widget.EditSeasonInfoWidget(parent)
 
   @staticmethod
-  def getSearchParamsWidget(mode):
-    if mode == interfaces.MOVIE_MODE:
-      return movie_widget.SearchMovieWidget()
+  def getSearchParamsWidget(mode, parent=None):
+    if mode == base_types.MOVIE_MODE:
+      return movie_widget.SearchMovieParamsWidget(parent)
     else:
-      return tv_widget.SearchMovieParamsWidget()
+      return tv_widget.SearchSeasonParamsWidget(parent)
 
   @staticmethod
   def getSearchWidget(mode, parent=None):
-    if mode == interfaces.MOVIE_MODE:
+    if mode == base_types.MOVIE_MODE:
       return movie_widget.EditMovieItemWidget(Factory.getStoreHolder(mode), parent)
     else:
       return tv_widget.EditSeasonItemWidget(Factory.getStoreHolder(mode), parent)

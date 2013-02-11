@@ -5,20 +5,18 @@
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
 # Purpose of document: ??
 # --------------------------------------------------------------------------------------------------------------------
-import copy
-
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
 from common import config
 from common import file_helper
-from common import interfaces
 from common import thread
 from common import utils
 
 from media.base import client as base_client
 from media.base import widget as base_widget
+from media.base import types as base_types
 
 from media.tv import types as tv_types
 from media.tv import client as tv_client
@@ -29,7 +27,7 @@ _TITLE_COLUMN = 0
 # --------------------------------------------------------------------------------------------------------------------
 class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
   def __init__(self, manager, parent=None):
-    super(TvWorkBenchWidget, self).__init__(interfaces.TV_MODE, manager, parent)
+    super(TvWorkBenchWidget, self).__init__(base_types.TV_MODE, manager, parent)
     self._setModel(tv_model.TvModel(self.tv_view))
 
     self._change_episode_widget = EditEpisodeWidget(self)
@@ -149,7 +147,6 @@ class EditSeasonInfoWidget(base_widget.BaseEditInfoWidget):
     self.episode_table.cellClicked.connect(self._onSelectionChanged)
     self.index_spin_box.valueChanged.connect(self._updateColumnHeaders)
     self._search_widget = search_widget
-    self._item = None
 
   def _moveDown(self):
     currentItem = self.episode_table.currentItem()
@@ -194,14 +191,9 @@ class EditSeasonInfoWidget(base_widget.BaseEditInfoWidget):
     rowCount = self.episode_table.rowCount()
     self.episode_table.setVerticalHeaderLabels([str(i) for i in range(startIndex, rowCount + startIndex)])
 
-  def _setItem(self, item):
-    """ Fill the dialog with the data prior to being shown """
-    #utils.verifyType(s, tv_types.Season)
-    self._item = item or tv_types.Season("", tv_types.SeasonInfo(), tv_types.SourceFiles())
-    self.setInfo(self._item.getInfo())
-
   def setInfo(self, info):
     #utils.verifyType(info, tv_types.SeasonInfo)
+    info = info or tv_types.SeasonInfo()
     self.episode_table.clearContents()
 
     minValue = min([ep.ep_num for ep in info.episodes] or [0])
@@ -217,15 +209,14 @@ class EditSeasonInfoWidget(base_widget.BaseEditInfoWidget):
       self.episode_table.setItem(i, _TITLE_COLUMN, item)
     self._onSelectionChanged()
 
-  def getItem(self):
+  def getInfo(self):
     search_params = self._search_widget.getSearchParams()
     info = tv_types.SeasonInfo(search_params.show_name, search_params.season_num)
     startIndex = self.index_spin_box.value()
     for i in range(self.episode_table.rowCount()):
       ep_name = self.episode_table.item(i, _TITLE_COLUMN)
       info.episodes.append(tv_types.EpisodeInfo(i + startIndex, utils.toString(ep_name.text())))
-    self._item.info = info
-    return copy.copy(self._item)
+    return info
 
   def _onSelectionChanged(self):
     currentIndex = self.episode_table.currentItem().row() if self.episode_table.currentItem() else -1
@@ -238,7 +229,7 @@ class EditSeasonItemWidget(base_widget.EditItemWidget):
   def __init__(self, holder, parent=None):
     search_params = SearchSeasonParamsWidget(parent)
     super(EditSeasonItemWidget, self).__init__(
-        interfaces.TV_MODE, holder, search_params, EditSeasonInfoWidget(search_params, parent), parent)
+        base_types.TV_MODE, holder, search_params, EditSeasonInfoWidget(search_params, parent), parent)
 
 # --------------------------------------------------------------------------------------------------------------------
 class EditEpisodeWidget(QtGui.QDialog):

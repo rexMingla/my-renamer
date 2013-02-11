@@ -15,9 +15,9 @@ from media.movie import types as movie_types
 
 from media.base import client as base_client
 from media.base import widget as base_widget
+from media.base import types as base_types
 
 from common import config
-from common import interfaces
 from common import file_helper
 from common import thread
 from common import utils
@@ -25,7 +25,7 @@ from common import utils
 # --------------------------------------------------------------------------------------------------------------------
 class MovieWorkBenchWidget(base_widget.BaseWorkBenchWidget):
   def __init__(self, manager, parent=None):
-    super(MovieWorkBenchWidget, self).__init__(interfaces.MOVIE_MODE, manager, parent)
+    super(MovieWorkBenchWidget, self).__init__(base_types.MOVIE_MODE, manager, parent)
     self._setModel(movie_model.MovieModel(self.movie_view))
 
     self._change_movie_widget = EditMovieItemWidget(manager.getHolder(), self)
@@ -146,7 +146,6 @@ class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
     self.setWindowModality(True)
     self.part_check_box.toggled.connect(self.part_spin_box.setEnabled)
 
-    self._item = None
     self._series_list = []
 
   def accept(self):
@@ -155,12 +154,6 @@ class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
       self._series_list.append(series)
       #TODO: self.setSeriesList(self._series_list)
     return super(EditMovieItemWidget, self).accept()
-
-  def setInfo(self, info):
-    #utils.verifyType(info, movie_types.MovieInfo)
-    self.title_edit.setText(info.title)
-    self.year_edit.setText(info.year or "")
-    self.genre_edit.setText(info.getGenre())
 
   def setSeriesList(self, obj):
     #utils.verifyType(l, list)
@@ -173,11 +166,10 @@ class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
   def getSeriesList(self):
     return self._series_list
 
-  def _setItem(self, item):
+  def setInfo(self, info):
     """ Fill the dialog with the data prior to being shown """
     #utils.verifyType(item, movie_manager.MovieRenameItem)
-    self._item = item or movie_types.MovieRenameItem("", movie_types.MovieInfo())
-    info = self._item.getInfo()
+    info = info or movie_types.MovieInfo()
     self.title_edit.setText(info.title)
     self.year_edit.setText(info.year)
     self.genre_edit.setText(info.getGenre(""))
@@ -186,24 +178,18 @@ class EditMovieInfoWidget(base_widget.BaseEditInfoWidget):
       self.part_spin_box.setValue(int(info.part))
     self.part_check_box.setChecked(bool(info.part))
 
-  def getItem(self):
-    self._item.info.title = utils.toString(self.title_edit.text())
-    self._item.info.year = utils.toString(self.year_edit.text())
+  def getInfo(self):
+    title = utils.toString(self.title_edit.text())
+    year = utils.toString(self.year_edit.text())
     genre = utils.toString(self.genre_edit.text()).strip()
-    if genre:
-      genre = [genre]
-    else:
-      genre = []
-    self._item.info.genres = genre
-    self._item.info.part = None
-    if self.part_check_box.isChecked():
-      self._item.info.part = self.part_spin_box.value()
-    self._item.info.series = utils.toString(self.series_edit.text()).strip()
-    return self._item
+    genres = [genre] if genre else []
+    part = None if not self.part_check_box.isChecked() else self.part_spin_box.value()
+    series = utils.toString(self.series_edit.text()).strip()
+    return movie_types.MovieInfo(title, year, genres, series, part)
 
 # --------------------------------------------------------------------------------------------------------------------
 class EditMovieItemWidget(base_widget.EditItemWidget):
   def __init__(self, holder, parent=None):
     super(EditMovieItemWidget, self).__init__(
-        interfaces.MOVIE_MODE, holder, SearchMovieParamsWidget(parent), EditMovieInfoWidget(parent), parent)
+        base_types.MOVIE_MODE, holder, SearchMovieParamsWidget(parent), EditMovieInfoWidget(parent), parent)
 
