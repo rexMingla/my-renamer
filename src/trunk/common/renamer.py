@@ -30,13 +30,14 @@ class RenameItemGenerator(BaseRenameItemGenerator):
     self.config = config or {}
 
   def getRenameItem(self, item):
+    output_folder = item.getSourceFolder()
     if self.config.getOutputFolder():
-      item.output_folder = self.config.getOutputFolder()
-    name = file_helper.FileHelper.sanitizeFilename(self._formatter.getName(self.config.format, item))
+      output_folder = self.config.getOutputFolder()
+    name = file_helper.FileHelper.sanitizeFilename(self._formatter.getName(self.config.format, item, output_folder))
     return FileRenamer(item.filename, name, can_overwrite=not self.config.dont_overwrite,
         keep_source=not self.config.is_move,
         subtitle_extensions=self.config.getSubtitles(),
-        action_text="rename {}".format(item.info.mode))
+        action_text="rename {}".format(item.getInfo().mode))
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseRenamer(object):

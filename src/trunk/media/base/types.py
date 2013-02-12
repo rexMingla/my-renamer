@@ -39,7 +39,7 @@ class BaseInfo(object):
     """
     raise NotImplementedError("BaseInfo.getSearchParams not implemented")
 
-  def hasData(self):
+  def isValid(self):
     """ is the info object usable by the application """
     return True
 
@@ -49,16 +49,19 @@ class BaseRenameItem(object):
   required to rename the file. 
   Attributes:
     filename: absolute path to the file
-    info: media.base.BaseInfo object
+    _info: media.base.BaseInfo object
+    is_enabled: boolean. Does the user want to rename the file? This is controlled through the check box in the 
+      Workbench widget.
   """
-  #States for the item. Derived classes will add failed states as required
+  #Statuses for the item. Derived classes will add failed states as required
   READY          = "Ready"    # item has enough data to be renamed
   UNKNOWN        = "Unknown"  # initial state
   
-  def __init__(self, filename, info):
+  def __init__(self, filename, info, is_enabled=True):
     super(BaseRenameItem, self).__init__()
     self.filename = filename
-    self.info = info
+    self._info = info
+    self.is_enabled = is_enabled
     
   def getSourceFolder(self):
     return file_helper.FileHelper.dirname(self.filename)
@@ -69,11 +72,32 @@ class BaseRenameItem(object):
   def getFileExt(self):
     return file_helper.FileHelper.extension(self.filename)
 
+  def setInfo(self, info):
+    self._info = info
+
   def getInfo(self):
-    raise NotImplementedError("BaseRenameItem.getInfo not implemented")
+    return self._info
 
   def getStatus(self):
-    raise NotImplementedError("BaseRenameItem.getStatus not implemented")    
+    """ returns string representation of status. must return BaseRenameItem.READY on success (see canEdit()), any other 
+    value will imply failure. """
+    raise NotImplementedError("BaseRenameItem.getStatus not implemented")
+  
+  def canEdit(self):
+    """ can the properties associated with this item be edited? basically if the file exists we can otherwise there 
+    is no point setting properties. this function decides whether or not to display a check box in the Workbench widget
+    Returns:
+      boolean
+    """
+    return file_helper.FileHelper.getFileSize(self.filename) > 0
+
+  def isValid(self):
+    """ is the item is a state where it can be renamed? """
+    return self.getStatus() == BaseRenameItem.READY and self.getInfo().isValid()  
+  
+  def canPerformRename(self):
+    """ is this is true the file will be renamed by the Module """
+    return self.isValid() and self.is_enabled
 
 # --------------------------------------------------------------------------------------------------------------------
 class BaseSearchParams(object):

@@ -207,5 +207,14 @@ class FileHelper:
         else:
           ret = unsafeCopyFile(source, dest, progress_cb)
     return ret
+  
+  @staticmethod
+  def getFolders(root_folder, is_recursive):
+    folders = []
+    for root, _dirs, _files in os.walk(FileHelper.replaceSeparators(root_folder, os.sep)):
+      folders.append(root)
+      if not is_recursive:
+        break
+    return folders  
 
 

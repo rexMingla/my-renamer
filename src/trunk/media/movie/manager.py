@@ -73,8 +73,9 @@ class MovieManager(base_manager.BaseManager):
 
   def processFile(self, filename):
     movie = MovieHelper.extractMovieFromFile(filename)
-    if movie.isReady():
-      movie.info = self.getInfo(movie.getInfo().getSearchParams())
+    if movie.isValid():
+      info = self.getInfo(movie.getInfo().getSearchParams())
+      movie.setInfo(info)
     return movie
 
 _MANAGER = None

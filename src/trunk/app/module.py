@@ -9,6 +9,7 @@ from threading import Lock
 from PyQt4 import QtCore
 from functools import partial
 
+from common import file_helper
 from common import thread
 from media.base import types as base_types
 from app import factory
@@ -40,13 +41,13 @@ class TvSearchThread(SearchThread):
     super(TvSearchThread, self).__init__(base_types.TV_MODE, manager, config)
 
   def _getAllItems(self):
-    return self._manager.getFolders(self._config.folder, self._config.recursive)
+    return file_helper.FileHelper.getFolders(self._config.folder, self._config.recursive)
 
   def _applyToItem(self, item):
     season = self._manager.getSeasonForFolder(item, self._config.getExtensions(), self._config.getMinFileSizeBytes())
     ret = None
     if season:
-      ret = thread.WorkItem(season, season.status)
+      ret = thread.WorkItem(season, season.getStatus())
     return ret
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -65,7 +66,7 @@ class MovieSearchThread(SearchThread):
     item = self._manager.processFile(item)
     ret = None
     if item:
-      ret = thread.WorkItem(item, item.status())
+      ret = thread.WorkItem(item, item.getStatus())
     return ret
 
 def getSearchThread(mode, manager, config):
@@ -83,7 +84,7 @@ class RenamerModule(QtCore.QObject):
     super(RenamerModule, self).__init__(parent)
 
     self.mode = mode
-    self.edit_sources_widget = factory.Factory.getEditSourceWidget(mode, parent)
+    self.edit_sources_widget = factory.Factory.getEditInfoClientsWidget(mode, parent)
     self.edit_sources_widget.setVisible(False)
     self.input_widget = factory.Factory.getInputWidget(mode, parent)
     self.output_widget = factory.Factory.getOutputWidget(mode, parent)
@@ -95,8 +96,8 @@ class RenamerModule(QtCore.QObject):
     self.work_bench.workbench_changed_signal.connect(self.output_widget.rename_button.setEnabled)
     self.output_widget.rename_signal.connect(self._rename)
     self.work_bench.renameItemChangedSignal.connect(self.output_widget.onRenameItemChanged)
-    self.work_bench.show_edit_sources_signal.connect(self.edit_sources_widget.show)
-    self.input_widget.show_edit_sources_signal.connect(self.edit_sources_widget.show)
+    self.work_bench.show_edit_info_clients_signal.connect(self.edit_sources_widget.show)
+    self.input_widget.show_edit_info_clients_signal.connect(self.edit_sources_widget.show)
     self.edit_sources_widget.accepted.connect(self.input_widget.onSourcesWidgetFinished)
 
     self.input_widget.explore_signal.connect(self._explore)

@@ -14,24 +14,18 @@ from common import utils
 class MovieRenameItem(base_types.BaseRenameItem):
   FILE_NOT_FOUND = "File not found"
   
-  def __init__(self, filename, info):
+  def __init__(self, filename, info, is_enabled=True):
     super(MovieRenameItem, self).__init__(filename, info)
 
   def __copy__(self):
-    ret = MovieRenameItem(self.filename, copy.copy(self.info))
+    ret = MovieRenameItem(self.filename, copy.copy(self.getInfo()), self.is_enabled)
     return ret
-
-  def isReady(self):
-    return self.getStatus() == self.READY
 
   def getStatus(self):
     return self.READY if self.getFileSize() > 0 else self.FILE_NOT_FOUND
 
   def __str__(self):
-    return str(self.info)
-
-  def getInfo(self):
-    return self.info
+    return str(self._info)
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieInfo(base_types.BaseInfo):

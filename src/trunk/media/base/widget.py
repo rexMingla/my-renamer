@@ -363,6 +363,7 @@ class OutputWidget(ActionWidgetInterface):
     self.rename_button.setEnabled(True)
 
   def _initFormat(self):
+    """ setup the help text box and default output format edit """
     def escapeHtml(text):
       return text.replace("<", "&lt;").replace(">", "&gt;")
 
@@ -382,6 +383,9 @@ class OutputWidget(ActionWidgetInterface):
     self._updatePreviewText()
 
   def _updatePreviewText(self):
+    """ update preview text based on the currently selected item in the BaseWorkBenchWidget. 
+    if no item is selected the preview info is shown 
+    """
     prefix_text = "Example"
     info = self._helper.example_info
     if self._helper.preview_info:
@@ -534,6 +538,7 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
     self._view.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
 
   def eventFilter(self, obj, event):
+    """ disgard double right click events """
     if obj in (self.tv_view.viewport(), self.movie_view.viewport()):
       if event.type() == QtCore.QEvent.MouseButtonDblClick and event.button() == QtCore.Qt.RightButton:
         event.accept() #do nothing
@@ -556,6 +561,11 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
     raise NotImplementedError("BaseWorkBenchWidget._editMovie not implemented")
 
   def _setModel(self, model):
+    """ set the model and set self's actions to be from those available in the model. This widget's (self) actions are 
+    then used to populate the action menu in the main window. They are switched in when this widget becomes visible.
+    Args:
+      model: BaseModel   
+    """
     self._model = model
     self._model.workbench_changed_signal.connect(self._onWorkBenchChanged)
     self._onWorkBenchChanged(False)
@@ -571,10 +581,14 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
     self._view.addActions([a.action for a in actions])
 
   def _launchLocation(self, location):
+    """ calls qt's QDesktopServices with the location as argument.
+    Args:
+      location: filesystem path. If it is a file, qt will open the application with the default program for that 
+        extension. If it is a folder, qt will open an explorer (or equivalent) window. 
+    """
     path = QtCore.QDir.toNativeSeparators(location)
     if not QtGui.QDesktopServices.openUrl(QtCore.QUrl("file:///{}".format(path))):
-      QtGui.QMessageBox.information(self, "An error occured",
-          "Could not find path:\n{}".format(path))
+      QtGui.QMessageBox.information(self, "An error occured", "Could not find path:\n{}".format(path))
 
   def _launch(self):
     file_obj = self._model.getFile(self._current_index)
@@ -582,6 +596,12 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
       self._launchLocation(file_obj)
 
   def _open(self):
+    """ opens the folder of the selected item (or no action if no file is found). 
+    
+    It would be good to be able to 
+    open explorer with the file selected but I was unable to find a cross platform way of doing this (on the rare 
+    chance it is being used cross platform).
+    """
     file_obj = self._model.getFolder(self._current_index)
     if file_obj:
       self._launchLocation(file_obj)
@@ -642,6 +662,12 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
       self._actions[action].action.setEnabled(requires_key)
 
   def _deleteLocation(self, location):
+    """ send the filesystem item to the recycling bin after confirming with the user
+    Args: 
+      location: file or folder path to delete.
+      
+    Has only been tested on windows.
+    """
     is_del = False
     ret = common_widget.DontShowManager.getAnswer("Please confirm delete",
       "Are you sure you want to delete this file?\n"
@@ -659,9 +685,11 @@ class BaseWorkBenchWidget(ActionWidgetInterface):
     return is_del
 
   def addItem(self, item):
+    """ appends the media.base.types.BaseRenameItem to the widget (via the model) """
     self._model.addItem(item)
 
   def actionableItems(self):
+    """ list of media.base.types.BaseRenameItem that can be renamed """
     return self._model.items()
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -821,6 +849,7 @@ class EditItemWidget(QtGui.QDialog):
     self._stopThread()
 
   def showEvent(self, e):
+    """ upon showing clear all preview set data """
     self._found_data = True
     self._onThreadFinished()
     self._hideResults()
@@ -860,6 +889,10 @@ class EditItemWidget(QtGui.QDialog):
       QtGui.QMessageBox.information(self, "Nothing found", "No results found for search")
 
   def _onDataFound(self, data):
+    """ data received from the search thread
+    Args:
+      data: media.base.client.InfoHolder 
+    """
     if not data:
       return
 
@@ -874,14 +907,17 @@ class EditItemWidget(QtGui.QDialog):
     self._found_data = True
 
   def setItem(self, item):
-    """ Fill the dialog with the data prior to being shown """
-    #utils.verifyType(s, tv_types.Season)
+    """ fills the dialog with the data prior to being shown.
+    Args: 
+      item: media.base.types.BaseRenameItem subject to modification
+    """
     self._item = item
     self._search_widget.setItem(item)
     self._edit_info_widget.setInfo(item.getInfo() if item else None)
 
   def getItem(self):
-    self._item.info = self._edit_info_widget.getInfo()
+    """ returns a media.base.types.BaseRenameItem object with the current state information from the widget """
+    self._item.setInfo(self._edit_info_widget.getInfo())
     return copy.copy(self._item)
 
   def _showResults(self):
@@ -907,6 +943,7 @@ class SearchResultsWidget(QtGui.QWidget):
     self.results_widget.itemSelectionChanged.connect(self._onItemClicked)
 
   def clear(self):
+    """ removes all items from the widget """
     self._items = []
     self.results_widget.clearContents()
     self.results_widget.setRowCount(0)

@@ -268,14 +268,14 @@ class SwitchFilesTest(unittest.TestCase):
 class OutputFormatTest(unittest.TestCase):
   def setUp(self):
     self.formatter = formatting.TvNameFormatter()
-    self.info = tv_types.AdvancedEpisodeInfo("Entourage", 1, 3, "Talk Show")
+    self.setInfo(tv_types.AdvancedEpisodeInfo("Entourage", 1, 3, "Talk Show"))
 
   def test_normal(self):
-    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name>", self.info)
+    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name>", self.getInfo())
     self.assertEqual(out, "Entourage - S01E03 - Talk Show")
 
   def test_missing(self):
-    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name >", self.info)
+    out = self.formatter.getNameFromInfo("<show> - S<s_num>E<ep_num> - <ep_name >", self.getInfo())
     self.assertEqual(out, "Entourage - S01E03 - <ep_name >")
 
 # --------------------------------------------------------------------------------------------------------------------
