@@ -96,7 +96,7 @@ class TvWorkBenchWidget(base_widget.BaseWorkBenchWidget):
 
   def _editEpisode(self):
     moveItemCandidateData, isMoveItemCandidate = self._model.data(self._current_index, tv_model.RAW_DATA_ROLE)
-    if isMoveItemCandidate and moveItemCandidateData.canEdit:
+    if isMoveItemCandidate and moveItemCandidateData.canEdit():
       seasonData, isMoveItemCandidate = self._model.data(self._current_index.parent(), tv_model.RAW_DATA_ROLE)
       utils.verify(not isMoveItemCandidate, "Must be move item")
       self._change_episode_widget.setItem(seasonData, moveItemCandidateData)
@@ -254,10 +254,11 @@ class EditEpisodeWidget(QtGui.QDialog):
     #episode_move_items = copy.copy(ssn.episode_move_items)
     #episode_move_items = sorted(episode_move_items, key=lambda item: item.info.ep_num)
     for mi in ssn.episode_move_items:
-      if mi.info.ep_num != tv_types.UNRESOLVED_KEY:
-        display_name = "{}: {}".format(mi.info.ep_num, mi.info.ep_name)
-        self.episode_combo_box.addItem(display_name, mi.info.ep_num)
-    index = self.episode_combo_box.findData(ep.info.ep_num)
+      info = mi.getInfo()
+      if info.ep_num != tv_types.UNRESOLVED_KEY:
+        display_name = "{}: {}".format(info.ep_num, info.ep_name)
+        self.episode_combo_box.addItem(display_name, info.ep_num)
+    index = self.episode_combo_box.findData(ep.getInfo().ep_num)
     if index != -1:
       self.pick_from_list_radio.setChecked(True)
       self.episode_combo_box.setCurrentIndex(index)

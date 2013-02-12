@@ -41,7 +41,7 @@ class BaseManager(object):
       info = self._cache[cache_key]
     else:
       info = self._holder.getInfo(search_params, default=search_params.getInfo())
-      if info and info.hasData():
+      if info and info.isValid():
         new_key = info.getSearchParams().getKey()
         cached_item = copy.copy(info)
         self._cache[new_key] = cached_item

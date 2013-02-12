@@ -60,7 +60,7 @@ class MovieItem(object):
 
   def isMatch(self, other):
     #utils.verifyType(other, MovieItem)
-    return self.movie.getStatus() == self.movie.READY and self.movie.info == other.movie.info
+    return self.movie.getStatus() == self.movie.READY and self.movie.getInfo() == other.movie.getInfo()
 
 # --------------------------------------------------------------------------------------------------------------------
 class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
@@ -128,7 +128,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
 
     item = self._movies[index.row()]
     movie = item.movie
-    info = movie.info
+    info = movie.getInfo()
     if role == RAW_DATA_ROLE:
       return copy.copy(movie)
 
@@ -157,7 +157,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     elif col == Columns.COL_GENRE:
       return info.getGenre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesToString(movie.getFileSize()) if movie.isReady() else ""
+      return utils.bytesToString(movie.getFileSize()) if movie.getFileSize() else ""
     elif col == Columns.COL_SERIES:
       return info.series
 
@@ -260,9 +260,9 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
       ret = "File not found"
     elif item.duplicates:
       ret = _DUPLICATE
-    elif self._require_year and not item.movie.info.year:
+    elif self._require_year and not item.movie.getInfo().year:
       ret = _MISSING_YEAR
-    elif self._require_genre and not item.movie.info.genres:
+    elif self._require_genre and not item.movie.getInfo().genres:
       ret = _MISSING_GENRE
     else:
       ret = _OK
@@ -274,7 +274,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
 
   def _updateDuplicatesForItem(self, item):
     item.duplicates = []
-    if item.movie.isReady():
+    if item.movie.canEdit():
       item.duplicates = [m.index for m in self._movies if m.index != item.index and m.isMatch(item)]
 
   def overallCheckedState(self):

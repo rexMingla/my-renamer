@@ -85,8 +85,8 @@ class MainWindow(QtGui.QMainWindow):
 
     def getText(mode):
       info = []
-      holder = factory.Factory.getStoreHolder(mode)
-      for store in holder.stores:
+      holder = factory.Factory.getInfoClientHolder(mode)
+      for store in holder.clients:
         info.append("<li>{} (interface to {})</li>".format(href(store.url, store.display_name), href(store.source_name)))
       info.append("</ul>")
       return "{} libraries:<ul>{}</ul>".format(mode.capitalize(), "\n".join(info))
@@ -365,14 +365,12 @@ class _RenameThread(thread.WorkerThread):
     self._current_item = None
     
   def _run(self):
-    self._onLog("starting")
     while not self._user_stopped:
       self._current_item = None
       with self.mutex:
         if not self._items:
           break
         self._current_item = self._items.pop(0)
-      self._onLog("item: {}".format(self._current_item.shortDescription()))
       self._current_item.performAction(progress_cb=self._itemUpdated)
       self._itemUpdated()
       

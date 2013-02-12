@@ -90,7 +90,6 @@ class ContainerItem(BaseItem):
 
     if role == RAW_DATA_ROLE:
       model.beginRemoveRows(index, 0, self.childCount() - 1)
-      value.updateSeasonInfo(value.info)
       self.raw = value
       self.child_items = []
       for move_item in self.raw.episode_move_items:
@@ -155,6 +154,7 @@ class LeafItem(BaseItem):
       return None
 
     column = index.column()
+    info = self.raw.getInfo()
     if role == QtCore.Qt.ForegroundRole:
       if self.raw.getStatus() == tv_types.EpisodeRenameItem.MISSING_NEW:
         return QtGui.QBrush(QtCore.Qt.red)
@@ -166,16 +166,16 @@ class LeafItem(BaseItem):
       else:
         return file_helper.FileHelper.basename(self.raw.filename)
     elif column == Columns.COL_NEW_NUM:
-      if self.raw.info.ep_num == tv_types.UNRESOLVED_KEY:
+      if info.ep_num == tv_types.UNRESOLVED_KEY:
         return None
       else:
-        return self.raw.info.ep_num
+        return info.ep_num
     elif column == Columns.COL_NEW_NAME:
-      return self.raw.info.ep_name
+      return info.ep_name
     elif column == Columns.COL_STATUS:
       return self.raw.getStatus()
     elif column == Columns.COL_FILE_SIZE:
-      if self.raw.getStatus() != tv_types.EpisodeRenameItem.MISSING_OLD:
+      if self.raw.canEdit():
         return utils.bytesToString(self.raw.getFileSize())
     return None
 
@@ -204,19 +204,19 @@ class LeafItem(BaseItem):
     return ret
 
   def canCheck(self):
-    return self.raw.can_move
+    return self.raw.isValid()
 
   def checkState(self):
     checked_state = None
     if self.canCheck():
-      checked_state = QtCore.Qt.Checked if self.raw.perform_move else QtCore.Qt.Unchecked
+      checked_state = QtCore.Qt.Checked if self.raw.is_enabled else QtCore.Qt.Unchecked
     return checked_state
 
   def setCheckState(self, checked_state):
-    self.raw.perform_move = checked_state == QtCore.Qt.Checked
+    self.raw.is_enabled = checked_state == QtCore.Qt.Checked
 
   def canEdit(self):
-    return bool(self.raw.filename)
+    return self.raw.canEdit() and self.parent.canCheck()
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
@@ -378,17 +378,14 @@ class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):
     return item.raw if item.isEpisode() and item.canCheck() else None
 
   def getAvailableActions(self, index):
-    canEditEp = self.canEdit(index)
-    canLaunch = bool(self.getFile(index))
-    canOpen = bool(self.getFolder(index))
-    canDelete = bool(self.getDeleteItem(index))
-
+    can_open = bool(self.getFolder(index))
+    
     ret = {}
-    ret[base_model.BaseWorkBenchModel.ACTION_EPISODE] = canEditEp
-    ret[base_model.BaseWorkBenchModel.ACTION_SEASON] = canOpen
-    ret[base_model.BaseWorkBenchModel.ACTION_OPEN] = canOpen
-    ret[base_model.BaseWorkBenchModel.ACTION_LAUNCH] = canLaunch
-    ret[base_model.BaseWorkBenchModel.ACTION_DELETE] = canDelete
+    ret[base_model.BaseWorkBenchModel.ACTION_EPISODE] = self.canEdit(index)
+    ret[base_model.BaseWorkBenchModel.ACTION_SEASON] = can_open
+    ret[base_model.BaseWorkBenchModel.ACTION_OPEN] = can_open
+    ret[base_model.BaseWorkBenchModel.ACTION_LAUNCH] = bool(self.getFile(index))
+    ret[base_model.BaseWorkBenchModel.ACTION_DELETE] = bool(self.getDeleteItem(index))
     return ret
 
   def addItem(self, season):

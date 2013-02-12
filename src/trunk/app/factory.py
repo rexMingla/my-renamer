@@ -26,13 +26,13 @@ class Factory:
   """ creates components for the application based on mode value """
 
   @staticmethod
-  def getEditSourceWidget(mode, parent=None):
-    store = Factory.getStoreHolder(mode)
-    return base_widget.EditSourcesWidget(mode, store, parent)
+  def getEditInfoClientsWidget(mode, parent=None):
+    store = Factory.getInfoClientHolder(mode)
+    return base_widget.EditInfoClientsWidget(mode, store, parent)
 
   @staticmethod
   def getInputWidget(mode, parent=None):
-    store = Factory.getStoreHolder(mode)
+    store = Factory.getInfoClientHolder(mode)
     return base_widget.InputWidget(mode, store, parent)
 
   @staticmethod
@@ -44,14 +44,12 @@ class Factory:
   def getNameFormatHelper(mode):
     if mode == base_types.MOVIE_MODE:
       return base_widget.NameFormatHelper(formatting.MovieNameFormatter(),
-                                           movie_types.MovieInfo("Title", "Year",
-                                                                     "Genre", "Part", "Series"),
-                                           movie_types.MovieInfo("The Twin Towers", 2002, "action", 1, "LOTR"))
+          movie_types.MovieInfo("Title", "Year", ["Genre"], "Part", "Series"),
+          movie_types.MovieInfo("The Twin Towers", 2002, ["action"], 1, "LOTR"))
     else:
       return base_widget.NameFormatHelper(formatting.TvNameFormatter(),
-                                           tv_types.AdvancedEpisodeInfo("Show Name", "Series Number",
-                                                                      "Episode Number", "Episode Name"),
-                                           tv_types.AdvancedEpisodeInfo("Seinfeld", 9, 3, "The Serenity Now"))
+          tv_types.AdvancedEpisodeInfo("Show Name", "Series Number", "Episode Number", "Episode Name"),
+          tv_types.AdvancedEpisodeInfo("Seinfeld", 9, 3, "The Serenity Now"))
 
   @staticmethod
   def getWorkBenchWidget(mode, parent=None):
@@ -69,11 +67,11 @@ class Factory:
       return renamer.RenameItemGenerator(formatting.TvNameFormatter())
 
   @staticmethod
-  def getStoreHolder(mode):
+  def getInfoClientHolder(mode):
     if mode == base_types.MOVIE_MODE:
-      return movie_client.getStoreHolder()
+      return movie_client.getInfoClientHolder()
     else:
-      return tv_client.getStoreHolder()
+      return tv_client.getInfoClientHolder()
 
   @staticmethod
   def getManager(mode):
@@ -99,6 +97,6 @@ class Factory:
   @staticmethod
   def getSearchWidget(mode, parent=None):
     if mode == base_types.MOVIE_MODE:
-      return movie_widget.EditMovieItemWidget(Factory.getStoreHolder(mode), parent)
+      return movie_widget.EditMovieItemWidget(Factory.getInfoClientHolder(mode), parent)
     else:
-      return tv_widget.EditSeasonItemWidget(Factory.getStoreHolder(mode), parent)
+      return tv_widget.EditSeasonItemWidget(Factory.getInfoClientHolder(mode), parent)

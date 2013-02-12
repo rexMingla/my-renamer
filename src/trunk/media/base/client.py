@@ -79,6 +79,9 @@ class ResultHolder(object):
   
   Currently used for displaying in the search results of media.base.widget.EditItemWidget
   
+  Alternatively, the source_name could get stored in the media.base.types.BaseInfo which would simplify things and 
+  this may be the solution in the future.
+  
   Attributes:
     info: media.base.types.BaseInfo
     source_name: string
@@ -96,7 +99,7 @@ class InfoClientHolder(object):
   
   See media.tv.client.getInfoClientHolder() and media.movie.client.getInfoClientHolder() for sample usage.
   
-  The clients can be modified using the media.base.widget.EditInfoClientsWidget.
+  The clients can be modified using the media.base.widget.EditInfoClientsWidget.  
   """
   def __init__(self):
     super(InfoClientHolder, self).__init__()
@@ -114,9 +117,14 @@ class InfoClientHolder(object):
     return next( (i for i, client in enumerate(self.clients) if name == client.prettyName() ), -1)
 
   def getInfoClientHolder(self, name):
+    """ retrive media.base.client.BaseInfoClient by name """
     return next( (client for client in self.clients if name == client.prettyName() ), None)
 
   def getAllActiveNames(self):
+    """ used in the input widget to display active clients to the user
+    Returns:
+      list of strings containing client names
+    """
     return [client.prettyName() for client in self.clients if client.isActive()]
 
   def getConfig(self):
@@ -137,7 +145,13 @@ class InfoClientHolder(object):
         client.key = values["key"]
 
   def getInfo(self, search_params, default=None):
-    """ get info api  """
+    """ return the first info object found, or default if none are found
+    Args:
+      search_params: media.base.types.BaseSearchParams object used to define search
+      default: return if none is found
+    Returns:
+      media.base.types.BaseInfo
+    """
     return next(self.getAllInfo(search_params), ResultHolder(default, "")).info
 
   def getAllInfo(self, search_params):
@@ -146,4 +160,3 @@ class InfoClientHolder(object):
       if client.isActive():
         for info in client.getAllInfo(search_params):
           yield ResultHolder(info, client.source_name)
-

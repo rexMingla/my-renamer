@@ -3,8 +3,19 @@
 # Project:             my-renamer
 # Repository:          http://code.google.com/p/my-renamer/
 # License:             Creative Commons GNU GPL v2 (http://creativecommons.org/licenses/GPL/2.0/)
-# Purpose of document: Config singleton
+# Purpose of document: Serialization of object state to/from file
 # --------------------------------------------------------------------------------------------------------------------
+""" 
+sample serialization:
+>>> config = ConfigManager()
+>>> config.setData("key", "value")
+>>> config.saveConfig("temp.txt")
+
+sample deserialization:
+>>> config.loadConfig("temp.txt")
+>>> config.getData("key")
+value
+"""
 import jsonpickle
 import os
 import sys
@@ -19,18 +30,23 @@ jsonpickle.set_encoder_options("simplejson", indent=2)
 
 # --------------------------------------------------------------------------------------------------------------------
 class ConfigManager(object):
-  """ serializes / deserializes jsonpickle to / from file """
+  """ manages serialization to / from file using json pickle """
 
   def __init__(self):
+    """ """
+    super(ConfigManager, self).__init__()
     self._data = {}
 
   def getData(self, key, default=""):
+    """ retrieve value from data. assumes loadConfig() has already been performed """
     return self._data.get(key, default)
 
   def setData(self, key, value):
+    """ sets data for key """ 
     self._data[key] = value
 
   def loadConfig(self, filename):
+    """ deserializes the contents of the file with jsonpickle """
     self._data = {}
     if file_helper.FileHelper.fileExists(filename):
       file_obj = open(filename, "r")
@@ -42,6 +58,10 @@ class ConfigManager(object):
       self._data = {}
 
   def saveConfig(self, filename):
+    """ 
+    serializes the data using jsonpickle. the data is first written to a temporary file (with .bak extension) and then
+    swapped with the real file on success. 
+    """
     tmp_file = "{}.bak".format(filename)
     try:
       #write a temp file and swap on success
