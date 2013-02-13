@@ -63,15 +63,6 @@ class BaseRenameItem(object):
     self._info = info
     self.is_enabled = is_enabled
     
-  def getSourceFolder(self):
-    return file_helper.FileHelper.dirname(self.filename)
-  
-  def getFileSize(self):
-    return file_helper.FileHelper.getFileSize(self.filename)
-  
-  def getFileExt(self):
-    return file_helper.FileHelper.extension(self.filename)
-
   def setInfo(self, info):
     self._info = info
 
@@ -79,11 +70,11 @@ class BaseRenameItem(object):
     return self._info
 
   def getStatus(self):
-    """ returns string representation of status. must return BaseRenameItem.READY on success (see canEdit()), any other 
-    value will imply failure. """
+    """ returns string representation of status. must return BaseRenameItem.READY on success (see isValid()), any 
+    other value will imply failure. """
     raise NotImplementedError("BaseRenameItem.getStatus not implemented")
   
-  def canEdit(self):
+  def canEditInfo(self):
     """ can the properties associated with this item be edited? basically if the file exists we can otherwise there 
     is no point setting properties. this function decides whether or not to display a check box in the Workbench widget
     Returns:

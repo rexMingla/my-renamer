@@ -160,7 +160,7 @@ class LeafItem(BaseItem):
         return QtGui.QBrush(QtCore.Qt.red)
       elif self.raw.getStatus() == tv_types.EpisodeRenameItem.MISSING_OLD:
         return QtGui.QBrush(QtCore.Qt.gray)
-    if column == Columns.COL_OLD_NAME:
+    if column == Columns.COL_OLD_NAME:  
       if role == QtCore.Qt.ToolTipRole:
         return self.raw.filename
       else:
@@ -175,8 +175,8 @@ class LeafItem(BaseItem):
     elif column == Columns.COL_STATUS:
       return self.raw.getStatus()
     elif column == Columns.COL_FILE_SIZE:
-      if self.raw.canEdit():
-        return utils.bytesToString(self.raw.getFileSize())
+      if self.raw.canEditInfo():
+        return utils.bytesToString(file_helper.FileHelper.getFileSize(self.raw.filename))
     return None
 
   def setData(self, model, index, value, role):
@@ -216,7 +216,7 @@ class LeafItem(BaseItem):
     self.raw.is_enabled = checked_state == QtCore.Qt.Checked
 
   def canEdit(self):
-    return self.raw.canEdit() and self.parent.canCheck()
+    return self.raw.canEditInfo() and self.parent.canCheck()
 
 # --------------------------------------------------------------------------------------------------------------------
 class TvModel(QtCore.QAbstractItemModel, base_model.BaseWorkBenchModel):

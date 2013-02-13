@@ -30,8 +30,8 @@ class BaseNameFormatter(object):
 
   def getName(self, fmt, item, folder=None):
     if folder is None:
-      folder = item.getSourceFolder()
-    return self.getNameFromInfo(fmt, item.getInfo(), item.getFileExt(), folder)
+      folder = file_helper.FileHelper.dirname(item.filename)
+    return self.getNameFromInfo(fmt, item.getInfo(), file_helper.FileHelper.getExtension(item.filename), folder)
 
   def getNameFromInfo(self, fmt, info, ext="", folder=""):
     ret = file_helper.FileHelper.joinPath(folder, fmt)

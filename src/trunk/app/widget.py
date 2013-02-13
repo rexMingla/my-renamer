@@ -351,7 +351,6 @@ class _LogModel(QtCore.QAbstractTableModel):
 
 # --------------------------------------------------------------------------------------------------------------------
 class _RenameThread(thread.WorkerThread):
-  mutex = threading.Lock()
   item_changed_signal = QtCore.pyqtSignal(object, int)
   """ 
   thread responsible for performing the rename
@@ -361,13 +360,14 @@ class _RenameThread(thread.WorkerThread):
   """
   def __init__(self, name="renamer", items=None):
     super(_RenameThread, self).__init__(name)
+    self._mutex = threading.Lock()
     self._items = items or []
     self._current_item = None
     
   def _run(self):
     while not self._user_stopped:
       self._current_item = None
-      with self.mutex:
+      with self._mutex:
         if not self._items:
           break
         self._current_item = self._items.pop(0)
@@ -379,7 +379,7 @@ class _RenameThread(thread.WorkerThread):
     return not self._user_stopped
 
   def addItems(self, items):
-    with self.mutex:
+    with self._mutex:
       self._items.extend(items)
 
 # --------------------------------------------------------------------------------------------------------------------

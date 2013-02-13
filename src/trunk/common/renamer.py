@@ -30,9 +30,7 @@ class RenameItemGenerator(BaseRenameItemGenerator):
     self.config = config or {}
 
   def getRenameItem(self, item):
-    output_folder = item.getSourceFolder()
-    if self.config.getOutputFolder():
-      output_folder = self.config.getOutputFolder()
+    output_folder = self.config.getOutputFolder() or None # if none the item's filenames folder is used
     name = file_helper.FileHelper.sanitizeFilename(self._formatter.getName(self.config.format, item, output_folder))
     return FileRenamer(item.filename, name, can_overwrite=not self.config.dont_overwrite,
         keep_source=not self.config.is_move,
@@ -108,7 +106,7 @@ class FileRenamer(BaseRenamer):
   def _moveFile(self, progress_cb):
     if file_helper.FileHelper.moveFile(self.source, self.dest, progress_cb):
       for sub in self._subtitleFiles():
-        ext = file_helper.FileHelper.changeExtension(self.dest, file_helper.FileHelper.extension(sub))
+        ext = file_helper.FileHelper.changeExtension(self.dest, file_helper.FileHelper.getExtension(sub))
         file_helper.FileHelper.moveFile(sub, ext)
       return FileRenamer.SUCCESS
     else:
@@ -117,7 +115,7 @@ class FileRenamer(BaseRenamer):
   def _copyFile(self, progress_cb):
     if file_helper.FileHelper.copyFile(self.source, self.dest, progress_cb):
       for sub in self._subtitleFiles():
-        ext = file_helper.FileHelper.changeExtension(self.dest, file_helper.FileHelper.extension(sub))
+        ext = file_helper.FileHelper.changeExtension(self.dest, file_helper.FileHelper.getExtension(sub))
         file_helper.FileHelper.copyFile(sub, ext)
       return FileRenamer.SUCCESS
     else:

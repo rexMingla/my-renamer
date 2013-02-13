@@ -48,7 +48,7 @@ class FileHelper:
     return os.path.splitdrive(path)
 
   @staticmethod
-  def extension(file_obj):
+  def getExtension(file_obj):
     #utils.verifyType(file_obj, str)
     return os.path.splitext(file_obj)[1]
 

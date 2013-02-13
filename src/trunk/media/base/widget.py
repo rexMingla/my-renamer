@@ -51,10 +51,11 @@ class ActionWidgetInterface(QtGui.QWidget):
 class _InfoClientModel(QtCore.QAbstractTableModel):
   """ model used to store base.client.InfoClientHolder for use in the EditInfoClientsWidget """
   #statuses
-  MISSING_LIBRARY = ("Missing Library", "Source could not be loaded") #(status, tooltip)
-  MISSING_KEY = ("Missing Key", "Key needs to be set")
+  MISSING_LIBRARY = ("Missing library", "Source could not be loaded") #(status, tooltip)
+  MISSING_KEY = ("Missing key", "Key needs to be set")
   DISABLED = ("Disabled", "Disabled by user")
   ENABLED = ("Enabled", "In use")
+  #TODO: this should be BaseInfoClient.getStatus()
 
   COL_NAME = 0
   COL_STATUS = 1
