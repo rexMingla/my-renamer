@@ -18,8 +18,8 @@ from media.base import model as base_model
 class SortFilterModel(QtGui.QSortFilterProxyModel):
   def lessThan(self, left, right):
     if left.column() == Columns.COL_FILE_SIZE:
-      left_data = self.sourceModel().data(left, RAW_DATA_ROLE).getFileSize()
-      right_data = self.sourceModel().data(right, RAW_DATA_ROLE).getFileSize()
+      left_data = file_helper.FileHelper.getFileSize(self.sourceModel().data(left, RAW_DATA_ROLE))
+      right_data = file_helper.FileHelper.getFileSize(self.sourceModel().data(right, RAW_DATA_ROLE))
       return left_data < right_data
     else:
       left_data = self.sourceModel().data(left, QtCore.Qt.ToolTipRole) #use tooltip so that filename is col is full path
@@ -54,7 +54,6 @@ class MovieItem(object):
     #utils.verifyType(movie, movie_types.MovieRenameItem)
     self.movie = movie
     self.index = index
-    self.want_to_move = True
     self.cached_status_text = movie.getStatus()
     self.duplicates = []
 
@@ -157,7 +156,8 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     elif col == Columns.COL_GENRE:
       return info.getGenre()
     elif col == Columns.COL_FILE_SIZE:
-      return utils.bytesToString(movie.getFileSize()) if movie.getFileSize() else ""
+      if movie.canEditInfo():
+        return utils.bytesToString(file_helper.FileHelper.getFileSize(movie.filename))
     elif col == Columns.COL_SERIES:
       return info.series
 
@@ -180,7 +180,7 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
           self._updateItemStatus(self._movies[now_not_dup_index])
     elif role == QtCore.Qt.CheckStateRole and index.column() == Columns.COL_CHECK:
       item = self._movies[index.row()]
-      item.want_to_move = value == QtCore.Qt.Checked
+      item.is_enabled = value == QtCore.Qt.Checked
       self.dataChanged.emit(index, index)
     if not self._bulk_updating:
       self._emitWorkbenchChanged()
@@ -244,7 +244,8 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
     return [i.movie for i in self._movies if self._performMoveOnItem(i)]
 
   def _isItemValid(self, item):
-    return item.cached_status_text == _OK  or (item.cached_status_text == _DUPLICATE and not self._flag_duplicates)
+    return item.cached_status_text == item.movie.READY or \
+        (item.cached_status_text == _DUPLICATE and not self._flag_duplicates)
 
   def _updateItemStatus(self, item):
     old_status_text = item.cached_status_text
@@ -255,26 +256,23 @@ class MovieModel(QtCore.QAbstractTableModel, base_model.BaseWorkBenchModel):
       self.dataChanged.emit(self.index(item.index, 0), self.index(item.index, Columns.NUM_COLS))
 
   def _updateItemStatusText(self, item):
-    ret = ""
-    if not file_helper.FileHelper.fileExists(item.movie.filename):
-      ret = "File not found"
-    elif item.duplicates:
-      ret = _DUPLICATE
-    elif self._require_year and not item.movie.getInfo().year:
-      ret = _MISSING_YEAR
-    elif self._require_genre and not item.movie.getInfo().genres:
-      ret = _MISSING_GENRE
-    else:
-      ret = _OK
+    ret = item.movie.getStatus()
+    if ret == item.movie.READY:
+      if item.duplicates:
+        ret = _DUPLICATE
+      elif self._require_year and not item.movie.getInfo().year:
+        ret = _MISSING_YEAR
+      elif self._require_genre and not item.movie.getInfo().genres:
+        ret = _MISSING_GENRE
     item.cached_status_text = ret
     return ret
 
   def _performMoveOnItem(self, item):
-    return item.want_to_move and self._isItemValid(item)
+    return item.movie.is_enabled and self._isItemValid(item)
 
   def _updateDuplicatesForItem(self, item):
     item.duplicates = []
-    if item.movie.canEdit():
+    if item.movie.canEditInfo():
       item.duplicates = [m.index for m in self._movies if m.index != item.index and m.isMatch(item)]
 
   def overallCheckedState(self):

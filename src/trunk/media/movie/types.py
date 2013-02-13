@@ -8,6 +8,7 @@
 import copy
 
 from media.base import types as base_types
+from common import file_helper
 from common import utils
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -22,7 +23,7 @@ class MovieRenameItem(base_types.BaseRenameItem):
     return ret
 
   def getStatus(self):
-    return self.READY if self.getFileSize() > 0 else self.FILE_NOT_FOUND
+    return self.READY if file_helper.FileHelper.fileExists(self.filename) else self.FILE_NOT_FOUND
 
   def __str__(self):
     return str(self._info)
